@@ -279,25 +279,19 @@ export const schema = {
 		},
 	},
 
-	expression: {
-		evaluator: {
-			doc: 'Expression evaluator to use',
-			format: ['tmpl', 'tournament'] as const,
-			default: 'tournament',
-			env: 'N8N_EXPRESSION_EVALUATOR',
-		},
-		reportDifference: {
-			doc: 'Whether to report differences in the evaluator outputs',
-			format: Boolean,
-			default: false,
-			env: 'N8N_EXPRESSION_REPORT_DIFFERENCE',
-		},
-	},
-
 	proxy_hops: {
 		format: Number,
 		default: 0,
 		env: 'N8N_PROXY_HOPS',
 		doc: 'Number of reverse-proxies n8n is running behind',
+	},
+
+	logs_view: {
+		enabled: {
+			format: Boolean,
+			default: true,
+			env: 'N8N_ENABLE_LOGS_VIEW',
+			doc: 'Temporary env variable to enable logs view',
+		},
 	},
 };
