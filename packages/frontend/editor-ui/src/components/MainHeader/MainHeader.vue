@@ -43,7 +43,7 @@ const activeHeaderTab = ref(MAIN_HEADER_TABS.WORKFLOW);
 const workflowToReturnTo = ref('');
 const executionToReturnTo = ref('');
 const dirtyState = ref(false);
-const githubButtonHidden = useLocalStorage(LOCAL_STORAGE_HIDE_GITHUB_STAR_BUTTON, false);
+const githubButtonHidden = useLocalStorage(LOCAL_STORAGE_HIDE_GITHUB_STAR_BUTTON, true);
 
 // Track the routes that are used for the tabs
 // This is used to determine which tab to show when the route changes
@@ -91,9 +91,10 @@ const readOnly = computed(() => sourceControlStore.preferences.branchReadOnly);
 const isEnterprise = computed(
 	() => settingsStore.isQueueModeEnabled && settingsStore.isWorkerViewAvailable,
 );
-const showGitHubButton = computed(
-	() => !isEnterprise.value && !settingsStore.settings.inE2ETests && !githubButtonHidden.value,
-);
+// const showGitHubButton = computed(
+// 	() => !isEnterprise.value && !settingsStore.settings.inE2ETests && !githubButtonHidden.value,
+// );
+const showGitHubButton = false;
 
 const parentFolderForBreadcrumbs = computed<FolderShortInfo | undefined>(() => {
 	if (!workflow.value.parentFolder) {
