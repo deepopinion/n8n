@@ -157,6 +157,15 @@ describe('Execution Lifecycle Hooks', () => {
 					nodeName,
 				});
 			});
+
+			it('should run node.preExecute hook', async () => {
+				await lifecycleHooks.runHook('nodeExecuteBefore', [nodeName, taskStartedData]);
+
+				expect(externalHooks.run).toHaveBeenCalledWith('node.preExecute', [
+					nodeName,
+					taskStartedData,
+				]);
+			});
 		});
 
 		describe('nodeExecuteAfter', () => {
@@ -169,6 +178,16 @@ describe('Execution Lifecycle Hooks', () => {
 					nodeName,
 				});
 			});
+
+			it('should run node.postExecute hook', async () => {
+				await lifecycleHooks.runHook('nodeExecuteAfter', [nodeName, taskData, runExecutionData]);
+
+				expect(externalHooks.run).toHaveBeenCalledWith('node.postExecute', [
+					nodeName,
+					taskData,
+					{ ...runExecutionData, executionId },
+				]);
+			});
 		});
 	};
 
@@ -177,7 +196,11 @@ describe('Execution Lifecycle Hooks', () => {
 			it('should run workflow.preExecute hook', async () => {
 				await lifecycleHooks.runHook('workflowExecuteBefore', [workflow, runExecutionData]);
 
-				expect(externalHooks.run).toHaveBeenCalledWith('workflow.preExecute', [workflow, 'manual']);
+				expect(externalHooks.run).toHaveBeenCalledWith('workflow.preExecute', [
+					workflow,
+					'manual',
+					executionId,
+				]);
 			});
 		});
 
@@ -239,8 +262,8 @@ describe('Execution Lifecycle Hooks', () => {
 			expect(lifecycleHooks.workflowData).toEqual(workflowData);
 
 			const { handlers } = lifecycleHooks;
-			expect(handlers.nodeExecuteBefore).toHaveLength(2);
-			expect(handlers.nodeExecuteAfter).toHaveLength(2);
+			expect(handlers.nodeExecuteBefore).toHaveLength(3);
+			expect(handlers.nodeExecuteAfter).toHaveLength(3);
 			expect(handlers.workflowExecuteBefore).toHaveLength(3);
 			expect(handlers.workflowExecuteAfter).toHaveLength(5);
 			expect(handlers.nodeFetchedData).toHaveLength(1);
@@ -272,7 +295,7 @@ describe('Execution Lifecycle Hooks', () => {
 				workflowData.settings = { saveExecutionProgress: true };
 				lifecycleHooks = createHooks();
 
-				expect(lifecycleHooks.handlers.nodeExecuteAfter).toHaveLength(3);
+				expect(lifecycleHooks.handlers.nodeExecuteAfter).toHaveLength(4);
 
 				await lifecycleHooks.runHook('nodeExecuteAfter', [nodeName, taskData, runExecutionData]);
 
@@ -286,7 +309,7 @@ describe('Execution Lifecycle Hooks', () => {
 				workflowData.settings = { saveExecutionProgress: false };
 				lifecycleHooks = createHooks();
 
-				expect(lifecycleHooks.handlers.nodeExecuteAfter).toHaveLength(2);
+				expect(lifecycleHooks.handlers.nodeExecuteAfter).toHaveLength(3);
 
 				await lifecycleHooks.runHook('nodeExecuteAfter', [nodeName, taskData, runExecutionData]);
 
@@ -318,7 +341,11 @@ describe('Execution Lifecycle Hooks', () => {
 			it('should run workflow.preExecute external hook', async () => {
 				await lifecycleHooks.runHook('workflowExecuteBefore', [workflow, runExecutionData]);
 
-				expect(externalHooks.run).toHaveBeenCalledWith('workflow.preExecute', [workflow, 'manual']);
+				expect(externalHooks.run).toHaveBeenCalledWith('workflow.preExecute', [
+					workflow,
+					'manual',
+					executionId,
+				]);
 			});
 		});
 
@@ -516,8 +543,8 @@ describe('Execution Lifecycle Hooks', () => {
 
 			it('should not setup any push hooks', async () => {
 				const { handlers } = lifecycleHooks;
-				expect(handlers.nodeExecuteBefore).toHaveLength(1);
-				expect(handlers.nodeExecuteAfter).toHaveLength(1);
+				expect(handlers.nodeExecuteBefore).toHaveLength(2);
+				expect(handlers.nodeExecuteAfter).toHaveLength(2);
 				expect(handlers.workflowExecuteBefore).toHaveLength(2);
 				expect(handlers.workflowExecuteAfter).toHaveLength(4);
 
@@ -567,7 +594,11 @@ describe('Execution Lifecycle Hooks', () => {
 			it('should run the workflow.preExecute external hook', async () => {
 				await lifecycleHooks.runHook('workflowExecuteBefore', [workflow, runExecutionData]);
 
-				expect(externalHooks.run).toHaveBeenCalledWith('workflow.preExecute', [workflow, 'manual']);
+				expect(externalHooks.run).toHaveBeenCalledWith('workflow.preExecute', [
+					workflow,
+					'manual',
+					executionId,
+				]);
 			});
 		});
 
@@ -642,8 +673,8 @@ describe('Execution Lifecycle Hooks', () => {
 			expect(lifecycleHooks.workflowData).toEqual(workflowData);
 
 			const { handlers } = lifecycleHooks;
-			expect(handlers.nodeExecuteBefore).toHaveLength(2);
-			expect(handlers.nodeExecuteAfter).toHaveLength(2);
+			expect(handlers.nodeExecuteBefore).toHaveLength(3);
+			expect(handlers.nodeExecuteAfter).toHaveLength(3);
 			expect(handlers.workflowExecuteBefore).toHaveLength(2);
 			expect(handlers.workflowExecuteAfter).toHaveLength(4);
 			expect(handlers.nodeFetchedData).toHaveLength(1);
@@ -739,8 +770,8 @@ describe('Execution Lifecycle Hooks', () => {
 			expect(lifecycleHooks.workflowData).toEqual(workflowData);
 
 			const { handlers } = lifecycleHooks;
-			expect(handlers.nodeExecuteBefore).toHaveLength(1);
-			expect(handlers.nodeExecuteAfter).toHaveLength(1);
+			expect(handlers.nodeExecuteBefore).toHaveLength(2);
+			expect(handlers.nodeExecuteAfter).toHaveLength(2);
 			expect(handlers.workflowExecuteBefore).toHaveLength(2);
 			expect(handlers.workflowExecuteAfter).toHaveLength(4);
 			expect(handlers.nodeFetchedData).toHaveLength(1);

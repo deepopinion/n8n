@@ -145,8 +145,21 @@ function hookFunctionsPush(
 
 function hookFunctionsExternalHooks(hooks: ExecutionLifecycleHooks) {
 	const externalHooks = Container.get(ExternalHooks);
+	hooks.addHandler('nodeExecuteBefore', async function (nodeName, taskData) {
+		await externalHooks.run('node.preExecute', [nodeName, taskData]);
+	});
+	hooks.addHandler('nodeExecuteAfter', async function (nodeName, taskData, executionData) {
+		const { executionId } = this;
+
+		await externalHooks.run('node.postExecute', [
+			nodeName,
+			taskData,
+			{ ...executionData, executionId },
+		]);
+	});
 	hooks.addHandler('workflowExecuteBefore', async function (workflow) {
-		await externalHooks.run('workflow.preExecute', [workflow, this.mode]);
+		const { executionId } = this;
+		await externalHooks.run('workflow.preExecute', [workflow, this.mode, executionId]);
 	});
 	hooks.addHandler('workflowExecuteAfter', async function (fullRunData) {
 		await externalHooks.run('workflow.postExecute', [
