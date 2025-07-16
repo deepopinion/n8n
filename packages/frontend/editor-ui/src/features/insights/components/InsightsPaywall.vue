@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useI18n } from '@/composables/useI18n';
+import { useI18n } from '@n8n/i18n';
 import { usePageRedirectionHelper } from '@/composables/usePageRedirectionHelper';
 
 const pageRedirectionHelper = usePageRedirectionHelper();
@@ -13,7 +13,7 @@ const goToUpgrade = async () => {
 <template>
 	<div :class="$style.callout">
 		<N8nIcon icon="lock" size="xlarge"></N8nIcon>
-		<N8nText bold tag="h3" size="large">
+		<N8nText bold tag="h4" size="large">
 			{{ i18n.baseText('insights.dashboard.paywall.title') }}
 		</N8nText>
 		<N8nText>

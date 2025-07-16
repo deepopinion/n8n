@@ -24,12 +24,12 @@ import {
 	parseResourceMapperFieldName,
 } from '@/utils/nodeTypesUtils';
 import { isFullExecutionResponse, isResourceMapperValue } from '@/utils/typeGuards';
-import { i18n as locale } from '@/plugins/i18n';
+import { i18n as locale } from '@n8n/i18n';
 import { useNDVStore } from '@/stores/ndv.store';
 import { useWorkflowsStore } from '@/stores/workflows.store';
 import { useDocumentVisibility } from '@/composables/useDocumentVisibility';
 import { N8nButton, N8nCallout, N8nNotice } from '@n8n/design-system';
-import { isEqual } from 'lodash-es';
+import isEqual from 'lodash/isEqual';
 
 type Props = {
 	parameter: INodeProperties;
@@ -598,7 +598,7 @@ defineExpose({
 			@refresh-field-list="initFetching(true)"
 		/>
 		<N8nText v-if="!showMappingModeSelect && state.loading" size="small">
-			<N8nIcon icon="sync-alt" size="xsmall" :spin="true" />
+			<N8nIcon icon="refresh-cw" size="xsmall" :spin="true" />
 			{{
 				locale.baseText('resourceMapper.fetchingFields.message', {
 					interpolate: {
@@ -639,7 +639,7 @@ defineExpose({
 			<template #trailingContent>
 				<N8nButton
 					size="mini"
-					icon="refresh"
+					icon="refresh-cw"
 					type="secondary"
 					:loading="state.refreshInProgress"
 					@click="initFetching(true)"

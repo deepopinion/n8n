@@ -1,6 +1,8 @@
+import { Logger } from '@n8n/backend-common';
+import { mockInstance } from '@n8n/backend-test-utils';
 import type express from 'express';
 import { mock, type MockProxy } from 'jest-mock-extended';
-import { BinaryDataService, ErrorReporter, Logger } from 'n8n-core';
+import { BinaryDataService, ErrorReporter } from 'n8n-core';
 import type {
 	Workflow,
 	INode,
@@ -16,12 +18,9 @@ import { createDeferredPromise, FORM_NODE_TYPE, WAIT_NODE_TYPE } from 'n8n-workf
 import type { Readable } from 'stream';
 import { finished } from 'stream/promises';
 
-import { mockInstance } from '@test/mocking';
-
 import {
 	autoDetectResponseMode,
 	handleFormRedirectionCase,
-	getResponseOnReceived,
 	setupResponseNodePromise,
 	prepareExecutionData,
 } from '../webhook-helpers';
@@ -62,6 +61,24 @@ describe('autoDetectResponseMode', () => {
 		});
 		const result = autoDetectResponseMode(workflowStartNode, workflow, 'POST');
 		expect(result).toBe('responseNode');
+	});
+
+	test('should return formPage when start node is FORM_NODE_TYPE and method is POST and there is a following FORM_NODE_TYPE node', () => {
+		const workflowStartNode = mock<INode>({
+			type: FORM_NODE_TYPE,
+			name: 'startNode',
+			parameters: {},
+		});
+		workflow.getChildNodes.mockReturnValue(['childNode']);
+		workflow.nodes.childNode = mock<INode>({
+			type: FORM_NODE_TYPE,
+			parameters: {
+				operation: 'completion',
+			},
+			disabled: false,
+		});
+		const result = autoDetectResponseMode(workflowStartNode, workflow, 'POST');
+		expect(result).toBe('formPage');
 	});
 
 	test('should return undefined when start node is FORM_NODE_TYPE with no other form child nodes', () => {
@@ -119,49 +136,6 @@ describe('handleFormRedirectionCase', () => {
 		});
 		const result = handleFormRedirectionCase(data, workflowStartNode);
 		expect(result).toEqual(data);
-	});
-});
-
-describe('getResponseOnReceived', () => {
-	const responseCode = 200;
-	const webhookResultData = mock<IWebhookResponseData>();
-
-	beforeEach(() => {
-		jest.resetAllMocks();
-	});
-
-	test('should return response with no data when responseData is "noData"', () => {
-		const callbackData = getResponseOnReceived('noData', webhookResultData, responseCode);
-
-		expect(callbackData).toEqual({ responseCode });
-	});
-
-	test('should return response with responseData when it is defined', () => {
-		const responseData = JSON.stringify({ foo: 'bar' });
-
-		const callbackData = getResponseOnReceived(responseData, webhookResultData, responseCode);
-
-		expect(callbackData).toEqual({ data: responseData, responseCode });
-	});
-
-	test('should return response with webhookResponse when responseData is falsy but webhookResponse exists', () => {
-		const webhookResponse = { success: true };
-		webhookResultData.webhookResponse = webhookResponse;
-
-		const callbackData = getResponseOnReceived(undefined, webhookResultData, responseCode);
-
-		expect(callbackData).toEqual({ data: webhookResponse, responseCode });
-	});
-
-	test('should return default response message when responseData and webhookResponse are falsy', () => {
-		webhookResultData.webhookResponse = undefined;
-
-		const callbackData = getResponseOnReceived(undefined, webhookResultData, responseCode);
-
-		expect(callbackData).toEqual({
-			data: { message: 'Workflow was started' },
-			responseCode,
-		});
 	});
 });
 
