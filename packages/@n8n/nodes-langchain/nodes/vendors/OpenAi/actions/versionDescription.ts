@@ -68,6 +68,7 @@ const configureNodeInputs = (
 	return ['main'];
 };
 
+// eslint-disable-next-line n8n-nodes-base/node-class-description-missing-subtitle
 export const versionDescription: INodeTypeDescription = {
 	displayName: 'OpenAI',
 	name: 'openAi',

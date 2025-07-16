@@ -66,5 +66,4 @@ export default {
 	'iconPicker.tabs.icons': 'Icons',
 	'iconPicker.tabs.emojis': 'Emojis',
 	'selectableList.addDefault': '+ Add a',
-	'auth.changePassword.passwordsMustMatchError': 'Passwords must match',
 } as N8nLocale;

@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { N8nIcon, N8nText } from '@n8n/design-system';
 import { ref, watch } from 'vue';
 
 import Message from '@n8n/chat/components/Message.vue';
@@ -36,7 +35,7 @@ watch(
 		class="empty-container"
 	>
 		<div class="empty" data-test-id="chat-messages-empty">
-			<N8nIcon icon="message-circle" size="large" class="emptyIcon" />
+			<N8nIcon icon="comment" size="large" class="emptyIcon" />
 			<N8nText tag="p" size="medium" color="text-base">
 				{{ emptyText }}
 			</N8nText>

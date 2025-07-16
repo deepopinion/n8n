@@ -42,9 +42,6 @@
         "$layout_id": {
             "type": "object",
             "properties": {
-                "display_label": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "string"
                 },
@@ -116,20 +113,6 @@
         "Locked__s": {
             "type": "boolean"
         },
-        "Modified_By": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "Modified_Time": {
             "type": "string"
         },
@@ -146,24 +129,7 @@
                     "type": "string"
                 }
             }
-        },
-        "Probability": {
-            "type": "integer"
-        },
-        "Tag": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "type": "string"
-                    }
-                }
-            }
         }
     },
-    "version": 2
+    "version": 1
 }

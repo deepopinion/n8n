@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, useAttrs, useCssModule, watchEffect } from 'vue';
 
-import type { IconSize } from '@n8n/design-system/types';
 import type { ButtonProps } from '@n8n/design-system/types/button';
 
 import N8nIcon from '../N8nIcon';
@@ -35,10 +34,7 @@ const ariaBusy = computed(() => (props.loading ? 'true' : undefined));
 const ariaDisabled = computed(() => (props.disabled ? 'true' : undefined));
 const isDisabled = computed(() => props.disabled || props.loading);
 
-const iconSize = computed(
-	(): IconSize | undefined =>
-		props.iconSize ?? (props.size === 'xmini' || props.size === 'mini' ? 'xsmall' : props.size),
-);
+const iconSize = computed(() => props.iconSize ?? (props.size === 'mini' ? 'xsmall' : props.size));
 
 const classes = computed(() => {
 	return (

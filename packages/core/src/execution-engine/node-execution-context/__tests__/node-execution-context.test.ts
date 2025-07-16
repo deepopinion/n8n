@@ -34,7 +34,7 @@ describe('NodeExecutionContext', () => {
 		timezone: 'UTC',
 		expression,
 	});
-	const additionalData = mock<IWorkflowExecuteAdditionalData>({
+	let additionalData = mock<IWorkflowExecuteAdditionalData>({
 		credentialsHelper: mock(),
 	});
 

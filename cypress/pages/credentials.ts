@@ -31,7 +31,7 @@ export class CredentialsPage extends BasePage {
 		credentialDeleteButton: () =>
 			cy.getByTestId('action-toggle-dropdown').filter(':visible').contains('Delete'),
 		credentialMoveButton: () =>
-			cy.getByTestId('action-toggle-dropdown').filter(':visible').contains('Change owner'),
+			cy.getByTestId('action-toggle-dropdown').filter(':visible').contains('Move'),
 		sort: () => cy.getByTestId('resources-list-sort').first(),
 		sortOption: (label: string) =>
 			cy.getByTestId('resources-list-sort-item').contains(label).first(),

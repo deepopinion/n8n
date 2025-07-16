@@ -1,10 +1,9 @@
-import { isObjectLiteral, Logger } from '@n8n/backend-common';
+import { isObjectLiteral } from '@n8n/backend-common';
 import { GlobalConfig } from '@n8n/config';
-import { Time } from '@n8n/constants';
 import { ExecutionRepository } from '@n8n/db';
 import { OnLeaderStepdown, OnLeaderTakeover, OnShutdown } from '@n8n/decorators';
 import { Container, Service } from '@n8n/di';
-import { ErrorReporter, InstanceSettings } from 'n8n-core';
+import { ErrorReporter, InstanceSettings, Logger } from 'n8n-core';
 import {
 	BINARY_ENCODING,
 	sleep,
@@ -18,7 +17,7 @@ import assert, { strict } from 'node:assert';
 
 import { ActiveExecutions } from '@/active-executions';
 import config from '@/config';
-import { HIGHEST_SHUTDOWN_PRIORITY } from '@/constants';
+import { HIGHEST_SHUTDOWN_PRIORITY, Time } from '@/constants';
 import { EventService } from '@/events/event.service';
 import { assertNever } from '@/utils';
 
@@ -58,9 +57,6 @@ export class ScalingService {
 	async setupQueue() {
 		const { default: BullQueue } = await import('bull');
 		const { RedisClientService } = await import('@/services/redis-client.service');
-
-		if (this.queue) return;
-
 		const service = Container.get(RedisClientService);
 
 		const bullPrefix = this.globalConfig.queue.bull.prefix;
@@ -87,13 +83,6 @@ export class ScalingService {
 
 		void this.queue.process(JOB_TYPE_NAME, concurrency, async (job: Job) => {
 			try {
-				this.eventService.emit('job-dequeued', {
-					executionId: job.data.executionId,
-					workflowId: job.data.workflowId,
-					hostId: this.instanceSettings.hostId,
-					jobId: job.id.toString(),
-				});
-
 				if (!this.hasValidJobData(job)) {
 					throw new UnexpectedError('Worker received invalid job', {
 						extra: { jobData: jsonStringify(job, { replaceCircularRefs: true }) },
@@ -204,12 +193,6 @@ export class ScalingService {
 		const jobId = job.id;
 
 		this.logger.info(`Enqueued execution ${executionId} (job ${jobId})`, { executionId, jobId });
-		this.eventService.emit('job-enqueued', {
-			executionId,
-			workflowId: jobData.workflowId,
-			hostId: this.instanceSettings.hostId,
-			jobId: jobId.toString(),
-		});
 
 		return job;
 	}
@@ -317,15 +300,11 @@ export class ScalingService {
 			// than natively provided by Bull in `global:completed` and `global:failed` events
 
 			switch (msg.kind) {
-				case 'send-chunk':
-					this.activeExecutions.sendChunk(msg.executionId, msg.chunkText);
-					break;
 				case 'respond-to-webhook':
 					const decodedResponse = this.decodeWebhookResponse(msg.response);
 					this.activeExecutions.resolveResponsePromise(msg.executionId, decodedResponse);
 					break;
 				case 'job-finished':
-					this.activeExecutions.resolveResponsePromise(msg.executionId, {});
 					this.logger.info(`Execution ${msg.executionId} (job ${jobId}) finished successfully`, {
 						workerId: msg.workerId,
 						executionId: msg.executionId,
@@ -400,7 +379,7 @@ export class ScalingService {
 	private readonly jobCounters = { completed: 0, failed: 0 };
 
 	/** Interval for collecting queue metrics to expose via Prometheus. */
-	private queueMetricsInterval: NodeJS.Timeout | undefined;
+	private queueMetricsInterval: NodeJS.Timer | undefined;
 
 	get isQueueMetricsEnabled() {
 		return (

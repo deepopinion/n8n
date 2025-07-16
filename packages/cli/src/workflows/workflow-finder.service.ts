@@ -1,5 +1,5 @@
 import type { SharedWorkflow, User } from '@n8n/db';
-import { SharedWorkflowRepository, FolderRepository } from '@n8n/db';
+import { SharedWorkflowRepository } from '@n8n/db';
 import { Service } from '@n8n/di';
 import { hasGlobalScope, rolesWithScope, type Scope } from '@n8n/permissions';
 // eslint-disable-next-line n8n-local-rules/misplaced-n8n-typeorm-import
@@ -9,10 +9,7 @@ import { In } from '@n8n/typeorm';
 
 @Service()
 export class WorkflowFinderService {
-	constructor(
-		private readonly sharedWorkflowRepository: SharedWorkflowRepository,
-		private readonly folderRepository: FolderRepository,
-	) {}
+	constructor(private readonly sharedWorkflowRepository: SharedWorkflowRepository) {}
 
 	async findWorkflowForUser(
 		workflowId: string,
@@ -55,27 +52,8 @@ export class WorkflowFinderService {
 		return sharedWorkflow.workflow;
 	}
 
-	async findAllWorkflowsForUser(
-		user: User,
-		scopes: Scope[],
-		folderId?: string,
-		projectId?: string,
-	) {
+	async findAllWorkflowsForUser(user: User, scopes: Scope[]) {
 		let where: FindOptionsWhere<SharedWorkflow> = {};
-
-		if (folderId) {
-			const subFolderIds = await this.folderRepository.getAllFolderIdsInHierarchy(
-				folderId,
-				projectId,
-			);
-
-			where = {
-				...where,
-				workflow: {
-					parentFolder: In([folderId, ...subFolderIds]),
-				},
-			};
-		}
 
 		if (!hasGlobalScope(user, scopes, { mode: 'allOf' })) {
 			const projectRoles = rolesWithScope('project', scopes);
@@ -85,7 +63,6 @@ export class WorkflowFinderService {
 				...where,
 				role: In(workflowRoles),
 				project: {
-					...(projectId && { id: projectId }),
 					projectRelations: {
 						role: In(projectRoles),
 						userId: user.id,

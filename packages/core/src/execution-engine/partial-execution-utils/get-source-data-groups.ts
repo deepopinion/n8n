@@ -1,4 +1,4 @@
-import { NodeConnectionTypes, type INode, type IPinData, type IRunData } from 'n8n-workflow';
+import { type INode, type IPinData, type IRunData } from 'n8n-workflow';
 
 import type { GraphConnection, DirectedGraph } from './directed-graph';
 
@@ -99,7 +99,7 @@ export function getSourceDataGroups(
 
 		if (hasData) {
 			sortedConnectionsWithData.push(connection);
-		} else if (connection.type === NodeConnectionTypes.Main) {
+		} else {
 			sortedConnectionsWithoutData.push(connection);
 		}
 	}
@@ -123,6 +123,7 @@ export function getSourceDataGroups(
 		currentInputIndex++;
 
 		const connectionWithDataIndex = sortedConnectionsWithData.findIndex(
+			// eslint-disable-next-line @typescript-eslint/no-loop-func
 			(c) => c.inputIndex === currentInputIndex,
 		);
 
@@ -136,6 +137,7 @@ export function getSourceDataGroups(
 		}
 
 		const connectionWithoutDataIndex = sortedConnectionsWithoutData.findIndex(
+			// eslint-disable-next-line @typescript-eslint/no-loop-func
 			(c) => c.inputIndex === currentInputIndex,
 		);
 

@@ -73,7 +73,7 @@ defaultCallout.args = {
 export const customCallout = template.bind({});
 customCallout.args = {
 	theme: 'custom',
-	icon: 'git-branch',
+	icon: 'code-branch',
 	default: `
 		This is a custom callout.
 	`,
@@ -87,7 +87,7 @@ customCallout.args = {
 export const secondaryCallout = template.bind({});
 secondaryCallout.args = {
 	theme: 'secondary',
-	icon: 'pin',
+	icon: 'thumbtack',
 	default: `
 		This data is pinned.
 	`,

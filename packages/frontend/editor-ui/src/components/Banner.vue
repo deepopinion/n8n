@@ -37,8 +37,8 @@ const onClick = () => {
 
 <template>
 	<el-tag :type="theme" :disable-transitions="true" :class="$style.container">
-		<n8n-icon
-			:icon="theme === 'success' ? 'circle-check' : 'triangle-alert'"
+		<font-awesome-icon
+			:icon="theme === 'success' ? 'check-circle' : 'exclamation-triangle'"
 			:class="theme === 'success' ? $style.icon : $style.dangerIcon"
 		/>
 		<div :class="$style.banner">

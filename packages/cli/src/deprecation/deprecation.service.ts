@@ -1,7 +1,6 @@
-import { Logger } from '@n8n/backend-common';
 import { GlobalConfig } from '@n8n/config';
 import { Service } from '@n8n/di';
-import { InstanceSettings } from 'n8n-core';
+import { Logger } from 'n8n-core';
 
 import config from '@/config';
 
@@ -66,7 +65,6 @@ export class DeprecationService {
 			checkValue: (value?: string) => value?.toLowerCase() !== 'true' && value !== '1',
 			warnIfMissing: true,
 			matchConfig: config.getEnv('executions.mode') === 'queue',
-			disableIf: () => this.instanceSettings.instanceType !== 'main',
 		},
 		{
 			envVar: 'N8N_PARTIAL_EXECUTION_VERSION_DEFAULT',
@@ -105,7 +103,6 @@ export class DeprecationService {
 	constructor(
 		private readonly logger: Logger,
 		private readonly globalConfig: GlobalConfig,
-		private readonly instanceSettings: InstanceSettings,
 	) {}
 
 	warn() {

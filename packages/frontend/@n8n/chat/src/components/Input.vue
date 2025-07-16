@@ -144,7 +144,7 @@ async function onSubmit(event: MouseEvent | KeyboardEvent) {
 }
 
 async function onSubmitKeydown(event: KeyboardEvent) {
-	if (event.shiftKey || event.isComposing) {
+	if (event.shiftKey) {
 		return;
 	}
 

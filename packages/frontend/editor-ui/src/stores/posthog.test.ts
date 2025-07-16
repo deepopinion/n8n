@@ -8,7 +8,6 @@ import { LOCAL_STORAGE_EXPERIMENT_OVERRIDES } from '@/constants';
 import { nextTick } from 'vue';
 import { defaultSettings } from '../__tests__/defaults';
 import { useTelemetry } from '@/composables/useTelemetry';
-import { useCloudPlanStore } from '@/stores/cloudPlan.store';
 
 export const DEFAULT_POSTHOG_SETTINGS: FrontendSettings['posthog'] = {
 	enabled: true,
@@ -37,6 +36,7 @@ function setCurrentUser() {
 		{
 			id: CURRENT_USER_ID,
 			isPending: false,
+			createdAt: '2023-03-17T14:01:36.432Z',
 		},
 	]);
 
@@ -45,14 +45,7 @@ function setCurrentUser() {
 
 function resetStores() {
 	useSettingsStore().reset();
-
-	const usersStore = useUsersStore();
-	usersStore.initialized = false;
-	usersStore.currentUserId = null;
-	usersStore.usersById = {};
-
-	const cloudPlanStore = useCloudPlanStore();
-	cloudPlanStore.currentUserCloudInfo = null;
+	useUsersStore().reset();
 }
 
 function setup() {
@@ -122,6 +115,7 @@ describe('Posthog store', () => {
 
 			const userId = `${CURRENT_INSTANCE_ID}#${CURRENT_USER_ID}`;
 			expect(window.posthog?.identify).toHaveBeenCalledWith(userId, {
+				created_at_timestamp: 1679061696432,
 				instance_id: CURRENT_INSTANCE_ID,
 			});
 		});

@@ -1,5 +1,5 @@
 import { mock } from 'jest-mock-extended';
-import get from 'lodash/get';
+import { get } from 'lodash';
 import type {
 	DeclarativeRestApiSettings,
 	IExecuteData,

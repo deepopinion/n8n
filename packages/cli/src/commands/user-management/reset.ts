@@ -8,7 +8,6 @@ import {
 	SharedWorkflowRepository,
 	UserRepository,
 } from '@n8n/db';
-import { Command } from '@n8n/decorators';
 import { Container } from '@n8n/di';
 
 import { BaseCommand } from '../base-command';
@@ -21,11 +20,11 @@ const defaultUserProps = {
 	role: 'global:owner',
 };
 
-@Command({
-	name: 'user-management:reset',
-	description: 'Resets the database to the default user state',
-})
 export class Reset extends BaseCommand {
+	static description = 'Resets the database to the default user state';
+
+	static examples = ['$ n8n user-management:reset'];
+
 	async run(): Promise<void> {
 		const owner = await this.getInstanceOwner();
 		const personalProject = await Container.get(ProjectRepository).getPersonalProjectForUserOrFail(
@@ -77,6 +76,6 @@ export class Reset extends BaseCommand {
 	async catch(error: Error): Promise<void> {
 		this.logger.error('Error resetting database. See log messages for details.');
 		this.logger.error(error.message);
-		process.exit(1);
+		this.exit(1);
 	}
 }

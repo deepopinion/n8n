@@ -99,7 +99,6 @@ describe('getMetadata()', () => {
 describe('copyByFileId()', () => {
 	it('should copy by file ID and return the file ID', async () => {
 		fsp.copyFile = jest.fn().mockResolvedValue(undefined);
-		fsp.writeFile = jest.fn().mockResolvedValue(undefined);
 
 		// @ts-expect-error - private method
 		jest.spyOn(fsManager, 'toFileId').mockReturnValue(otherFileId);
@@ -110,9 +109,6 @@ describe('copyByFileId()', () => {
 		const targetPath = toFullFilePath(targetFileId);
 
 		expect(fsp.copyFile).toHaveBeenCalledWith(sourcePath, targetPath);
-
-		// Make sure metadata file was written
-		expect(fsp.writeFile).toBeCalledTimes(1);
 	});
 });
 

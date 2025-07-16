@@ -3,8 +3,7 @@ import { ElMenu } from 'element-plus';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
-import type { IMenuItem, IMenuElement } from '../../types';
-import { isCustomMenuItem } from '../../types';
+import type { IMenuItem } from '../../types';
 import N8nMenuItem from '../N8nMenuItem';
 import { doesMenuItemMatchCurrentRoute } from '../N8nMenuItem/routerUtil';
 
@@ -15,7 +14,7 @@ interface MenuProps {
 	transparentBackground?: boolean;
 	mode?: 'router' | 'tabs';
 	tooltipDelay?: number;
-	items?: IMenuElement[];
+	items?: IMenuItem[];
 	modelValue?: string;
 }
 
@@ -37,13 +36,11 @@ const emit = defineEmits<{
 const activeTab = ref(props.modelValue);
 
 const upperMenuItems = computed(() =>
-	props.items.filter((item: IMenuElement) => item.position === 'top' && item.available !== false),
+	props.items.filter((item: IMenuItem) => item.position === 'top' && item.available !== false),
 );
 
 const lowerMenuItems = computed(() =>
-	props.items.filter(
-		(item: IMenuElement) => item.position === 'bottom' && item.available !== false,
-	),
+	props.items.filter((item: IMenuItem) => item.position === 'bottom' && item.available !== false),
 );
 
 const currentRoute = computed(() => {
@@ -92,35 +89,31 @@ const onSelect = (item: IMenuItem): void => {
 					<slot name="menuPrefix"></slot>
 				</div>
 				<ElMenu :default-active="defaultActive" :collapse="collapsed">
-					<template v-for="item in upperMenuItems" :key="item.id">
-						<component :is="item.component" v-if="isCustomMenuItem(item)" v-bind="item.props" />
-						<N8nMenuItem
-							v-else
-							:item="item"
-							:compact="collapsed"
-							:tooltip-delay="tooltipDelay"
-							:mode="mode"
-							:active-tab="activeTab"
-							:handle-select="onSelect"
-						/>
-					</template>
+					<N8nMenuItem
+						v-for="item in upperMenuItems"
+						:key="item.id"
+						:item="item"
+						:compact="collapsed"
+						:tooltip-delay="tooltipDelay"
+						:mode="mode"
+						:active-tab="activeTab"
+						:handle-select="onSelect"
+					/>
 				</ElMenu>
 			</div>
 			<div :class="[$style.lowerContent, 'pb-2xs']">
 				<slot name="beforeLowerMenu"></slot>
 				<ElMenu :default-active="defaultActive" :collapse="collapsed">
-					<template v-for="item in lowerMenuItems" :key="item.id">
-						<component :is="item.component" v-if="isCustomMenuItem(item)" v-bind="item.props" />
-						<N8nMenuItem
-							v-else
-							:item="item"
-							:compact="collapsed"
-							:tooltip-delay="tooltipDelay"
-							:mode="mode"
-							:active-tab="activeTab"
-							:handle-select="onSelect"
-						/>
-					</template>
+					<N8nMenuItem
+						v-for="item in lowerMenuItems"
+						:key="item.id"
+						:item="item"
+						:compact="collapsed"
+						:tooltip-delay="tooltipDelay"
+						:mode="mode"
+						:active-tab="activeTab"
+						:handle-select="onSelect"
+					/>
 				</ElMenu>
 				<div v-if="$slots.menuSuffix" :class="$style.menuSuffix">
 					<slot name="menuSuffix"></slot>

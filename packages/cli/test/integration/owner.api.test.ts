@@ -1,10 +1,3 @@
-import {
-	randomEmail,
-	randomInvalidPassword,
-	randomName,
-	randomValidPassword,
-	testDb,
-} from '@n8n/backend-test-utils';
 import type { User } from '@n8n/db';
 import { UserRepository } from '@n8n/db';
 import { Container } from '@n8n/di';
@@ -13,6 +6,13 @@ import validator from 'validator';
 import config from '@/config';
 
 import { createUserShell } from './shared/db/users';
+import {
+	randomEmail,
+	randomInvalidPassword,
+	randomName,
+	randomValidPassword,
+} from './shared/random';
+import * as testDb from './shared/test-db';
 import * as utils from './shared/utils/';
 
 const testServer = utils.setupTestServer({ endpointGroups: ['owner'] });

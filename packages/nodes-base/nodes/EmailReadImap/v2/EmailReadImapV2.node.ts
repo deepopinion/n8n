@@ -1,15 +1,6 @@
-import type { ICredentialsDataImap } from '@credentials/Imap.credentials';
-import { isCredentialsDataImap } from '@credentials/Imap.credentials';
-import type {
-	ImapSimple,
-	ImapSimpleOptions,
-	Message,
-	MessagePart,
-	SearchCriteria,
-} from '@n8n/imap';
+import type { ImapSimple, ImapSimpleOptions, Message, MessagePart } from '@n8n/imap';
 import { connect as imapConnect } from '@n8n/imap';
 import isEmpty from 'lodash/isEmpty';
-import { DateTime } from 'luxon';
 import type {
 	ITriggerFunctions,
 	IBinaryData,
@@ -22,10 +13,12 @@ import type {
 	INodeTypeDescription,
 	ITriggerResponse,
 	JsonObject,
-	INodeExecutionData,
 } from 'n8n-workflow';
 import { NodeConnectionTypes, NodeOperationError, TriggerCloseError } from 'n8n-workflow';
 import rfc2047 from 'rfc2047';
+
+import type { ICredentialsDataImap } from '@credentials/Imap.credentials';
+import { isCredentialsDataImap } from '@credentials/Imap.credentials';
 
 import { getNewEmails } from './utils';
 
@@ -35,7 +28,7 @@ const versionDescription: INodeTypeDescription = {
 	icon: 'fa:inbox',
 	iconColor: 'green',
 	group: ['trigger'],
-	version: [2, 2.1],
+	version: 2,
 	description: 'Triggers the workflow when a new email is received',
 	eventTriggerDescription: 'Waiting for you to receive an email',
 	defaults: {
@@ -255,7 +248,6 @@ export class EmailReadImapV2 implements INodeType {
 		const mailbox = this.getNodeParameter('mailbox') as string;
 		const postProcessAction = this.getNodeParameter('postProcessAction') as string;
 		const options = this.getNodeParameter('options', {}) as IDataObject;
-		const activatedAt = DateTime.now();
 
 		const staticData = this.getWorkflowStaticData('node');
 		this.logger.debug('Loaded static data for node "EmailReadImap"', { staticData });
@@ -341,10 +333,12 @@ export class EmailReadImapV2 implements INodeType {
 		const returnedPromise = this.helpers.createDeferredPromise();
 
 		const establishConnection = async (): Promise<ImapSimple> => {
-			let searchCriteria: SearchCriteria[] = ['UNSEEN'];
+			let searchCriteria = ['UNSEEN'] as Array<string | string[]>;
 			if (options.customEmailConfig !== undefined) {
 				try {
-					searchCriteria = JSON.parse(options.customEmailConfig as string) as SearchCriteria[];
+					searchCriteria = JSON.parse(options.customEmailConfig as string) as Array<
+						string | string[]
+					>;
 				} catch (error) {
 					throw new NodeOperationError(this.getNode(), 'Custom email config is not valid JSON.');
 				}
@@ -359,21 +353,10 @@ export class EmailReadImapV2 implements INodeType {
 					tls: credentials.secure,
 					authTimeout: 20000,
 				},
-				onMail: async (numEmails) => {
-					this.logger.debug('New emails received in node "EmailReadImap"', {
-						numEmails,
-					});
-
+				onMail: async () => {
 					if (connection) {
-						/**
-						 * Only process new emails:
-						 * - If we've seen emails before (lastMessageUid is set), fetch messages higher UID.
-						 * - Otherwise, fetch emails received since the workflow activation date.
-						 *
-						 * Note: IMAP 'SINCE' only filters by date (not time),
-						 * so it may include emails from earlier on the activation day.
-						 */
 						if (staticData.lastMessageUid !== undefined) {
+							searchCriteria.push(['UID', `${staticData.lastMessageUid as number}:*`]);
 							/**
 							 * A short explanation about UIDs and how they work
 							 * can be found here: https://dev.to/kehers/imap-new-messages-since-last-check-44gm
@@ -386,28 +369,24 @@ export class EmailReadImapV2 implements INodeType {
 							 * - You can check if UIDs changed in the above example
 							 * by checking UIDValidity.
 							 */
-							searchCriteria.push(['UID', `${staticData.lastMessageUid as number}:*`]);
-						} else {
-							searchCriteria.push(['SINCE', activatedAt.toFormat('dd-LLL-yyyy')]);
+							this.logger.debug('Querying for new messages on node "EmailReadImap"', {
+								searchCriteria,
+							});
 						}
 
-						this.logger.debug('Querying for new messages on node "EmailReadImap"', {
-							searchCriteria,
-						});
-
 						try {
-							await getNewEmails.call(this, {
-								imapConnection: connection,
+							const returnData = await getNewEmails.call(
+								this,
+								connection,
 								searchCriteria,
+								staticData,
 								postProcessAction,
 								getText,
 								getAttachment,
-								onEmailBatch: async (returnData: INodeExecutionData[]) => {
-									if (returnData.length) {
-										this.emit([returnData]);
-									}
-								},
-							});
+							);
+							if (returnData.length) {
+								this.emit([returnData]);
+							}
 						} catch (error) {
 							this.logger.error('Email Read Imap node encountered an error fetching new emails', {
 								error: error as Error,
@@ -420,7 +399,7 @@ export class EmailReadImapV2 implements INodeType {
 						}
 					}
 				},
-				onUpdate: (seqNo: number, info) => {
+				onUpdate: async (seqNo: number, info) => {
 					this.logger.debug(`Email Read Imap:update ${seqNo}`, info);
 				},
 			};
@@ -441,8 +420,8 @@ export class EmailReadImapV2 implements INodeType {
 
 			// Connect to the IMAP server and open the mailbox
 			// that we get informed whenever a new email arrives
-			return await imapConnect(config).then((conn) => {
-				conn.on('close', (_hadError: boolean) => {
+			return await imapConnect(config).then(async (conn) => {
+				conn.on('close', async (_hadError: boolean) => {
 					if (isCurrentlyReconnecting) {
 						this.logger.debug('Email Read Imap: Connected closed for forced reconnecting');
 					} else if (closeFunctionWasCalled) {
@@ -452,7 +431,7 @@ export class EmailReadImapV2 implements INodeType {
 						this.emitError(new Error('Imap connection closed unexpectedly'));
 					}
 				});
-				conn.on('error', (error) => {
+				conn.on('error', async (error) => {
 					const errorCode = ((error as JsonObject).code as string).toUpperCase();
 					this.logger.debug(`IMAP connection experienced an error: (${errorCode})`, {
 						error: error as Error,

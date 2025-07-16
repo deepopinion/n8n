@@ -22,13 +22,8 @@ import {
 	createEmailBodyWithoutN8nAttribution,
 } from './email-templates';
 import type { IEmail } from './interfaces';
-import { cssVariables } from '../../nodes/Form/cssVariables';
 import { formFieldsProperties } from '../../nodes/Form/Form.node';
-import {
-	prepareFormData,
-	prepareFormReturnItem,
-	resolveRawData,
-} from '../../nodes/Form/utils/utils';
+import { prepareFormData, prepareFormReturnItem, resolveRawData } from '../../nodes/Form/utils';
 import { escapeHtml } from '../utilities';
 
 export type SendAndWaitConfig = {
@@ -44,7 +39,6 @@ type FormResponseTypeOptions = {
 	responseFormTitle?: string;
 	responseFormDescription?: string;
 	responseFormButtonLabel?: string;
-	responseFormCustomCss?: string;
 };
 
 const INPUT_FIELD_IDENTIFIER = 'field-0';
@@ -289,17 +283,6 @@ export function getSendAndWaitProperties(
 					type: 'string',
 					default: 'Submit',
 				},
-				{
-					displayName: 'Response Form Custom Styling',
-					name: 'responseFormCustomCss',
-					type: 'string',
-					typeOptions: {
-						rows: 10,
-						editor: 'cssEditor',
-					},
-					default: cssVariables.trim(),
-					description: 'Override default styling of the response form with CSS',
-				},
 				limitWaitTimeOption,
 				appendAttributionOption,
 			],
@@ -348,7 +331,6 @@ const getFormResponseCustomizations = (context: IWebhookFunctions) => {
 		formTitle,
 		formDescription,
 		buttonLabel,
-		customCss: options.responseFormCustomCss,
 	};
 };
 
@@ -369,8 +351,7 @@ export async function sendAndWaitWebhook(this: IWebhookFunctions) {
 
 	if (responseType === 'freeText') {
 		if (method === 'GET') {
-			const { formTitle, formDescription, buttonLabel, customCss } =
-				getFormResponseCustomizations(this);
+			const { formTitle, formDescription, buttonLabel } = getFormResponseCustomizations(this);
 
 			const data = prepareFormData({
 				formTitle,
@@ -388,7 +369,6 @@ export async function sendAndWaitWebhook(this: IWebhookFunctions) {
 				],
 				testRun: false,
 				query: {},
-				customCss,
 			});
 
 			res.render('form-trigger', data);
@@ -428,8 +408,7 @@ export async function sendAndWaitWebhook(this: IWebhookFunctions) {
 		}
 
 		if (method === 'GET') {
-			const { formTitle, formDescription, buttonLabel, customCss } =
-				getFormResponseCustomizations(this);
+			const { formTitle, formDescription, buttonLabel } = getFormResponseCustomizations(this);
 
 			const data = prepareFormData({
 				formTitle,
@@ -441,7 +420,6 @@ export async function sendAndWaitWebhook(this: IWebhookFunctions) {
 				formFields: fields,
 				testRun: false,
 				query: {},
-				customCss,
 			});
 
 			res.render('form-trigger', data);

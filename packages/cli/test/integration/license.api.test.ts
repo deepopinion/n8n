@@ -1,4 +1,3 @@
-import { testDb } from '@n8n/backend-test-utils';
 import type { User } from '@n8n/db';
 import nock from 'nock';
 
@@ -8,6 +7,7 @@ import type { ILicensePostResponse, ILicenseReadResponse } from '@/interfaces';
 import { License } from '@/license';
 
 import { createUserShell } from './shared/db/users';
+import * as testDb from './shared/test-db';
 import type { SuperAgentTest } from './shared/types';
 import * as utils from './shared/utils/';
 
@@ -101,7 +101,6 @@ describe('POST /license/renew', () => {
 	});
 
 	test('errors out properly', async () => {
-		License.prototype.getPlanName = jest.fn().mockReturnValue('Enterprise');
 		License.prototype.renew = jest.fn().mockImplementation(() => {
 			throw new Error(GENERIC_ERROR_MESSAGE);
 		});
@@ -120,10 +119,6 @@ const DEFAULT_LICENSE_RESPONSE: { data: ILicenseReadResponse } = {
 				limit: -1,
 				warningThreshold: 0.8,
 			},
-			workflowsHavingEvaluations: {
-				value: 0,
-				limit: 0,
-			},
 		},
 		license: {
 			planId: '',
@@ -139,10 +134,6 @@ const DEFAULT_POST_RESPONSE: { data: ILicensePostResponse } = {
 				value: 0,
 				limit: -1,
 				warningThreshold: 0.8,
-			},
-			workflowsHavingEvaluations: {
-				value: 0,
-				limit: 0,
 			},
 		},
 		license: {

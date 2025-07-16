@@ -24,9 +24,7 @@ export const defaultSettings: FrontendSettings = {
 	enterprise: {
 		sharing: false,
 		ldap: false,
-		oidc: false,
 		saml: false,
-		mfaEnforcement: false,
 		logStreaming: false,
 		debugInEditor: false,
 		advancedExecutionFilters: false,
@@ -80,7 +78,6 @@ export const defaultSettings: FrontendSettings = {
 	sso: {
 		ldap: { loginEnabled: false, loginLabel: '' },
 		saml: { loginEnabled: false, loginLabel: '' },
-		oidc: { loginEnabled: false, loginUrl: '', callbackUrl: '' },
 	},
 	telemetry: {
 		enabled: false,
@@ -105,8 +102,6 @@ export const defaultSettings: FrontendSettings = {
 		enabled: true,
 		endpoint: '',
 		infoUrl: '',
-		whatsNewEnabled: true,
-		whatsNewEndpoint: '',
 	},
 	workflowCallerPolicyDefaultOption: 'any',
 	workflowTagsDisabled: false,
@@ -123,7 +118,6 @@ export const defaultSettings: FrontendSettings = {
 	previewMode: false,
 	mfa: {
 		enabled: false,
-		enforced: false,
 	},
 	askAi: {
 		enabled: false,
@@ -149,8 +143,21 @@ export const defaultSettings: FrontendSettings = {
 	folders: {
 		enabled: false,
 	},
-	evaluation: {
-		quota: 0,
+	insights: {
+		enabled: false,
+		summary: true,
+		dashboard: false,
+		dateRanges: [
+			{ key: 'day', licensed: true, granularity: 'hour' },
+			{ key: 'week', licensed: true, granularity: 'day' },
+			{ key: '2weeks', licensed: true, granularity: 'day' },
+			{ key: 'month', licensed: false, granularity: 'day' },
+			{ key: 'quarter', licensed: false, granularity: 'week' },
+			{ key: '6months', licensed: false, granularity: 'week' },
+			{ key: 'year', licensed: false, granularity: 'week' },
+		],
 	},
-	activeModules: [],
+	logsView: {
+		enabled: false,
+	},
 };

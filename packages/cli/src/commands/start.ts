@@ -2,8 +2,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { LICENSE_FEATURES } from '@n8n/constants';
 import { ExecutionRepository, SettingsRepository } from '@n8n/db';
-import { Command } from '@n8n/decorators';
 import { Container } from '@n8n/di';
+import { Flags } from '@oclif/core';
 import glob from 'fast-glob';
 import { createReadStream, createWriteStream, existsSync } from 'fs';
 import { mkdir } from 'fs/promises';
@@ -11,9 +11,6 @@ import { jsonParse, randomString, type IWorkflowExecutionDataProcess } from 'n8n
 import path from 'path';
 import replaceStream from 'replacestream';
 import { pipeline } from 'stream/promises';
-import { z } from 'zod';
-
-import { BaseCommand } from './base-command';
 
 import { ActiveExecutions } from '@/active-executions';
 import { ActiveWorkflowManager } from '@/active-workflow-manager';
@@ -25,7 +22,7 @@ import { EventService } from '@/events/event.service';
 import { ExecutionService } from '@/executions/execution.service';
 import { MultiMainSetup } from '@/scaling/multi-main-setup.ee';
 import { Publisher } from '@/scaling/pubsub/publisher.service';
-import { PubSubRegistry } from '@/scaling/pubsub/pubsub.registry';
+import { PubSubHandler } from '@/scaling/pubsub/pubsub-handler';
 import { Subscriber } from '@/scaling/pubsub/subscriber.service';
 import { Server } from '@/server';
 import { OwnershipService } from '@/services/ownership.service';
@@ -34,32 +31,37 @@ import { UrlService } from '@/services/url.service';
 import { WaitTracker } from '@/wait-tracker';
 import { WorkflowRunner } from '@/workflow-runner';
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+import { BaseCommand } from './base-command';
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-var-requires
 const open = require('open');
 
-const flagsSchema = z.object({
-	open: z.boolean().alias('o').describe('opens the UI automatically in browser').optional(),
-	tunnel: z
-		.boolean()
-		.describe(
-			'runs the webhooks via a hooks.n8n.cloud tunnel server. Use only for testing and development!',
-		)
-		.optional(),
-	reinstallMissingPackages: z
-		.boolean()
-		.describe(
-			'Attempts to self heal n8n if packages with nodes are missing. Might drastically increase startup times.',
-		)
-		.optional(),
-});
+export class Start extends BaseCommand {
+	static description = 'Starts n8n. Makes Web-UI available and starts active workflows';
 
-@Command({
-	name: 'start',
-	description: 'Starts n8n. Makes Web-UI available and starts active workflows',
-	examples: ['', '--tunnel', '-o', '--tunnel -o'],
-	flagsSchema,
-})
-export class Start extends BaseCommand<z.infer<typeof flagsSchema>> {
+	static examples = [
+		'$ n8n start',
+		'$ n8n start --tunnel',
+		'$ n8n start -o',
+		'$ n8n start --tunnel -o',
+	];
+
+	static flags = {
+		help: Flags.help({ char: 'h' }),
+		open: Flags.boolean({
+			char: 'o',
+			description: 'opens the UI automatically in browser',
+		}),
+		tunnel: Flags.boolean({
+			description:
+				'runs the webhooks via a hooks.n8n.cloud tunnel server. Use only for testing and development!',
+		}),
+		reinstallMissingPackages: Flags.boolean({
+			description:
+				'Attempts to self heal n8n if packages with nodes are missing. Might drastically increase startup times.',
+		}),
+	};
+
 	protected activeWorkflowManager: ActiveWorkflowManager;
 
 	protected server = Container.get(Server);
@@ -164,8 +166,9 @@ export class Start extends BaseCommand<z.infer<typeof flagsSchema>> {
 			}
 		};
 
+		await compileFile('index.html');
 		const files = await glob('**/*.{css,js}', { cwd: EDITOR_UI_DIST_DIR });
-		await Promise.all([compileFile('index.html'), ...files.map(compileFile)]);
+		await Promise.all(files.map(compileFile));
 	}
 
 	async init() {
@@ -178,7 +181,7 @@ export class Start extends BaseCommand<z.infer<typeof flagsSchema>> {
 			scopedLogger.debug(`Host ID: ${this.instanceSettings.hostId}`);
 		}
 
-		const { flags } = this;
+		const { flags } = await this.parse(Start);
 		const { communityPackages } = this.globalConfig.nodes;
 		// cli flag overrides the config env variable
 		if (flags.reinstallMissingPackages) {
@@ -192,10 +195,6 @@ export class Start extends BaseCommand<z.infer<typeof flagsSchema>> {
 					'`--reinstallMissingPackages` was passed, but community packages are disabled',
 				);
 			}
-		}
-
-		if (process.env.OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS === 'true') {
-			this.needsTaskRunner = false;
 		}
 
 		await super.init();
@@ -233,6 +232,8 @@ export class Start extends BaseCommand<z.infer<typeof flagsSchema>> {
 		this.logger.debug('Data deduplication service init complete');
 		await this.initExternalHooks();
 		this.logger.debug('External hooks init complete');
+		await this.initExternalSecrets();
+		this.logger.debug('External secrets init complete');
 		this.initWorkflowHistory();
 		this.logger.debug('Workflow history init complete');
 
@@ -245,17 +246,13 @@ export class Start extends BaseCommand<z.infer<typeof flagsSchema>> {
 			await this.generateStaticAssets();
 		}
 
-		await this.moduleRegistry.initModules();
-
-		if (this.instanceSettings.isMultiMain) {
-			Container.get(MultiMainSetup).registerEventHandlers();
-		}
+		await this.loadModules();
 	}
 
 	async initOrchestration() {
 		Container.get(Publisher);
 
-		Container.get(PubSubRegistry).init();
+		Container.get(PubSubHandler).init();
 
 		const subscriber = Container.get(Subscriber);
 		await subscriber.subscribe('n8n.commands');
@@ -269,7 +266,7 @@ export class Start extends BaseCommand<z.infer<typeof flagsSchema>> {
 	}
 
 	async run() {
-		const { flags } = this;
+		const { flags } = await this.parse(Start);
 
 		// Load settings from database and set them to config.
 		const databaseSettings = await Container.get(SettingsRepository).findBy({

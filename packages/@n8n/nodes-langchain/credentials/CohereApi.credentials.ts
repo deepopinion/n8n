@@ -21,12 +21,6 @@ export class CohereApi implements ICredentialType {
 			required: true,
 			default: '',
 		},
-		{
-			displayName: 'Base URL',
-			name: 'url',
-			type: 'hidden',
-			default: 'https://api.cohere.ai',
-		},
 	];
 
 	authenticate: IAuthenticateGeneric = {
@@ -40,7 +34,7 @@ export class CohereApi implements ICredentialType {
 
 	test: ICredentialTestRequest = {
 		request: {
-			baseURL: '={{ $credentials.url }}',
+			baseURL: 'https://api.cohere.ai',
 			url: '/v1/models?page_size=1',
 		},
 	};

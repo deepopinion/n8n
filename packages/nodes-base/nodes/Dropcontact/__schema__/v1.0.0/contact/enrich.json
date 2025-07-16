@@ -13,20 +13,6 @@
         "country": {
             "type": "string"
         },
-        "email": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "email": {
-                        "type": "string"
-                    },
-                    "qualification": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "first_name": {
             "type": "string"
         },
@@ -67,5 +53,5 @@
             "type": "string"
         }
     },
-    "version": 3
+    "version": 2
 }

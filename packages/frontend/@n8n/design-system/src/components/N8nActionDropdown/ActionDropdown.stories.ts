@@ -51,7 +51,7 @@ defaultActionDropdown.args = {
 
 export const customStyling = template.bind({});
 customStyling.args = {
-	activatorIcon: 'menu',
+	activatorIcon: 'bars',
 	items: [
 		{
 			id: 'item1',
@@ -67,7 +67,7 @@ customStyling.args = {
 		{
 			id: 'item3',
 			label: 'Action 3',
-			icon: 'home',
+			icon: 'heart',
 			divided: true,
 		},
 	],

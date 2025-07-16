@@ -1,20 +1,19 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { UserAction } from '@n8n/design-system';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import type {
 	WorkflowHistory,
 	WorkflowVersionId,
 	WorkflowHistoryActionTypes,
 	WorkflowHistoryRequestParams,
-} from '@n8n/rest-api-client/api/workflowHistory';
+} from '@/types/workflowHistory';
 import WorkflowHistoryListItem from '@/components/WorkflowHistory/WorkflowHistoryListItem.vue';
-import type { IUser } from 'n8n-workflow';
 
 const props = defineProps<{
 	items: WorkflowHistory[];
 	activeItem: WorkflowHistory | null;
-	actions: Array<UserAction<IUser>>;
+	actions: UserAction[];
 	requestNumberOfItems: number;
 	lastReceivedItemsLength: number;
 	evaluatedPruneTime: number;

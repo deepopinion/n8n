@@ -7,7 +7,7 @@ import { createTestingPinia } from '@pinia/testing';
 import userEvent from '@testing-library/user-event';
 import { within, waitFor } from '@testing-library/vue';
 import { getFilterOperator } from './utils';
-import get from 'lodash/get';
+import { get } from 'lodash-es';
 
 const DEFAULT_SETUP = {
 	pinia: createTestingPinia({

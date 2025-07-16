@@ -1,6 +1,6 @@
 import { CreateProjectDto, DeleteProjectDto, UpdateProjectDto } from '@n8n/api-types';
 import type { Project } from '@n8n/db';
-import { AuthenticatedRequest, ProjectRepository } from '@n8n/db';
+import { ProjectRepository } from '@n8n/db';
 import {
 	Get,
 	Post,
@@ -24,12 +24,12 @@ import { BadRequestError } from '@/errors/response-errors/bad-request.error';
 import { NotFoundError } from '@/errors/response-errors/not-found.error';
 import { EventService } from '@/events/event.service';
 import type { ProjectRequest } from '@/requests';
+import { AuthenticatedRequest } from '@/requests';
 import {
 	ProjectService,
 	TeamProjectOverQuotaError,
 	UnlicensedProjectRoleError,
 } from '@/services/project.service.ee';
-import { UserManagementMailer } from '@/user-management/email';
 
 @RestController('/projects')
 export class ProjectController {
@@ -37,7 +37,6 @@ export class ProjectController {
 		private readonly projectsService: ProjectService,
 		private readonly projectRepository: ProjectRepository,
 		private readonly eventService: EventService,
-		private readonly userManagementMailer: UserManagementMailer,
 	) {}
 
 	@Get('/')
@@ -168,7 +167,7 @@ export class ProjectController {
 		_res: Response,
 		@Param('projectId') projectId: string,
 	): Promise<ProjectRequest.ProjectWithRelations> {
-		const [{ id, name, icon, type, description }, relations] = await Promise.all([
+		const [{ id, name, icon, type }, relations] = await Promise.all([
 			this.projectsService.getProject(projectId),
 			this.projectsService.getProjectRelations(projectId),
 		]);
@@ -179,7 +178,6 @@ export class ProjectController {
 			name,
 			icon,
 			type,
-			description,
 			relations: relations.map((r) => ({
 				id: r.user.id,
 				email: r.user.email,
@@ -204,23 +202,13 @@ export class ProjectController {
 		@Body payload: UpdateProjectDto,
 		@Param('projectId') projectId: string,
 	) {
-		const { name, icon, relations, description } = payload;
-		if (name || icon || description) {
-			await this.projectsService.updateProject(projectId, { name, icon, description });
+		const { name, icon, relations } = payload;
+		if (name || icon) {
+			await this.projectsService.updateProject(projectId, { name, icon });
 		}
 		if (relations) {
 			try {
-				const { project, newRelations } = await this.projectsService.syncProjectRelations(
-					projectId,
-					relations,
-				);
-
-				// Send email notifications to new sharees
-				await this.userManagementMailer.notifyProjectShared({
-					sharer: req.user,
-					newSharees: newRelations,
-					project: { id: project.id, name: project.name },
-				});
+				await this.projectsService.syncProjectRelations(projectId, relations);
 			} catch (e) {
 				if (e instanceof UnlicensedProjectRoleError) {
 					throw new BadRequestError(e.message);

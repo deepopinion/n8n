@@ -13,7 +13,7 @@ import type {
 
 import type {
 	ExecutionLifecycleHookName,
-	ExecutionLifecycleHookHandlers,
+	ExecutionLifecyleHookHandlers,
 } from '../execution-lifecycle-hooks';
 import { ExecutionLifecycleHooks } from '../execution-lifecycle-hooks';
 
@@ -39,7 +39,6 @@ describe('ExecutionLifecycleHooks', () => {
 				sendResponse: [],
 				workflowExecuteAfter: [],
 				workflowExecuteBefore: [],
-				sendChunk: [],
 			});
 		});
 	});
@@ -47,14 +46,12 @@ describe('ExecutionLifecycleHooks', () => {
 	describe('addHandler()', () => {
 		const hooksHandlers =
 			mock<{
-				[K in keyof ExecutionLifecycleHookHandlers]: ExecutionLifecycleHookHandlers[K][number];
+				[K in keyof ExecutionLifecyleHookHandlers]: ExecutionLifecyleHookHandlers[K][number];
 			}>();
 
 		const testCases: Array<{
 			hook: ExecutionLifecycleHookName;
-			args: Parameters<
-				ExecutionLifecycleHookHandlers[keyof ExecutionLifecycleHookHandlers][number]
-			>;
+			args: Parameters<ExecutionLifecyleHookHandlers[keyof ExecutionLifecyleHookHandlers][number]>;
 		}> = [
 			{ hook: 'nodeExecuteBefore', args: ['testNode', mock<ITaskStartedData>()] },
 			{

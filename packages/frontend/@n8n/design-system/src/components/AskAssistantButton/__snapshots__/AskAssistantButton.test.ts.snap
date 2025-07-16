@@ -21,6 +21,13 @@ exports[`AskAssistantButton > renders button with unread messages correctly 1`] 
           Ask Assistant
         </span>
       </div>
+      <div>
+        <div
+          class="beta"
+        >
+          beta
+        </div>
+      </div>
     </div>
   </button>
 </div>
@@ -75,6 +82,13 @@ exports[`AskAssistantButton > renders default button correctly 1`] = `
         >
           Ask Assistant
         </span>
+      </div>
+      <div>
+        <div
+          class="beta"
+        >
+          beta
+        </div>
       </div>
     </div>
   </button>

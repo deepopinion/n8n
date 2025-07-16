@@ -14,8 +14,12 @@ import { createMockEnterpriseSettings } from '@/__tests__/mocks';
 import { useWorkflowsStore } from '@/stores/workflows.store';
 import type { INodeParameterResourceLocator } from 'n8n-workflow';
 
-function getNdvStateMock(): Partial<ReturnType<typeof useNDVStore>> {
-	return {
+let mockNdvState: Partial<ReturnType<typeof useNDVStore>>;
+let mockNodeTypesState: Partial<ReturnType<typeof useNodeTypesStore>>;
+let mockCompletionResult: Partial<CompletionResult>;
+
+beforeEach(() => {
+	mockNdvState = {
 		hasInputData: true,
 		activeNode: {
 			id: faker.string.uuid(),
@@ -28,21 +32,9 @@ function getNdvStateMock(): Partial<ReturnType<typeof useNDVStore>> {
 		isInputPanelEmpty: false,
 		isOutputPanelEmpty: false,
 	};
-}
-
-function getNodeTypesStateMock(): Partial<ReturnType<typeof useNodeTypesStore>> {
-	return {
+	mockNodeTypesState = {
 		allNodeTypes: [],
 	};
-}
-
-let mockNdvState = getNdvStateMock();
-let mockNodeTypesState = getNodeTypesStateMock();
-let mockCompletionResult: Partial<CompletionResult> = {};
-
-beforeEach(() => {
-	mockNdvState = getNdvStateMock();
-	mockNodeTypesState = getNodeTypesStateMock();
 	mockCompletionResult = {};
 	createAppModals();
 });
@@ -232,65 +224,39 @@ describe('ParameterInput.vue', () => {
 		expect(emitted('update')).toContainEqual([expect.objectContaining({ value: 'foo' })]);
 	});
 
-	describe('paste events', () => {
-		async function paste(input: HTMLInputElement, text: string) {
+	test('should correctly handle paste events', async () => {
+		const { container, emitted } = renderComponent({
+			props: {
+				path: 'tag',
+				parameter: {
+					displayName: 'Tag',
+					name: 'tag',
+					type: 'string',
+				},
+				modelValue: '',
+			},
+		});
+		const input = container.querySelector('input') as HTMLInputElement;
+		expect(input).toBeInTheDocument();
+		await userEvent.click(input);
+
+		async function paste(text: string) {
 			const expression = new DataTransfer();
 			expression.setData('text', text);
 			await userEvent.clear(input);
 			await userEvent.paste(expression);
 		}
 
-		test('should handle pasting into a string parameter', async () => {
-			const { container, emitted } = renderComponent({
-				props: {
-					path: 'tag',
-					parameter: {
-						displayName: 'Tag',
-						name: 'tag',
-						type: 'string',
-					},
-					modelValue: '',
-				},
-			});
-			const input = container.querySelector('input') as HTMLInputElement;
-			expect(input).toBeInTheDocument();
-			await userEvent.click(input);
+		await paste('foo');
+		expect(emitted('update')).toContainEqual([expect.objectContaining({ value: 'foo' })]);
 
-			await paste(input, 'foo');
-			expect(emitted('update')).toContainEqual([expect.objectContaining({ value: 'foo' })]);
+		await paste('={{ $json.foo }}');
+		expect(emitted('update')).toContainEqual([
+			expect.objectContaining({ value: '={{ $json.foo }}' }),
+		]);
 
-			await paste(input, '={{ $json.foo }}');
-			expect(emitted('update')).toContainEqual([
-				expect.objectContaining({ value: '={{ $json.foo }}' }),
-			]);
-
-			await paste(input, '=flDvzj%y1nP');
-			expect(emitted('update')).toContainEqual([
-				expect.objectContaining({ value: '==flDvzj%y1nP' }),
-			]);
-		});
-
-		test('should handle pasting an expression into a number parameter', async () => {
-			const { container, emitted } = renderComponent({
-				props: {
-					path: 'percentage',
-					parameter: {
-						displayName: 'Percentage',
-						name: 'percentage',
-						type: 'number',
-					},
-					modelValue: 1,
-				},
-			});
-			const input = container.querySelector('input') as HTMLInputElement;
-			expect(input).toBeInTheDocument();
-			await userEvent.click(input);
-
-			await paste(input, '{{ $json.foo }}');
-			expect(emitted('update')).toContainEqual([
-				expect.objectContaining({ value: '={{ $json.foo }}' }),
-			]);
-		});
+		await paste('=flDvzj%y1nP');
+		expect(emitted('update')).toContainEqual([expect.objectContaining({ value: '==flDvzj%y1nP' })]);
 	});
 
 	test('should not reset the value of a multi-select with loadOptionsMethod on load', async () => {

@@ -55,7 +55,7 @@ const mockSubcategoryItemProps = (
 ): SubcategoryItemProps => ({
 	description: 'Sample description',
 	iconType: 'sampleIconType',
-	icon: 'smile',
+	icon: 'sampleIcon',
 	title: 'Sample title',
 	subcategory: 'sampleSubcategory',
 	defaults: { color: '#ffffff' },

@@ -35,7 +35,6 @@ vi.mock('@/composables/useProjectPages', () => ({
 	useProjectPages: vi.fn().mockReturnValue({
 		isOverviewSubPage: false,
 		isSharedSubPage: false,
-		isProjectsSubPage: false,
 	}),
 }));
 
@@ -76,7 +75,7 @@ describe('ProjectHeader', () => {
 		vi.spyOn(projectPages, 'isOverviewSubPage', 'get').mockReturnValue(true);
 		const { container } = renderComponent();
 
-		expect(container.querySelector('svg[data-icon=home]')).not.toBeInTheDocument();
+		expect(container.querySelector('.fa-home')).not.toBeInTheDocument();
 	});
 
 	it('should render the correct icon', async () => {
@@ -86,12 +85,12 @@ describe('ProjectHeader', () => {
 		// We no longer render icon for personal project
 		projectsStore.currentProject = { type: ProjectTypes.Personal } as Project;
 		await rerender({});
-		expect(container.querySelector('svg[data-icon=user]')).not.toBeInTheDocument();
+		expect(container.querySelector('.fa-user')).not.toBeInTheDocument();
 
 		const projectName = 'My Project';
 		projectsStore.currentProject = { name: projectName } as Project;
 		await rerender({});
-		expect(container.querySelector('svg[data-icon=layers]')).toBeVisible();
+		expect(container.querySelector('.fa-layer-group')).toBeVisible();
 	});
 
 	it('Overview: should render the correct title and subtitle', async () => {
@@ -131,10 +130,9 @@ describe('ProjectHeader', () => {
 		expect(getByTestId('project-subtitle')).toHaveTextContent(personalSubtitle);
 	});
 
-	it('Team project: should render the correct title and no subtitle if there is no description', async () => {
+	it('Team project: should render the correct title and subtitle', async () => {
 		vi.spyOn(projectPages, 'isOverviewSubPage', 'get').mockReturnValue(false);
 		vi.spyOn(projectPages, 'isSharedSubPage', 'get').mockReturnValue(false);
-		vi.spyOn(projectPages, 'isProjectsSubPage', 'get').mockReturnValue(true);
 		const { getByTestId, queryByTestId, rerender } = renderComponent();
 
 		const projectName = 'My Project';
@@ -146,23 +144,18 @@ describe('ProjectHeader', () => {
 		expect(queryByTestId('project-subtitle')).not.toBeInTheDocument();
 	});
 
-	it('Team project: should render the correct title and subtitle if there is a description', async () => {
-		vi.spyOn(projectPages, 'isOverviewSubPage', 'get').mockReturnValue(false);
-		vi.spyOn(projectPages, 'isSharedSubPage', 'get').mockReturnValue(false);
-		vi.spyOn(projectPages, 'isProjectsSubPage', 'get').mockReturnValue(true);
-		const { getByTestId, rerender } = renderComponent();
+	it('should overwrite default subtitle with slot', () => {
+		const defaultSubtitle = 'All the workflows, credentials and executions you have access to';
+		const subtitle = 'Custom subtitle';
 
-		const projectName = 'My Project';
-		const projectDescription = 'This is a team project description';
-		projectsStore.currentProject = {
-			name: projectName,
-			description: projectDescription,
-		} as Project;
+		const { getByText, queryByText } = renderComponent({
+			slots: {
+				subtitle,
+			},
+		});
 
-		await rerender({});
-
-		expect(getByTestId('project-name')).toHaveTextContent(projectName);
-		expect(getByTestId('project-subtitle')).toHaveTextContent(projectDescription);
+		expect(getByText(subtitle)).toBeVisible();
+		expect(queryByText(defaultSubtitle)).not.toBeInTheDocument();
 	});
 
 	it('should render ProjectTabs Settings if project is team project and user has update scope', () => {

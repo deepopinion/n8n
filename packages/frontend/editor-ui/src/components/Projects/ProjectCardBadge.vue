@@ -1,12 +1,16 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { useI18n } from '@n8n/i18n';
-import { ResourceType, splitName } from '@/utils/projects.utils';
-import type { Project } from '@/types/projects.types';
+import { useI18n } from '@/composables/useI18n';
+import { ResourceType } from '@/utils/projects.utils';
+import { splitName } from '@/utils/projects.utils';
+import type { Project, ProjectIcon as BadgeIcon } from '@/types/projects.types';
 import { ProjectTypes } from '@/types/projects.types';
-import type { CredentialsResource, FolderResource, WorkflowResource } from '@/Interface';
+import type {
+	CredentialsResource,
+	FolderResource,
+	WorkflowResource,
+} from '../layouts/ResourcesListLayout.vue';
 import { VIEWS } from '@/constants';
-import { type IconOrEmoji, isIconOrEmoji } from '@n8n/design-system/components/N8nIconPicker/types';
 
 type Props = {
 	resource: WorkflowResource | CredentialsResource | FolderResource;
@@ -32,10 +36,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 const i18n = useI18n();
 
-const isShared = computed(() => {
-	return 'sharedWithProjects' in props.resource && props.resource.sharedWithProjects?.length;
-});
-
 const projectState = computed(() => {
 	if (
 		(props.resource.homeProject &&
@@ -43,17 +43,17 @@ const projectState = computed(() => {
 			props.resource.homeProject.id === props.personalProject.id) ||
 		!props.resource.homeProject
 	) {
-		if (isShared.value) {
+		if (props.resource.sharedWithProjects?.length) {
 			return ProjectState.SharedOwned;
 		}
 		return ProjectState.Owned;
 	} else if (props.resource.homeProject?.type !== ProjectTypes.Team) {
-		if (isShared.value) {
+		if (props.resource.sharedWithProjects?.length) {
 			return ProjectState.SharedPersonal;
 		}
 		return ProjectState.Personal;
 	} else if (props.resource.homeProject?.type === ProjectTypes.Team) {
-		if (isShared.value) {
+		if (props.resource.sharedWithProjects?.length) {
 			return ProjectState.SharedTeam;
 		}
 		return ProjectState.Team;
@@ -61,8 +61,8 @@ const projectState = computed(() => {
 	return ProjectState.Unknown;
 });
 
-const numberOfMembersInHomeTeamProject = computed(() =>
-	'sharedWithProjects' in props.resource ? (props.resource.sharedWithProjects?.length ?? 0) : 0,
+const numberOfMembersInHomeTeamProject = computed(
+	() => props.resource.sharedWithProjects?.length ?? 0,
 );
 
 const badgeText = computed(() => {
@@ -77,7 +77,7 @@ const badgeText = computed(() => {
 	}
 });
 
-const badgeIcon = computed<IconOrEmoji>(() => {
+const badgeIcon = computed<BadgeIcon>(() => {
 	switch (projectState.value) {
 		case ProjectState.Owned:
 		case ProjectState.SharedOwned:
@@ -86,11 +86,9 @@ const badgeIcon = computed<IconOrEmoji>(() => {
 			return { type: 'icon', value: 'user' };
 		case ProjectState.Team:
 		case ProjectState.SharedTeam:
-			return isIconOrEmoji(props.resource.homeProject?.icon)
-				? props.resource.homeProject?.icon
-				: { type: 'icon', value: 'layers' };
+			return props.resource.homeProject?.icon ?? { type: 'icon', value: 'layer-group' };
 		default:
-			return { type: 'icon', value: 'layers' };
+			return { type: 'icon', value: 'layer-group' };
 	}
 });
 const badgeTooltip = computed(() => {

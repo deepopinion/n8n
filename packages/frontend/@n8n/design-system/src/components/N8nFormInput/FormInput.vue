@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ElSwitch } from 'element-plus';
-import { computed, reactive, onMounted, ref, watch } from 'vue';
+import { computed, reactive, onMounted, ref, watch, useSlots } from 'vue';
 
 import { getValidationError, VALIDATORS } from './validators';
 import { t } from '../../locale';
@@ -19,7 +19,6 @@ import type {
 import N8nCheckbox from '../N8nCheckbox';
 import N8nInput from '../N8nInput';
 import N8nInputLabel from '../N8nInputLabel';
-import N8nLink from '../N8nLink';
 import N8nOption from '../N8nOption';
 import N8nSelect from '../N8nSelect';
 
@@ -77,6 +76,8 @@ const state = reactive({
 	hasBlurred: false,
 	isTyping: false,
 });
+
+const slots = useSlots();
 
 const inputRef = ref<HTMLTextAreaElement | null>(null);
 
@@ -141,23 +142,21 @@ function onEnter(event: Event) {
 	emit('enter');
 }
 
-const validationError = computed<{ message: string } | null>(() => {
+const validationError = computed<string | null>(() => {
 	const error = getInputValidationError();
 
 	if (error) {
 		if ('messageKey' in error) {
-			return {
-				message: t(error.messageKey, error.options),
-			};
-		} else {
-			return {
-				message: error.message,
-			};
+			return t(error.messageKey, error.options);
+		} else if ('message' in error) {
+			return error.message;
 		}
 	}
 
 	return null;
 });
+
+const hasDefaultSlot = computed(() => !!slots.default);
 
 const showErrors = computed(
 	() =>
@@ -171,7 +170,10 @@ onMounted(() => {
 	if (props.focusInitially && inputRef.value) inputRef.value.focus();
 });
 
-watch(validationError, (error) => emit('validate', !error));
+watch(
+	() => validationError.value,
+	(error) => emit('validate', !error),
+);
 
 defineExpose({ inputRef });
 </script>
@@ -213,8 +215,8 @@ defineExpose({ inputRef });
 		:required="required && showRequiredAsterisk"
 		:size="labelSize"
 	>
-		<div :class="showErrors ? $style.errorInput : ''" @keydown.stop @keydown.enter.exact="onEnter">
-			<slot v-if="$slots.default" />
+		<div :class="showErrors ? $style.errorInput : ''" @keydown.stop @keydown.enter="onEnter">
+			<slot v-if="hasDefaultSlot" />
 			<N8nSelect
 				v-else-if="type === 'select' || type === 'multi-select'"
 				ref="inputRef"
@@ -257,8 +259,8 @@ defineExpose({ inputRef });
 			/>
 		</div>
 		<div v-if="showErrors" :class="$style.errors">
-			<span v-text="validationError?.message" />
-			<N8nLink
+			<span v-text="validationError" />
+			<n8n-link
 				v-if="documentationUrl && documentationText"
 				:to="documentationUrl"
 				:new-window="true"
@@ -266,7 +268,7 @@ defineExpose({ inputRef });
 				theme="danger"
 			>
 				{{ documentationText }}
-			</N8nLink>
+			</n8n-link>
 		</div>
 		<div v-else-if="infoText" :class="$style.infoText">
 			<span size="small" v-text="infoText" />

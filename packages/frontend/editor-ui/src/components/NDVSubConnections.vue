@@ -14,8 +14,7 @@ import type {
 } from 'n8n-workflow';
 import { useDebounce } from '@/composables/useDebounce';
 import { OnClickOutside } from '@vueuse/components';
-import { useI18n } from '@n8n/i18n';
-import { useNDVStore } from '@/stores/ndv.store';
+import { useI18n } from '@/composables/useI18n';
 
 interface Props {
 	rootNode: INodeUi;
@@ -29,11 +28,7 @@ const i18n = useI18n();
 const { debounce } = useDebounce();
 const emit = defineEmits<{
 	switchSelectedNode: [nodeName: string];
-	openConnectionNodeCreator: [
-		nodeName: string,
-		connectionType: NodeConnectionType,
-		connectionIndex: number,
-	];
+	openConnectionNodeCreator: [nodeName: string, connectionType: NodeConnectionType];
 }>();
 
 interface NodeConfig {
@@ -42,15 +37,9 @@ interface NodeConfig {
 	issues: string[];
 }
 
-interface ConnectionContext {
-	connectionType: NodeConnectionType;
-	typeIndex: number;
-	key: string;
-}
-
 const possibleConnections = ref<INodeInputConfiguration[]>([]);
 
-const expandedGroups = ref<string[]>([]);
+const expandedGroups = ref<NodeConnectionType[]>([]);
 const shouldShowNodeInputIssues = ref(false);
 
 const nodeType = computed(() =>
@@ -58,7 +47,7 @@ const nodeType = computed(() =>
 );
 
 const nodeData = computed(() => workflowsStore.getNodeByName(props.rootNode.name));
-const ndvStore = useNDVStore();
+
 const workflow = computed(() => workflowsStore.getCurrentWorkflow());
 
 const nodeInputIssues = computed(() => {
@@ -71,84 +60,41 @@ const nodeInputIssues = computed(() => {
 	return issues?.input ?? {};
 });
 
-const connectedNodes = computed<Record<string, NodeConfig[]>>(() => {
-	const typeIndexCounters: Record<string, number> = {};
-
+const connectedNodes = computed<Record<NodeConnectionType, NodeConfig[]>>(() => {
 	return possibleConnections.value.reduce(
 		(acc, connection) => {
-			// Track index per connection type
-			const typeIndex = typeIndexCounters[connection.type] ?? 0;
-			typeIndexCounters[connection.type] = typeIndex + 1;
-
-			// Get input-index-specific connections using the per-type index
-			const nodeConnections =
-				workflow.value.connectionsByDestinationNode[props.rootNode.name]?.[connection.type] ?? [];
-			const inputConnections = nodeConnections[typeIndex] ?? [];
-			const nodeNames = inputConnections.map((conn) => conn.node);
-			const nodes = getINodesFromNames(nodeNames);
-
-			// Use a unique key that combines connection type and per-type index
-			const connectionKey = `${connection.type}-${typeIndex}`;
-			return { ...acc, [connectionKey]: nodes };
+			const nodes = getINodesFromNames(
+				workflow.value.getParentNodes(props.rootNode.name, connection.type),
+			);
+			return { ...acc, [connection.type]: nodes };
 		},
-		{} as Record<string, NodeConfig[]>,
+		{} as Record<NodeConnectionType, NodeConfig[]>,
 	);
 });
 
-function getConnectionContext(
-	connection: INodeInputConfiguration,
-	globalIndex: number,
-): ConnectionContext {
-	let typeIndex = 0;
-	for (let i = 0; i < globalIndex; i++) {
-		if (possibleConnections.value[i].type === connection.type) {
-			typeIndex++;
-		}
-	}
-	return {
-		connectionType: connection.type,
-		typeIndex,
-		key: `${connection.type}-${typeIndex}`,
-	};
+function getConnectionConfig(connectionType: NodeConnectionType) {
+	return possibleConnections.value.find((c) => c.type === connectionType);
 }
 
-function getConnectionKey(connection: INodeInputConfiguration, globalIndex: number): string {
-	return getConnectionContext(connection, globalIndex).key;
-}
-
-function getConnectionConfig(connectionType: NodeConnectionType, typeIndex: number) {
-	return possibleConnections.value
-		.filter((connection) => connection.type === connectionType)
-		.at(typeIndex);
-}
-
-function isMultiConnection(connectionContext: ConnectionContext) {
-	const connectionConfig = getConnectionConfig(
-		connectionContext.connectionType,
-		connectionContext.typeIndex,
-	);
+function isMultiConnection(connectionType: NodeConnectionType) {
+	const connectionConfig = getConnectionConfig(connectionType);
 	return connectionConfig?.maxConnections !== 1;
 }
 
-function shouldShowConnectionTooltip(connectionContext: ConnectionContext) {
-	return (
-		isMultiConnection(connectionContext) &&
-		!expandedGroups.value.includes(connectionContext.connectionType)
-	);
+function shouldShowConnectionTooltip(connectionType: NodeConnectionType) {
+	return isMultiConnection(connectionType) && !expandedGroups.value.includes(connectionType);
 }
 
-function expandConnectionGroup(connectionContext: ConnectionContext, isExpanded: boolean) {
+function expandConnectionGroup(connectionType: NodeConnectionType, isExpanded: boolean) {
 	// If the connection is a single connection, we don't need to expand the group
-	if (!isMultiConnection(connectionContext)) {
+	if (!isMultiConnection(connectionType)) {
 		return;
 	}
 
 	if (isExpanded) {
-		expandedGroups.value = [...expandedGroups.value, connectionContext.connectionType];
+		expandedGroups.value = [...expandedGroups.value, connectionType];
 	} else {
-		expandedGroups.value = expandedGroups.value.filter(
-			(g) => g !== connectionContext.connectionType,
-		);
+		expandedGroups.value = expandedGroups.value.filter((g) => g !== connectionType);
 	}
 }
 
@@ -169,10 +115,9 @@ function getINodesFromNames(names: string[]): NodeConfig[] {
 		.filter((n): n is NodeConfig => n !== null);
 }
 
-function hasInputIssues(connectionContext: ConnectionContext) {
+function hasInputIssues(connectionType: NodeConnectionType) {
 	return (
-		shouldShowNodeInputIssues.value &&
-		(nodeInputIssues.value[connectionContext.connectionType] ?? []).length > 0
+		shouldShowNodeInputIssues.value && (nodeInputIssues.value[connectionType] ?? []).length > 0
 	);
 }
 
@@ -198,35 +143,27 @@ function getPossibleSubInputConnections(): INodeInputConfiguration[] {
 	return nonMainInputs;
 }
 
-function onNodeClick(nodeName: string, connectionContext: ConnectionContext) {
-	if (
-		isMultiConnection(connectionContext) &&
-		!expandedGroups.value.includes(connectionContext.connectionType)
-	) {
-		expandConnectionGroup(connectionContext, true);
+function onNodeClick(nodeName: string, connectionType: NodeConnectionType) {
+	if (isMultiConnection(connectionType) && !expandedGroups.value.includes(connectionType)) {
+		expandConnectionGroup(connectionType, true);
 		return;
 	}
 
 	emit('switchSelectedNode', nodeName);
 }
 
-function onPlusClick(connectionContext: ConnectionContext) {
-	const connectionNodes = connectedNodes.value[connectionContext.key];
+function onPlusClick(connectionType: NodeConnectionType) {
+	const connectionNodes = connectedNodes.value[connectionType];
 	if (
-		isMultiConnection(connectionContext) &&
-		!expandedGroups.value.includes(connectionContext.connectionType) &&
+		isMultiConnection(connectionType) &&
+		!expandedGroups.value.includes(connectionType) &&
 		connectionNodes.length >= 1
 	) {
-		expandConnectionGroup(connectionContext, true);
+		expandConnectionGroup(connectionType, true);
 		return;
 	}
 
-	emit(
-		'openConnectionNodeCreator',
-		props.rootNode.name,
-		connectionContext.connectionType,
-		connectionContext.typeIndex,
-	);
+	emit('openConnectionNodeCreator', props.rootNode.name, connectionType);
 }
 
 function showNodeInputsIssues() {
@@ -238,7 +175,7 @@ function showNodeInputsIssues() {
 }
 
 watch(
-	[nodeData, ndvStore.activeNode],
+	nodeData,
 	debounce(
 		() =>
 			setTimeout(() => {
@@ -262,41 +199,39 @@ defineExpose({
 			:style="`--possible-connections: ${possibleConnections.length}`"
 		>
 			<div
-				v-for="(connection, index) in possibleConnections"
-				:key="getConnectionKey(connection, index)"
-				:data-test-id="`subnode-connection-group-${getConnectionKey(connection, index)}`"
+				v-for="connection in possibleConnections"
+				:key="connection.type"
+				:data-test-id="`subnode-connection-group-${connection.type}`"
 			>
 				<div :class="$style.connectionType">
 					<span
 						:class="{
 							[$style.connectionLabel]: true,
-							[$style.hasIssues]: hasInputIssues(getConnectionContext(connection, index)),
+							[$style.hasIssues]: hasInputIssues(connection.type),
 						}"
 						v-text="`${connection.displayName}${connection.required ? ' *' : ''}`"
 					/>
-					<OnClickOutside
-						@trigger="expandConnectionGroup(getConnectionContext(connection, index), false)"
-					>
+					<OnClickOutside @trigger="expandConnectionGroup(connection.type, false)">
 						<div
 							ref="connectedNodesWrapper"
 							:class="{
 								[$style.connectedNodesWrapper]: true,
 								[$style.connectedNodesWrapperExpanded]: expandedGroups.includes(connection.type),
 							}"
-							:style="`--nodes-length: ${connectedNodes[getConnectionKey(connection, index)].length}`"
-							@click="expandConnectionGroup(getConnectionContext(connection, index), true)"
+							:style="`--nodes-length: ${connectedNodes[connection.type].length}`"
+							@click="expandConnectionGroup(connection.type, true)"
 						>
 							<div
 								v-if="
-									connectedNodes[getConnectionKey(connection, index)].length >= 1
+									connectedNodes[connection.type].length >= 1
 										? connection.maxConnections !== 1
 										: true
 								"
 								:class="{
 									[$style.plusButton]: true,
-									[$style.hasIssues]: hasInputIssues(getConnectionContext(connection, index)),
+									[$style.hasIssues]: hasInputIssues(connection.type),
 								}"
-								@click="onPlusClick(getConnectionContext(connection, index))"
+								@click="onPlusClick(connection.type)"
 							>
 								<n8n-tooltip
 									placement="top"
@@ -304,13 +239,13 @@ defineExpose({
 									:offset="10"
 									:show-after="300"
 									:disabled="
-										shouldShowConnectionTooltip(getConnectionContext(connection, index)) &&
-										connectedNodes[getConnectionKey(connection, index)].length >= 1
+										shouldShowConnectionTooltip(connection.type) &&
+										connectedNodes[connection.type].length >= 1
 									"
 								>
 									<template #content>
 										Add {{ connection.displayName }}
-										<template v-if="hasInputIssues(getConnectionContext(connection, index))">
+										<template v-if="hasInputIssues(connection.type)">
 											<TitledList
 												:title="`${i18n.baseText('node.issues')}:`"
 												:items="nodeInputIssues[connection.type]"
@@ -321,25 +256,24 @@ defineExpose({
 										size="medium"
 										icon="plus"
 										type="tertiary"
-										:data-test-id="`add-subnode-${getConnectionKey(connection, index)}`"
+										:data-test-id="`add-subnode-${connection.type}`"
 									/>
 								</n8n-tooltip>
 							</div>
 							<div
-								v-if="connectedNodes[getConnectionKey(connection, index)].length > 0"
+								v-if="connectedNodes[connection.type].length > 0"
 								:class="{
 									[$style.connectedNodes]: true,
-									[$style.connectedNodesMultiple]:
-										connectedNodes[getConnectionKey(connection, index)].length > 1,
+									[$style.connectedNodesMultiple]: connectedNodes[connection.type].length > 1,
 								}"
 							>
 								<div
-									v-for="(node, nodeIndex) in connectedNodes[getConnectionKey(connection, index)]"
+									v-for="(node, index) in connectedNodes[connection.type]"
 									:key="node.node.name"
 									:class="{ [$style.nodeWrapper]: true, [$style.hasIssues]: node.issues }"
 									data-test-id="floating-subnode"
 									:data-node-name="node.node.name"
-									:style="`--node-index: ${nodeIndex}`"
+									:style="`--node-index: ${index}`"
 								>
 									<n8n-tooltip
 										:key="node.node.name"
@@ -347,7 +281,7 @@ defineExpose({
 										:teleported="true"
 										:offset="10"
 										:show-after="300"
-										:disabled="shouldShowConnectionTooltip(getConnectionContext(connection, index))"
+										:disabled="shouldShowConnectionTooltip(connection.type)"
 									>
 										<template #content>
 											{{ node.node.name }}
@@ -361,7 +295,7 @@ defineExpose({
 
 										<div
 											:class="$style.connectedNode"
-											@click="onNodeClick(node.node.name, getConnectionContext(connection, index))"
+											@click="onNodeClick(node.node.name, connection.type)"
 										>
 											<NodeIcon
 												:node-type="node.nodeType"

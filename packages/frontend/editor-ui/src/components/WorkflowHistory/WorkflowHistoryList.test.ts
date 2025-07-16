@@ -5,9 +5,8 @@ import { faker } from '@faker-js/faker';
 import type { UserAction } from '@n8n/design-system';
 import { createComponentRenderer } from '@/__tests__/render';
 import WorkflowHistoryList from '@/components/WorkflowHistory/WorkflowHistoryList.vue';
-import type { WorkflowHistoryActionTypes } from '@n8n/rest-api-client/api/workflowHistory';
+import type { WorkflowHistoryActionTypes } from '@/types/workflowHistory';
 import { workflowHistoryDataFactory } from '@/stores/__tests__/utils/workflowHistoryTestUtils';
-import type { IUser } from 'n8n-workflow';
 
 vi.stubGlobal(
 	'IntersectionObserver',
@@ -20,7 +19,7 @@ vi.stubGlobal(
 );
 
 const actionTypes: WorkflowHistoryActionTypes = ['restore', 'clone', 'open', 'download'];
-const actions: Array<UserAction<IUser>> = actionTypes.map((value) => ({
+const actions: UserAction[] = actionTypes.map((value) => ({
 	label: value,
 	disabled: false,
 	value,

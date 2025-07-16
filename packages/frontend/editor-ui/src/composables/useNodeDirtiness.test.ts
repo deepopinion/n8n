@@ -1,3 +1,4 @@
+/* eslint-disable n8n-local-rules/no-unneeded-backticks */
 import { createTestNode, createTestWorkflow, defaultNodeDescriptions } from '@/__tests__/mocks';
 import { createComponentRenderer } from '@/__tests__/render';
 import { useCanvasOperations } from '@/composables/useCanvasOperations';
@@ -14,7 +15,12 @@ import { type FrontendSettings } from '@n8n/api-types';
 import { createTestingPinia } from '@pinia/testing';
 import { NodeConnectionTypes, type IConnections, type IRunData } from 'n8n-workflow';
 import { defineComponent } from 'vue';
-import { createRouter, createWebHistory, type RouteLocationNormalizedLoaded } from 'vue-router';
+import {
+	createRouter,
+	createWebHistory,
+	useRouter,
+	type RouteLocationNormalizedLoaded,
+} from 'vue-router';
 
 describe(useNodeDirtiness, () => {
 	let nodeTypeStore: ReturnType<typeof useNodeTypesStore>;
@@ -36,7 +42,7 @@ describe(useNodeDirtiness, () => {
 				workflowsStore = useWorkflowsStore();
 				settingsStore = useSettingsStore();
 				historyHelper = useHistoryHelper({} as RouteLocationNormalizedLoaded);
-				canvasOperations = useCanvasOperations();
+				canvasOperations = useCanvasOperations({ router: useRouter() });
 				uiStore = useUIStore();
 
 				nodeTypeStore.setNodeTypes(defaultNodeDescriptions);

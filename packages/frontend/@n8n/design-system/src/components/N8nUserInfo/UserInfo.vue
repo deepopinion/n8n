@@ -6,17 +6,16 @@ import N8nAvatar from '../N8nAvatar';
 import N8nBadge from '../N8nBadge';
 import N8nText from '../N8nText';
 
-export interface UsersInfoProps {
-	firstName?: string | null;
-	lastName?: string | null;
-	email?: string | null;
+interface UsersInfoProps {
+	firstName?: string;
+	lastName?: string;
+	email?: string;
 	isOwner?: boolean;
 	isPendingUser?: boolean;
 	isCurrentUser?: boolean;
 	disabled?: boolean;
 	settings?: object;
 	isSamlLoginEnabled?: boolean;
-	mfaEnabled?: boolean;
 }
 
 const props = withDefaults(defineProps<UsersInfoProps>(), {

@@ -119,9 +119,6 @@ export const EXPOSED_RPC_METHODS = [
 
 	// httpRequest(opts: IHttpRequestOptions): Promise<IN8nHttpFullResponse | IN8nHttpResponse>
 	'helpers.httpRequest',
-
-	// (deprecated) request(uriOrObject: string | IRequestOptions, options?: IRequestOptions): Promise<any>;
-	'helpers.request',
 ];
 
 /** Helpers that exist but that we are not exposing to the Code Node */

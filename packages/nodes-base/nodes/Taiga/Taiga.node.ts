@@ -26,15 +26,6 @@ import {
 	throwOnEmptyUpdate,
 	toOptions,
 } from './GenericFunctions';
-import type {
-	LoadedEpic,
-	LoadedResource,
-	LoadedTags,
-	LoadedUser,
-	LoadedUserStory,
-	Operation,
-	Resource,
-} from './types';
 
 export class Taiga implements INodeType {
 	description: INodeTypeDescription = {

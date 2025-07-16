@@ -1,4 +1,4 @@
-import type { ITag } from '@n8n/rest-api-client/api/tags';
+import type { ITag } from '@/Interface';
 export const tags: ITag[] = [
 	{
 		id: '1',

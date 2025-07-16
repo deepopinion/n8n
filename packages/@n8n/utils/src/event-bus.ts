@@ -1,5 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type CallbackFn = (...args: any[]) => any;
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type CallbackFn = Function;
 
 type Payloads<ListenerMap> = {
 	[E in keyof ListenerMap]: unknown;

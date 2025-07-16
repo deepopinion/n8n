@@ -1,3 +1,4 @@
+/* eslint-disable n8n-nodes-base/node-dirname-against-convention */
 import type { Embeddings } from '@langchain/core/embeddings';
 import {
 	NodeConnectionTypes,
@@ -37,7 +38,7 @@ export class VectorStoreInMemoryLoad implements INodeType {
 				],
 			},
 		},
-
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
 		inputs: [
 			{
 				displayName: 'Embedding',

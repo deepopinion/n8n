@@ -1,12 +1,12 @@
-import { AuthenticatedRequest, UserRepository } from '@n8n/db';
-import { Get, GlobalScope, Post, RestController } from '@n8n/decorators';
+import { UserRepository } from '@n8n/db';
+import { Get, Post, RestController } from '@n8n/decorators';
 import { Response } from 'express';
 
 import { AuthService } from '@/auth/auth.service';
 import { BadRequestError } from '@/errors/response-errors/bad-request.error';
 import { ExternalHooks } from '@/external-hooks';
 import { MfaService } from '@/mfa/mfa.service';
-import { MFA } from '@/requests';
+import { AuthenticatedRequest, MFA } from '@/requests';
 
 @RestController('/mfa')
 export class MFAController {
@@ -17,32 +17,13 @@ export class MFAController {
 		private userRepository: UserRepository,
 	) {}
 
-	@Post('/enforce-mfa')
-	@GlobalScope('user:enforceMfa')
-	async enforceMFA(req: MFA.Enforce) {
-		if (req.body.enforce && !(req.authInfo?.usedMfa ?? false)) {
-			// The current user tries to enforce MFA, but does not have
-			// MFA set up for them self. We are forbidding this, to
-			// help the user not lock them selfs out.
-			throw new BadRequestError(
-				'You must enable two-factor authentication on your own account before enforcing it for all users',
-			);
-		}
-		await this.mfaService.enforceMFA(req.body.enforce);
-		return;
-	}
-
-	@Post('/can-enable', {
-		allowSkipMFA: true,
-	})
+	@Post('/can-enable')
 	async canEnableMFA(req: AuthenticatedRequest) {
 		await this.externalHooks.run('mfa.beforeSetup', [req.user]);
 		return;
 	}
 
-	@Get('/qr', {
-		allowSkipMFA: true,
-	})
+	@Get('/qr')
 	async getQRCode(req: AuthenticatedRequest) {
 		const { email, id, mfaEnabled } = req.user;
 
@@ -82,7 +63,7 @@ export class MFAController {
 		};
 	}
 
-	@Post('/enable', { rateLimit: true, allowSkipMFA: true })
+	@Post('/enable', { rateLimit: true })
 	async activateMFA(req: MFA.Activate, res: Response) {
 		const { mfaCode = null } = req.body;
 		const { id, mfaEnabled } = req.user;
@@ -107,7 +88,7 @@ export class MFAController {
 
 		const updatedUser = await this.mfaService.enableMfa(id);
 
-		this.authService.issueCookie(res, updatedUser, verified, req.browserId);
+		this.authService.issueCookie(res, updatedUser, req.browserId);
 	}
 
 	@Post('/disable', { rateLimit: true })
@@ -134,10 +115,10 @@ export class MFAController {
 
 		const updatedUser = await this.userRepository.findOneByOrFail({ id: userId });
 
-		this.authService.issueCookie(res, updatedUser, false, req.browserId);
+		this.authService.issueCookie(res, updatedUser, req.browserId);
 	}
 
-	@Post('/verify', { rateLimit: true, allowSkipMFA: true })
+	@Post('/verify', { rateLimit: true })
 	async verifyMFA(req: MFA.Verify) {
 		const { id } = req.user;
 		const { mfaCode } = req.body;

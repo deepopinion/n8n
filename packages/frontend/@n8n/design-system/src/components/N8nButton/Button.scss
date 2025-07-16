@@ -22,13 +22,7 @@
 	box-sizing: border-box;
 	outline: none;
 	margin: 0;
-	transition:
-		all 0.3s,
-		padding 0s,
-		width 0s,
-		height 0s;
-
-	gap: var(--spacing-3xs);
+	transition: 0.3s;
 
 	@include utils-user-select(none);
 
@@ -112,6 +106,10 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
+	}
+
+	span + span {
+		margin-left: var(--spacing-3xs);
 	}
 }
 

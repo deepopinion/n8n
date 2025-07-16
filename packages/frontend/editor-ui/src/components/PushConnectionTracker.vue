@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { usePushConnectionStore } from '@/stores/pushConnection.store';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { computed } from 'vue';
 
 const pushConnectionStore = usePushConnectionStore();
@@ -23,7 +23,7 @@ const showConnectionLostError = computed(() => {
 					<div v-n8n-html="i18n.baseText('pushConnectionTracker.cannotConnectToServer')"></div>
 				</template>
 				<span>
-					<n8n-icon icon="triangle-alert" />&nbsp;
+					<font-awesome-icon icon="exclamation-triangle" />&nbsp;
 					{{ i18n.baseText('pushConnectionTracker.connectionLost') }}
 				</span>
 			</n8n-tooltip>

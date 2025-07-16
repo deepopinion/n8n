@@ -2,7 +2,7 @@ import { type Response } from 'express';
 import { type MockProxy, mock } from 'jest-mock-extended';
 import { type INode, type IWebhookFunctions } from 'n8n-workflow';
 
-import { binaryResponse, renderFormCompletion } from '../utils/formCompletionUtils';
+import { binaryResponse, renderFormCompletion } from '../formCompletionUtils';
 
 describe('formCompletionUtils', () => {
 	let mockWebhookFunctions: MockProxy<IWebhookFunctions>;

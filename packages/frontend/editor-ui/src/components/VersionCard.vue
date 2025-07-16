@@ -3,16 +3,16 @@ import NodeIcon from './NodeIcon.vue';
 import TimeAgo from './TimeAgo.vue';
 import Badge from './Badge.vue';
 import WarningTooltip from './WarningTooltip.vue';
-import type { Version, VersionNode } from '@n8n/rest-api-client/api/versions';
-import { useI18n } from '@n8n/i18n';
+import type { IVersion, IVersionNode } from '@/Interface';
+import { useI18n } from '@/composables/useI18n';
 
 defineProps<{
-	version: Version;
+	version: IVersion;
 }>();
 
 const i18n = useI18n();
 
-const nodeName = (node: VersionNode): string => {
+const nodeName = (node: IVersionNode): string => {
 	return node !== null ? node.displayName : i18n.baseText('versionCard.unknown');
 };
 </script>

@@ -25,15 +25,11 @@ export class CredentialTypes implements ICredentialTypes {
 	 */
 	getParentTypes(typeName: string): string[] {
 		const extendsArr = this.loadNodesAndCredentials.knownCredentials[typeName]?.extends ?? [];
-
-		if (extendsArr.length === 0) return [];
-
-		const extendsArrCopy = [...extendsArr];
-
-		for (const type of extendsArrCopy) {
-			extendsArrCopy.push(...this.getParentTypes(type));
+		if (extendsArr.length) {
+			extendsArr.forEach((type) => {
+				extendsArr.push(...this.getParentTypes(type));
+			});
 		}
-
-		return extendsArrCopy;
+		return extendsArr;
 	}
 }

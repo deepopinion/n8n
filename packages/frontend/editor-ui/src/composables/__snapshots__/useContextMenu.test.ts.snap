@@ -80,18 +80,6 @@ exports[`useContextMenu > Read-only mode > should return the correct actions whe
     },
   },
   {
-    "disabled": true,
-    "divided": true,
-    "id": "extract_sub_workflow",
-    "label": "Convert node to sub-workflow",
-    "shortcut": {
-      "altKey": true,
-      "keys": [
-        "X",
-      ],
-    },
-  },
-  {
     "disabled": false,
     "divided": true,
     "id": "select_all",
@@ -170,18 +158,6 @@ exports[`useContextMenu > Read-only mode > should return the correct actions whe
         "T",
       ],
       "shiftKey": true,
-    },
-  },
-  {
-    "disabled": true,
-    "divided": true,
-    "id": "extract_sub_workflow",
-    "label": "Convert node to sub-workflow",
-    "shortcut": {
-      "altKey": true,
-      "keys": [
-        "X",
-      ],
     },
   },
   {
@@ -297,18 +273,6 @@ exports[`useContextMenu > should return the correct actions opening the menu fro
   {
     "disabled": false,
     "divided": true,
-    "id": "extract_sub_workflow",
-    "label": "Convert node to sub-workflow",
-    "shortcut": {
-      "altKey": true,
-      "keys": [
-        "X",
-      ],
-    },
-  },
-  {
-    "disabled": false,
-    "divided": true,
     "id": "select_all",
     "label": "Select all",
     "shortcut": {
@@ -419,18 +383,6 @@ exports[`useContextMenu > should return the correct actions when right clicking 
   {
     "disabled": false,
     "divided": true,
-    "id": "extract_sub_workflow",
-    "label": "Convert node to sub-workflow",
-    "shortcut": {
-      "altKey": true,
-      "keys": [
-        "X",
-      ],
-    },
-  },
-  {
-    "disabled": false,
-    "divided": true,
     "id": "select_all",
     "label": "Select all",
     "shortcut": {
@@ -507,18 +459,6 @@ exports[`useContextMenu > should return the correct actions when right clicking 
         "T",
       ],
       "shiftKey": true,
-    },
-  },
-  {
-    "disabled": false,
-    "divided": true,
-    "id": "extract_sub_workflow",
-    "label": "Convert node to sub-workflow",
-    "shortcut": {
-      "altKey": true,
-      "keys": [
-        "X",
-      ],
     },
   },
   {
@@ -646,18 +586,6 @@ exports[`useContextMenu > should show "Go to Sub-workflow" action (disabled) whe
   {
     "disabled": false,
     "divided": true,
-    "id": "extract_sub_workflow",
-    "label": "Convert node to sub-workflow",
-    "shortcut": {
-      "altKey": true,
-      "keys": [
-        "X",
-      ],
-    },
-  },
-  {
-    "disabled": false,
-    "divided": true,
     "id": "select_all",
     "label": "Select all",
     "shortcut": {
@@ -775,18 +703,6 @@ exports[`useContextMenu > should show "Go to Sub-workflow" action (disabled) whe
         "T",
       ],
       "shiftKey": true,
-    },
-  },
-  {
-    "disabled": false,
-    "divided": true,
-    "id": "extract_sub_workflow",
-    "label": "Convert node to sub-workflow",
-    "shortcut": {
-      "altKey": true,
-      "keys": [
-        "X",
-      ],
     },
   },
   {
@@ -914,18 +830,6 @@ exports[`useContextMenu > should show "Go to Sub-workflow" action (enabled) when
   {
     "disabled": false,
     "divided": true,
-    "id": "extract_sub_workflow",
-    "label": "Convert node to sub-workflow",
-    "shortcut": {
-      "altKey": true,
-      "keys": [
-        "X",
-      ],
-    },
-  },
-  {
-    "disabled": false,
-    "divided": true,
     "id": "select_all",
     "label": "Select all",
     "shortcut": {
@@ -1048,18 +952,6 @@ exports[`useContextMenu > should show "Go to Sub-workflow" action (enabled) when
   {
     "disabled": false,
     "divided": true,
-    "id": "extract_sub_workflow",
-    "label": "Convert node to sub-workflow",
-    "shortcut": {
-      "altKey": true,
-      "keys": [
-        "X",
-      ],
-    },
-  },
-  {
-    "disabled": false,
-    "divided": true,
     "id": "select_all",
     "label": "Select all",
     "shortcut": {
@@ -1141,18 +1033,6 @@ exports[`useContextMenu > should support opening and closing (default = right cl
         "T",
       ],
       "shiftKey": true,
-    },
-  },
-  {
-    "disabled": false,
-    "divided": true,
-    "id": "extract_sub_workflow",
-    "label": "Convert 2 nodes to sub-workflow",
-    "shortcut": {
-      "altKey": true,
-      "keys": [
-        "X",
-      ],
     },
   },
   {

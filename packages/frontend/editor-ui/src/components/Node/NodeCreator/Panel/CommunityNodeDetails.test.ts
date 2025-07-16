@@ -2,8 +2,7 @@ import { createComponentRenderer } from '@/__tests__/render';
 import { type TestingPinia, createTestingPinia } from '@pinia/testing';
 import { setActivePinia } from 'pinia';
 import CommunityNodeDetails from './CommunityNodeDetails.vue';
-import { waitFor } from '@testing-library/vue';
-import { userEvent } from '@testing-library/user-event';
+import { fireEvent, waitFor } from '@testing-library/vue';
 
 const fetchCredentialTypes = vi.fn();
 const getCommunityNodeAttributes = vi.fn(() => ({ npmVersion: '1.0.0' }));
@@ -30,7 +29,6 @@ const getAllNodeCreateElements = vi.fn(() => [
 
 const popViewStack = vi.fn();
 const pushViewStack = vi.fn();
-const updateCurrentViewStack = vi.fn();
 
 const showError = vi.fn();
 
@@ -57,7 +55,6 @@ vi.mock('@/stores/nodeTypes.store', () => ({
 	useNodeTypesStore: vi.fn(() => ({
 		getCommunityNodeAttributes,
 		getNodeTypes,
-		communityNodeType: vi.fn(() => ({ isOfficialNode: true })),
 	})),
 }));
 
@@ -111,11 +108,10 @@ vi.mock('../composables/useViewStacks', () => ({
 			mode: 'community-node',
 			rootView: undefined,
 			subcategory: 'Other Node',
-			title: 'Node details',
+			title: 'Community node details',
 		},
 		pushViewStack,
 		popViewStack,
-		updateCurrentViewStack,
 		getAllNodeCreateElements,
 	})),
 }));
@@ -139,9 +135,9 @@ describe('CommunityNodeDetails', () => {
 		const installButton = wrapper.getByTestId('install-community-node-button');
 
 		expect(wrapper.container.querySelector('.title span')?.textContent).toEqual('Other Node');
-		expect(installButton.querySelector('span')?.textContent).toEqual('Install node');
+		expect(installButton.querySelector('span')?.textContent).toEqual('Install Node');
 
-		await userEvent.click(installButton);
+		await fireEvent.click(installButton);
 
 		await waitFor(() => expect(removeNodeFromMergedNodes).toHaveBeenCalled());
 
@@ -150,7 +146,6 @@ describe('CommunityNodeDetails', () => {
 		expect(fetchCredentialTypes).toHaveBeenCalledWith(true);
 		expect(getAllNodeCreateElements).toHaveBeenCalled();
 		expect(popViewStack).toHaveBeenCalled();
-		expect(updateCurrentViewStack).toHaveBeenCalled();
 		expect(pushViewStack).toHaveBeenCalledWith(
 			{
 				communityNodeDetails: {
@@ -160,7 +155,6 @@ describe('CommunityNodeDetails', () => {
 					nodeIcon: undefined,
 					packageName: 'n8n-nodes-test',
 					title: 'Other Node',
-					official: true,
 				},
 				hasSearch: false,
 				items: [
@@ -184,7 +178,7 @@ describe('CommunityNodeDetails', () => {
 				mode: 'community-node',
 				rootView: undefined,
 				subcategory: 'Other Node',
-				title: 'Node details',
+				title: 'Community node details',
 			},
 			{
 				transitionDirection: 'none',
@@ -202,7 +196,7 @@ describe('CommunityNodeDetails', () => {
 
 		const installButton = wrapper.getByTestId('install-community-node-button');
 
-		await userEvent.click(installButton);
+		await fireEvent.click(installButton);
 
 		expect(showError).toHaveBeenCalledWith(expect.any(Error), 'Error installing new package');
 		expect(pushViewStack).not.toHaveBeenCalled();

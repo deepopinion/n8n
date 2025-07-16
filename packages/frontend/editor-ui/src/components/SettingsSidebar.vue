@@ -8,7 +8,7 @@ import { useSettingsStore } from '@/stores/settings.store';
 import { useRootStore } from '@n8n/stores/useRootStore';
 import { hasPermission } from '@/utils/rbac/permissions';
 import { useRoute, useRouter } from 'vue-router';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 
 const emit = defineEmits<{
 	return: [];
@@ -28,7 +28,7 @@ const sidebarMenuItems = computed<IMenuItem[]>(() => {
 	const menuItems: IMenuItem[] = [
 		{
 			id: 'settings-usage-and-plan',
-			icon: 'chart-column-decreasing',
+			icon: 'chart-bar',
 			label: i18n.baseText('settings.usageAndPlan.title'),
 			position: 'top',
 			available: canUserAccessRouteByName(VIEWS.USAGE),
@@ -36,7 +36,7 @@ const sidebarMenuItems = computed<IMenuItem[]>(() => {
 		},
 		{
 			id: 'settings-personal',
-			icon: 'circle-user-round',
+			icon: 'user-circle',
 			label: i18n.baseText('settings.personal'),
 			position: 'top',
 			available: canUserAccessRouteByName(VIEWS.PERSONAL_SETTINGS),
@@ -44,7 +44,7 @@ const sidebarMenuItems = computed<IMenuItem[]>(() => {
 		},
 		{
 			id: 'settings-users',
-			icon: 'user-round',
+			icon: 'user-friends',
 			label: i18n.baseText('settings.users'),
 			position: 'top',
 			available: canUserAccessRouteByName(VIEWS.USERS_SETTINGS),
@@ -69,7 +69,7 @@ const sidebarMenuItems = computed<IMenuItem[]>(() => {
 
 		{
 			id: 'settings-source-control',
-			icon: 'git-branch',
+			icon: 'code-branch',
 			label: i18n.baseText('settings.sourceControl.title'),
 			position: 'top',
 			available: canUserAccessRouteByName(VIEWS.SOURCE_CONTROL),
@@ -85,7 +85,7 @@ const sidebarMenuItems = computed<IMenuItem[]>(() => {
 		},
 		{
 			id: 'settings-ldap',
-			icon: 'network',
+			icon: 'network-wired',
 			label: i18n.baseText('settings.ldap'),
 			position: 'top',
 			available: canUserAccessRouteByName(VIEWS.LDAP_SETTINGS),
@@ -93,7 +93,7 @@ const sidebarMenuItems = computed<IMenuItem[]>(() => {
 		},
 		{
 			id: 'settings-workersview',
-			icon: 'waypoints',
+			icon: 'project-diagram',
 			label: i18n.baseText('mainSidebar.workersView'),
 			position: 'top',
 			available:
@@ -105,7 +105,7 @@ const sidebarMenuItems = computed<IMenuItem[]>(() => {
 
 	menuItems.push({
 		id: 'settings-log-streaming',
-		icon: 'log-in',
+		icon: 'sign-in-alt',
 		label: i18n.baseText('settings.log-streaming'),
 		position: 'top',
 		available: canUserAccessRouteByName(VIEWS.LOG_STREAMING_SETTINGS),
@@ -114,7 +114,7 @@ const sidebarMenuItems = computed<IMenuItem[]>(() => {
 
 	menuItems.push({
 		id: 'settings-community-nodes',
-		icon: 'box',
+		icon: 'cube',
 		label: i18n.baseText('settings.communityNodes'),
 		position: 'top',
 		available: canUserAccessRouteByName(VIEWS.COMMUNITY_NODES),
@@ -131,7 +131,7 @@ const sidebarMenuItems = computed<IMenuItem[]>(() => {
 			<template #header>
 				<div :class="$style.returnButton" data-test-id="settings-back" @click="emit('return')">
 					<i class="mr-xs">
-						<n8n-icon icon="arrow-left" />
+						<font-awesome-icon icon="arrow-left" />
 					</i>
 					<n8n-heading size="large" :bold="true">{{ i18n.baseText('settings') }}</n8n-heading>
 				</div>

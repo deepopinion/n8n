@@ -1,7 +1,6 @@
 import { inTest } from '@n8n/backend-common';
-import { Command } from '@n8n/decorators';
 import { Container } from '@n8n/di';
-import { z } from 'zod';
+import { Flags, type Config } from '@oclif/core';
 
 import config from '@/config';
 import { N8N_VERSION } from '@/constants';
@@ -9,34 +8,35 @@ import { EventMessageGeneric } from '@/eventbus/event-message-classes/event-mess
 import { MessageEventBus } from '@/eventbus/message-event-bus/message-event-bus';
 import { LogStreamingEventRelay } from '@/events/relays/log-streaming.event-relay';
 import { Publisher } from '@/scaling/pubsub/publisher.service';
-import { PubSubRegistry } from '@/scaling/pubsub/pubsub.registry';
+import { PubSubHandler } from '@/scaling/pubsub/pubsub-handler';
 import { Subscriber } from '@/scaling/pubsub/subscriber.service';
 import type { ScalingService } from '@/scaling/scaling.service';
 import type { WorkerServerEndpointsConfig } from '@/scaling/worker-server';
-import { WorkerStatusService } from '@/scaling/worker-status.service.ee';
 
 import { BaseCommand } from './base-command';
 
-const flagsSchema = z.object({
-	concurrency: z.number().int().default(10).describe('How many jobs can run in parallel.'),
-});
+export class Worker extends BaseCommand {
+	static description = '\nStarts a n8n worker';
 
-@Command({
-	name: 'worker',
-	description: 'Starts a n8n worker',
-	examples: ['--concurrency=5'],
-	flagsSchema,
-})
-export class Worker extends BaseCommand<z.infer<typeof flagsSchema>> {
+	static examples = ['$ n8n worker --concurrency=5'];
+
+	static flags = {
+		help: Flags.help({ char: 'h' }),
+		concurrency: Flags.integer({
+			default: 10,
+			description: 'How many jobs can run in parallel.',
+		}),
+	};
+
 	/**
 	 * How many jobs this worker may run concurrently.
 	 *
 	 * Taken from env var `N8N_CONCURRENCY_PRODUCTION_LIMIT` if set to a value
 	 * other than -1, else taken from `--concurrency` flag.
 	 */
-	private concurrency: number;
+	concurrency: number;
 
-	private scalingService: ScalingService;
+	scalingService: ScalingService;
 
 	override needsCommunityPackages = true;
 
@@ -59,12 +59,12 @@ export class Worker extends BaseCommand<z.infer<typeof flagsSchema>> {
 		await this.exitSuccessFully();
 	}
 
-	constructor() {
+	constructor(argv: string[], cmdConfig: Config) {
 		if (config.getEnv('executions.mode') !== 'queue') {
 			config.set('executions.mode', 'queue');
 		}
 
-		super();
+		super(argv, cmdConfig);
 
 		this.logger = this.logger.scoped('scaling');
 	}
@@ -94,6 +94,8 @@ export class Worker extends BaseCommand<z.infer<typeof flagsSchema>> {
 		this.logger.debug('Data deduplication service init complete');
 		await this.initExternalHooks();
 		this.logger.debug('External hooks init complete');
+		await this.initExternalSecrets();
+		this.logger.debug('External secrets init complete');
 		await this.initEventBus();
 		this.logger.debug('Event bus init complete');
 		await this.initScalingService();
@@ -109,7 +111,7 @@ export class Worker extends BaseCommand<z.infer<typeof flagsSchema>> {
 			}),
 		);
 
-		await this.moduleRegistry.initModules();
+		await this.loadModules();
 	}
 
 	async initEventBus() {
@@ -128,13 +130,12 @@ export class Worker extends BaseCommand<z.infer<typeof flagsSchema>> {
 	async initOrchestration() {
 		Container.get(Publisher);
 
-		Container.get(PubSubRegistry).init();
+		Container.get(PubSubHandler).init();
 		await Container.get(Subscriber).subscribe('n8n.commands');
-		Container.get(WorkerStatusService);
 	}
 
 	async setConcurrency() {
-		const { flags } = this;
+		const { flags } = await this.parse(Worker);
 
 		const envConcurrency = config.getEnv('executions.concurrency.productionLimit');
 

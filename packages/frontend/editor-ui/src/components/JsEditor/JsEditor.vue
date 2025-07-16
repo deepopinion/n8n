@@ -107,17 +107,6 @@ const extensions = computed(() => {
 	}
 	return extensionsToApply;
 });
-
-const focus = () => {
-	const view = editor.value;
-	if (view && typeof view.focus === 'function') {
-		view.focus();
-	}
-};
-
-defineExpose({
-	focus,
-});
 </script>
 
 <template>

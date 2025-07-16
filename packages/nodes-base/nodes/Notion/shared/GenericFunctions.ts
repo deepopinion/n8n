@@ -271,7 +271,8 @@ function getTexts(texts: TextData[]) {
 					type: 'mention',
 					mention: {
 						type: text.mentionType,
-						[text.mentionType]: { id: text[text.mentionType as keyof TextData] as string },
+						//@ts-expect-error any
+						[text.mentionType]: { id: text[text.mentionType] as string },
 					},
 					annotations: text.annotationUi,
 				});
@@ -762,7 +763,7 @@ export function getConditions() {
 		number: [
 			'equals',
 			'does_not_equal',
-			'greater_than',
+			'grater_than',
 			'less_than',
 			'greater_than_or_equal_to',
 			'less_than_or_equal_to',

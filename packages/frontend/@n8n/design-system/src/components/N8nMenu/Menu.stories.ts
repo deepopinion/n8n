@@ -2,7 +2,6 @@ import { action } from '@storybook/addon-actions';
 import type { StoryFn } from '@storybook/vue3';
 
 import N8nMenu from './Menu.vue';
-import N8nCallout from '../N8nCallout';
 import N8nIcon from '../N8nIcon';
 import N8nText from '../N8nText';
 
@@ -48,7 +47,7 @@ const templateWithHeaderAndFooter: StoryFn = (args, { argTypes }) => ({
 				</template>
 				<template #footer>
 					<div class="p-m hideme">
-						<n8n-icon icon="circle-user-round" size="xlarge"/>&nbsp;&nbsp;
+						<n8n-icon icon="user-circle" size="xlarge"/>&nbsp;&nbsp;
 						<n8n-text>John Smithson</n8n-text>
 					</div>
 				</template>
@@ -82,7 +81,7 @@ const templateWithAllSlots: StoryFn = (args, { argTypes }) => ({
 				</template>
 				<template #footer>
 					<div class="p-m hideme">
-						<n8n-icon icon="circle-user-round" size="xlarge"/>&nbsp;&nbsp;
+						<n8n-icon icon="user-circle" size="xlarge"/>&nbsp;&nbsp;
 						<n8n-text>John Smithson</n8n-text>
 					</div>
 				</template>
@@ -95,7 +94,7 @@ const templateWithAllSlots: StoryFn = (args, { argTypes }) => ({
 const menuItems = [
 	{
 		id: 'workflows',
-		icon: 'network',
+		icon: 'network-wired',
 		label: 'Workflows',
 		position: 'top',
 	},
@@ -107,7 +106,7 @@ const menuItems = [
 	},
 	{
 		id: 'disabled-item',
-		icon: 'x',
+		icon: 'times',
 		label: 'Not Available',
 		available: false,
 		position: 'top',
@@ -132,7 +131,7 @@ const menuItems = [
 			{ icon: 'book', label: 'Documentation', id: 'docs' },
 			{
 				id: 'disabled-submenu-item',
-				icon: 'x',
+				icon: 'times',
 				label: 'Not Available',
 				available: false,
 				position: 'top',
@@ -160,69 +159,3 @@ withHeaderAndFooter.args = { items: menuItems };
 
 export const withAllSlots = templateWithAllSlots.bind({});
 withAllSlots.args = { items: menuItems };
-
-export const withCustomComponent = templateWithHeaderAndFooter.bind({});
-withCustomComponent.args = {
-	items: [
-		...menuItems,
-		{
-			id: 'custom',
-			icon: 'bell',
-			label: "What's New",
-			position: 'bottom',
-			children: [
-				{
-					id: 'custom-callout',
-					component: N8nCallout,
-					available: true,
-					props: {
-						theme: 'warning',
-						icon: 'bell',
-					},
-				},
-			],
-		},
-	],
-};
-
-export const withNotification = templateWithHeaderAndFooter.bind({});
-withNotification.args = {
-	items: [
-		...menuItems,
-		{
-			id: 'notification',
-			icon: 'bell',
-			label: 'Notification',
-			position: 'top',
-			notification: true,
-		},
-	],
-};
-
-export const withSmallMenu = templateWithHeaderAndFooter.bind({});
-withSmallMenu.args = {
-	items: [
-		...menuItems,
-		{
-			id: 'notification',
-			icon: {
-				type: 'icon',
-				value: 'bell',
-				color: 'primary',
-			},
-			label: 'Small items',
-			position: 'top',
-			children: [
-				{ icon: 'info', label: 'About n8n', id: 'about', size: 'small' },
-				{ icon: 'book', label: 'Documentation', id: 'docs', size: 'small' },
-				{
-					icon: 'bell',
-					label: 'Notification',
-					id: 'notification',
-					notification: true,
-					size: 'small',
-				},
-			],
-		},
-	],
-};

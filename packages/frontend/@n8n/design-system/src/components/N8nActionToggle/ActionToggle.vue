@@ -1,18 +1,17 @@
-<script lang="ts" setup generic="UserType extends IUser, Actions extends UserAction<UserType>[]">
+<script lang="ts" setup>
 import { ElDropdown, ElDropdownMenu, ElDropdownItem, type Placement } from 'element-plus';
 import { ref } from 'vue';
 
-import type { IUser, UserAction } from '@n8n/design-system/types';
+import type { UserAction } from '@n8n/design-system/types';
 import type { IconOrientation, IconSize } from '@n8n/design-system/types/icon';
 
 import N8nIcon from '../N8nIcon';
-import N8nLoading from '../N8nLoading';
 
 const SIZE = ['mini', 'small', 'medium'] as const;
 const THEME = ['default', 'dark'] as const;
 
-interface ActionToggleProps<UserType extends IUser, Actions extends Array<UserAction<UserType>>> {
-	actions?: Actions;
+interface ActionToggleProps {
+	actions?: UserAction[];
 	placement?: Placement;
 	size?: (typeof SIZE)[number];
 	iconSize?: IconSize;
@@ -25,10 +24,8 @@ interface ActionToggleProps<UserType extends IUser, Actions extends Array<UserAc
 	trigger?: 'click' | 'hover';
 }
 
-type ActionValue = Actions[number]['value'];
-
 defineOptions({ name: 'N8nActionToggle' });
-withDefaults(defineProps<ActionToggleProps<UserType, Array<UserAction<UserType>>>>(), {
+withDefaults(defineProps<ActionToggleProps>(), {
 	actions: () => [],
 	placement: 'bottom',
 	size: 'medium',
@@ -45,9 +42,9 @@ withDefaults(defineProps<ActionToggleProps<UserType, Array<UserAction<UserType>>
 const actionToggleRef = ref<InstanceType<typeof ElDropdown> | null>(null);
 
 const emit = defineEmits<{
-	action: [value: ActionValue];
+	action: [value: string];
 	'visible-change': [value: boolean];
-	'item-mouseup': [action: UserAction<UserType>];
+	'item-mouseup': [action: UserAction];
 }>();
 
 const onCommand = (value: string) => emit('action', value);
@@ -60,7 +57,7 @@ const openActionToggle = (isOpen: boolean) => {
 	}
 };
 
-const onActionMouseUp = (action: UserAction<UserType>) => {
+const onActionMouseUp = (action: UserAction) => {
 	emit('item-mouseup', action);
 	actionToggleRef.value?.handleClose();
 };
@@ -89,7 +86,7 @@ defineExpose({
 			<slot>
 				<span :class="{ [$style.button]: true, [$style[theme]]: !!theme }">
 					<N8nIcon
-						:icon="iconOrientation === 'horizontal' ? 'ellipsis' : 'ellipsis-vertical'"
+						:icon="iconOrientation === 'horizontal' ? 'ellipsis-h' : 'ellipsis-v'"
 						:size="iconSize"
 					/>
 				</span>
@@ -120,7 +117,7 @@ defineExpose({
 						<div :class="$style.iconContainer">
 							<N8nIcon
 								v-if="action.type === 'external-link'"
-								icon="external-link"
+								icon="external-link-alt"
 								size="xsmall"
 								color="text-base"
 							/>

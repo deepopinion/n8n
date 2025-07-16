@@ -416,12 +416,7 @@ exports[`RunDataJson.vue > renders json values properly 1`] = `
                   >
                     
                     <span
-                      class="content mappable ph-no-capture"
-                      data-depth="3"
-                      data-name="record.name"
-                      data-path="[0].record.name"
-                      data-target="mappable"
-                      data-value="{{ $('Set').item.json.record.name }}"
+                      class="content"
                     >
                       
                       <span>
@@ -517,12 +512,7 @@ exports[`RunDataJson.vue > renders json values properly 1`] = `
                   >
                     
                     <span
-                      class="content mappable ph-no-capture"
-                      data-depth="2"
-                      data-name="myNumber"
-                      data-path="[0].myNumber"
-                      data-target="mappable"
-                      data-value="{{ $('Set').item.json.myNumber }}"
+                      class="content"
                     >
                       
                       <span>
@@ -589,12 +579,7 @@ exports[`RunDataJson.vue > renders json values properly 1`] = `
                   >
                     
                     <span
-                      class="content mappable ph-no-capture"
-                      data-depth="2"
-                      data-name="myStringNumber"
-                      data-path="[0].myStringNumber"
-                      data-target="mappable"
-                      data-value="{{ $('Set').item.json.myStringNumber }}"
+                      class="content"
                     >
                       
                       <span>
@@ -661,12 +646,7 @@ exports[`RunDataJson.vue > renders json values properly 1`] = `
                   >
                     
                     <span
-                      class="content mappable ph-no-capture"
-                      data-depth="2"
-                      data-name="myStringText"
-                      data-path="[0].myStringText"
-                      data-target="mappable"
-                      data-value="{{ $('Set').item.json.myStringText }}"
+                      class="content"
                     >
                       
                       <span>
@@ -733,12 +713,7 @@ exports[`RunDataJson.vue > renders json values properly 1`] = `
                   >
                     
                     <span
-                      class="content mappable ph-no-capture"
-                      data-depth="2"
-                      data-name="nil"
-                      data-path="[0].nil"
-                      data-target="mappable"
-                      data-value="{{ $('Set').item.json.nil }}"
+                      class="content"
                     >
                       
                       <span>
@@ -805,12 +780,7 @@ exports[`RunDataJson.vue > renders json values properly 1`] = `
                   >
                     
                     <span
-                      class="content mappable ph-no-capture"
-                      data-depth="2"
-                      data-name="d"
-                      data-path="[0].d"
-                      data-target="mappable"
-                      data-value="{{ $('Set').item.json.d }}"
+                      class="content"
                     >
                       <span />
                     </span>

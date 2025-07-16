@@ -1,6 +1,6 @@
 import type { ICredentialDataDecryptedObject } from 'n8n-workflow';
 
-import type { RemoteResourceOwner, StatusResourceOwner } from './resource-owner';
+import type { ResourceOwner } from './resource-owner';
 
 export interface ExportableCredential {
 	id: string;
@@ -12,10 +12,5 @@ export interface ExportableCredential {
 	 * Email of the user who owns this credential at the source instance.
 	 * Ownership is mirrored at target instance if user is also present there.
 	 */
-	ownedBy: RemoteResourceOwner | null;
+	ownedBy: ResourceOwner | null;
 }
-
-export type StatusExportableCredential = ExportableCredential & {
-	filename: string;
-	ownedBy?: StatusResourceOwner;
-};

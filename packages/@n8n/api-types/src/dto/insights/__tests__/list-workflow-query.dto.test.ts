@@ -21,26 +21,6 @@ describe('ListInsightsWorkflowQueryDto', () => {
 				},
 			},
 			{
-				name: 'valid sortBy workflowName:asc',
-				request: {
-					sortBy: 'workflowName:asc',
-				},
-				parsedResult: {
-					...DEFAULT_PAGINATION,
-					sortBy: 'workflowName:asc',
-				},
-			},
-			{
-				name: 'valid sortBy workflowName:desc',
-				request: {
-					sortBy: 'workflowName:desc',
-				},
-				parsedResult: {
-					...DEFAULT_PAGINATION,
-					sortBy: 'workflowName:desc',
-				},
-			},
-			{
 				name: 'valid skip and take',
 				request: {
 					skip: '0',
@@ -62,19 +42,6 @@ describe('ListInsightsWorkflowQueryDto', () => {
 					skip: 0,
 					take: 10,
 					sortBy: 'total:desc',
-				},
-			},
-			{
-				name: 'limit take to 100',
-				request: {
-					skip: '0',
-					take: '200',
-					sortBy: 'total:asc',
-				},
-				parsedResult: {
-					skip: 0,
-					take: 100,
-					sortBy: 'total:asc',
 				},
 			},
 		])('should validate $name', ({ request, parsedResult }) => {

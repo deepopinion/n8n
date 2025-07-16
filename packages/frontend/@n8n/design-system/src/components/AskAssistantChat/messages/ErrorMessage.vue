@@ -2,8 +2,6 @@
 import BaseMessage from './BaseMessage.vue';
 import { useI18n } from '../../../composables/useI18n';
 import type { ChatUI } from '../../../types/assistant';
-import N8nButton from '../../N8nButton';
-import N8nIcon from '../../N8nIcon';
 
 interface Props {
 	message: ChatUI.ErrorMessage & { id: string; read: boolean };
@@ -22,10 +20,10 @@ const { t } = useI18n();
 	<BaseMessage :message="message" :is-first-of-role="isFirstOfRole" :user="user">
 		<div :class="$style.error" data-test-id="chat-message-system">
 			<p :class="$style.errorText">
-				<N8nIcon icon="triangle-alert" size="small" :class="$style.errorIcon" />
+				<n8n-icon icon="exclamation-triangle" size="small" :class="$style.errorIcon" />
 				{{ message.content }}
 			</p>
-			<N8nButton
+			<n8n-button
 				v-if="message.retry"
 				type="secondary"
 				size="mini"
@@ -34,7 +32,7 @@ const { t } = useI18n();
 				@click="() => message.retry?.()"
 			>
 				{{ t('generic.retry') }}
-			</N8nButton>
+			</n8n-button>
 		</div>
 	</BaseMessage>
 </template>

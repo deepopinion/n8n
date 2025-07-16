@@ -1,13 +1,13 @@
-import { ProxyAgent } from 'undici';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 
-import { getProxyAgent } from '../httpProxyAgent';
+import { getHttpProxyAgent } from '../httpProxyAgent';
 
-// Mock the dependencies
-jest.mock('undici', () => ({
-	ProxyAgent: jest.fn().mockImplementation((url) => ({ proxyUrl: url })),
+// Mock the https-proxy-agent package
+jest.mock('https-proxy-agent', () => ({
+	HttpsProxyAgent: jest.fn().mockImplementation((url) => ({ proxyUrl: url })),
 }));
 
-describe('getProxyAgent', () => {
+describe('getHttpProxyAgent', () => {
 	// Store original environment variables
 	const originalEnv = { ...process.env };
 
@@ -19,8 +19,6 @@ describe('getProxyAgent', () => {
 		delete process.env.http_proxy;
 		delete process.env.HTTPS_PROXY;
 		delete process.env.https_proxy;
-		delete process.env.NO_PROXY;
-		delete process.env.no_proxy;
 	});
 
 	// Restore original environment after all tests
@@ -28,130 +26,63 @@ describe('getProxyAgent', () => {
 		process.env = originalEnv;
 	});
 
-	describe('target URL not provided', () => {
-		it('should return undefined when no proxy environment variables are set', () => {
-			const agent = getProxyAgent();
-			expect(agent).toBeUndefined();
-			expect(ProxyAgent).not.toHaveBeenCalled();
-		});
-
-		it('should create ProxyAgent when HTTPS_PROXY is set', () => {
-			const proxyUrl = 'https://proxy.example.com:8080';
-			process.env.HTTPS_PROXY = proxyUrl;
-
-			const agent = getProxyAgent();
-
-			expect(agent).toEqual({ proxyUrl });
-			expect(ProxyAgent).toHaveBeenCalledWith(proxyUrl);
-		});
-
-		it('should create ProxyAgent when https_proxy is set', () => {
-			const proxyUrl = 'https://proxy.example.com:8080';
-			process.env.https_proxy = proxyUrl;
-
-			const agent = getProxyAgent();
-
-			expect(ProxyAgent).toHaveBeenCalledWith(proxyUrl);
-			expect(agent).toEqual({ proxyUrl });
-		});
-
-		it('should respect priority order of proxy environment variables', () => {
-			// Set multiple proxy environment variables
-			process.env.HTTP_PROXY = 'http://http-proxy.example.com:8080';
-			process.env.http_proxy = 'http://http-proxy-lowercase.example.com:8080';
-			process.env.HTTPS_PROXY = 'https://https-proxy.example.com:8080';
-			process.env.https_proxy = 'https://https-proxy-lowercase.example.com:8080';
-
-			const agent = getProxyAgent();
-
-			// Should use https_proxy as it has highest priority now
-			expect(ProxyAgent).toHaveBeenCalledWith('https://https-proxy-lowercase.example.com:8080');
-			expect(agent).toEqual({ proxyUrl: 'https://https-proxy-lowercase.example.com:8080' });
-		});
+	it('should return undefined when no proxy environment variables are set', () => {
+		const agent = getHttpProxyAgent();
+		expect(agent).toBeUndefined();
+		expect(HttpsProxyAgent).not.toHaveBeenCalled();
 	});
 
-	describe('target URL provided', () => {
-		it('should return undefined when no proxy is configured', () => {
-			const agent = getProxyAgent('https://api.openai.com/v1');
+	it('should create HttpsProxyAgent when HTTP_PROXY is set', () => {
+		const proxyUrl = 'http://proxy.example.com:8080';
+		process.env.HTTP_PROXY = proxyUrl;
 
-			expect(agent).toBeUndefined();
-			expect(ProxyAgent).not.toHaveBeenCalled();
-		});
+		const agent = getHttpProxyAgent();
 
-		it('should create ProxyAgent for HTTPS URL when HTTPS_PROXY is set', () => {
-			const proxyUrl = 'https://proxy.example.com:8080';
-			process.env.HTTPS_PROXY = proxyUrl;
+		expect(HttpsProxyAgent).toHaveBeenCalledWith(proxyUrl);
+		expect(agent).toEqual({ proxyUrl });
+	});
 
-			const agent = getProxyAgent('https://api.openai.com/v1');
+	it('should create HttpsProxyAgent when http_proxy is set', () => {
+		const proxyUrl = 'http://proxy.example.com:8080';
+		process.env.http_proxy = proxyUrl;
 
-			expect(agent).toEqual({ proxyUrl });
-			expect(ProxyAgent).toHaveBeenCalledWith(proxyUrl);
-		});
+		const agent = getHttpProxyAgent();
 
-		it('should create ProxyAgent for HTTP URL when HTTP_PROXY is set', () => {
-			const proxyUrl = 'http://proxy.example.com:8080';
-			process.env.HTTP_PROXY = proxyUrl;
+		expect(HttpsProxyAgent).toHaveBeenCalledWith(proxyUrl);
+		expect(agent).toEqual({ proxyUrl });
+	});
 
-			const agent = getProxyAgent('http://api.example.com');
+	it('should create HttpsProxyAgent when HTTPS_PROXY is set', () => {
+		const proxyUrl = 'http://proxy.example.com:8080';
+		process.env.HTTPS_PROXY = proxyUrl;
 
-			expect(agent).toEqual({ proxyUrl });
-			expect(ProxyAgent).toHaveBeenCalledWith(proxyUrl);
-		});
+		const agent = getHttpProxyAgent();
 
-		it('should use HTTPS_PROXY for HTTPS URLs even when HTTP_PROXY is set', () => {
-			const httpProxy = 'http://http-proxy.example.com:8080';
-			const httpsProxy = 'https://https-proxy.example.com:8443';
-			process.env.HTTP_PROXY = httpProxy;
-			process.env.HTTPS_PROXY = httpsProxy;
+		expect(HttpsProxyAgent).toHaveBeenCalledWith(proxyUrl);
+		expect(agent).toEqual({ proxyUrl });
+	});
 
-			const agent = getProxyAgent('https://api.openai.com/v1');
+	it('should create HttpsProxyAgent when https_proxy is set', () => {
+		const proxyUrl = 'http://proxy.example.com:8080';
+		process.env.https_proxy = proxyUrl;
 
-			expect(agent).toEqual({ proxyUrl: httpsProxy });
-			expect(ProxyAgent).toHaveBeenCalledWith(httpsProxy);
-		});
+		const agent = getHttpProxyAgent();
 
-		it('should respect NO_PROXY for localhost', () => {
-			const proxyUrl = 'http://proxy.example.com:8080';
-			process.env.HTTP_PROXY = proxyUrl;
-			process.env.NO_PROXY = 'localhost,127.0.0.1';
+		expect(HttpsProxyAgent).toHaveBeenCalledWith(proxyUrl);
+		expect(agent).toEqual({ proxyUrl });
+	});
 
-			const agent = getProxyAgent('http://localhost:3000');
+	it('should respect priority order of proxy environment variables', () => {
+		// Set multiple proxy environment variables
+		process.env.HTTP_PROXY = 'http://http-proxy.example.com:8080';
+		process.env.http_proxy = 'http://http-proxy-lowercase.example.com:8080';
+		process.env.HTTPS_PROXY = 'http://https-proxy.example.com:8080';
+		process.env.https_proxy = 'http://https-proxy-lowercase.example.com:8080';
 
-			expect(agent).toBeUndefined();
-			expect(ProxyAgent).not.toHaveBeenCalled();
-		});
+		const agent = getHttpProxyAgent();
 
-		it('should respect NO_PROXY wildcard patterns', () => {
-			const proxyUrl = 'http://proxy.example.com:8080';
-			process.env.HTTPS_PROXY = proxyUrl;
-			process.env.NO_PROXY = '*.internal.company.com,localhost';
-
-			const agent = getProxyAgent('https://api.internal.company.com');
-
-			expect(agent).toBeUndefined();
-			expect(ProxyAgent).not.toHaveBeenCalled();
-		});
-
-		it('should use proxy for URLs not in NO_PROXY', () => {
-			const proxyUrl = 'http://proxy.example.com:8080';
-			process.env.HTTPS_PROXY = proxyUrl;
-			process.env.NO_PROXY = 'localhost,127.0.0.1';
-
-			const agent = getProxyAgent('https://api.openai.com/v1');
-
-			expect(agent).toEqual({ proxyUrl });
-			expect(ProxyAgent).toHaveBeenCalledWith(proxyUrl);
-		});
-
-		it('should handle mixed case environment variables', () => {
-			const proxyUrl = 'http://proxy.example.com:8080';
-			process.env.https_proxy = proxyUrl;
-			process.env.no_proxy = 'localhost';
-
-			const agent = getProxyAgent('https://api.openai.com/v1');
-
-			expect(agent).toEqual({ proxyUrl });
-			expect(ProxyAgent).toHaveBeenCalledWith(proxyUrl);
-		});
+		// Should use HTTPS_PROXY as it has highest priority now
+		expect(HttpsProxyAgent).toHaveBeenCalledWith('http://https-proxy.example.com:8080');
+		expect(agent).toEqual({ proxyUrl: 'http://https-proxy.example.com:8080' });
 	});
 });

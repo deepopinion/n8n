@@ -2,9 +2,7 @@ import { Readability } from '@mozilla/readability';
 import * as cheerio from 'cheerio';
 import { convert } from 'html-to-text';
 import { JSDOM } from 'jsdom';
-import get from 'lodash/get';
-import set from 'lodash/set';
-import unset from 'lodash/unset';
+import { get, set, unset } from 'lodash';
 import {
 	type INodeProperties,
 	jsonParse,

@@ -351,7 +351,7 @@ export class JinaAi implements INodeType {
 								value: 'text',
 							},
 						],
-						default: '',
+						default: 'json',
 					},
 					{
 						displayName: 'Site Filter',

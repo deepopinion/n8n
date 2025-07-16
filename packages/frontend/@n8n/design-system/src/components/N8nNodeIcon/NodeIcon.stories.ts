@@ -26,14 +26,14 @@ FileIcon.args = {
 export const FontIcon = DefaultTemplate.bind({});
 FontIcon.args = {
 	type: 'icon',
-	name: 'cog',
+	name: 'cogs',
 	size: 200,
 };
 
 export const Hoverable = DefaultTemplate.bind({});
 Hoverable.args = {
 	type: 'icon',
-	name: 'home',
+	name: 'heart',
 	color: 'red',
 	size: 200,
 	nodeTypeName: 'We ❤️ n8n',

@@ -7,7 +7,7 @@ import { useRootStore } from '@n8n/stores/useRootStore';
 import { useUsersStore } from '@/stores/users.store';
 import { useSettingsStore } from '@/stores/settings.store';
 import { transformInsightsSummary } from '@/features/insights/insights.utils';
-import { getResourcePermissions } from '@n8n/permissions';
+import { getResourcePermissions } from '@/permissions';
 
 export const useInsightsStore = defineStore('insights', () => {
 	const rootStore = useRootStore();
@@ -18,11 +18,8 @@ export const useInsightsStore = defineStore('insights', () => {
 		() => getResourcePermissions(usersStore.currentUser?.globalScopes).insights,
 	);
 
-	const isInsightsEnabled = computed(() =>
-		settingsStore.settings.activeModules.includes('insights'),
-	);
-
-	const isDashboardEnabled = computed(() => !!settingsStore.moduleSettings.insights?.dashboard);
+	const isInsightsEnabled = computed(() => settingsStore.settings.insights.enabled);
+	const isDashboardEnabled = computed(() => settingsStore.settings.insights.dashboard);
 
 	const isSummaryEnabled = computed(
 		() => globalInsightsPermissions.value.list && isInsightsEnabled.value,
@@ -50,10 +47,7 @@ export const useInsightsStore = defineStore('insights', () => {
 
 	const charts = useAsyncState(
 		async (filter?: { dateRange: InsightsDateRange['key'] }) => {
-			const dataFetcher = isDashboardEnabled.value
-				? insightsApi.fetchInsightsByTime
-				: insightsApi.fetchInsightsTimeSaved;
-			return await dataFetcher(rootStore.restApiContext, filter);
+			return await insightsApi.fetchInsightsByTime(rootStore.restApiContext, filter);
 		},
 		[],
 		{ immediate: false, resetOnExecute: false },
@@ -70,7 +64,7 @@ export const useInsightsStore = defineStore('insights', () => {
 		{ immediate: false, resetOnExecute: false },
 	);
 
-	const dateRanges = computed(() => settingsStore.moduleSettings.insights?.dateRanges ?? []);
+	const dateRanges = computed(() => settingsStore.settings.insights.dateRanges);
 
 	return {
 		globalInsightsPermissions,

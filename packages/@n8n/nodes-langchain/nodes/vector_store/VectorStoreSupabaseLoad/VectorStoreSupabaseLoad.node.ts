@@ -97,6 +97,7 @@ export class VectorStoreSupabaseLoad implements INodeType {
 			0,
 		)) as Embeddings;
 
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const client = createClient(credentials.host as string, credentials.serviceRole as string);
 		const config: SupabaseLibArgs = {
 			client,

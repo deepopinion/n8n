@@ -1,4 +1,3 @@
-import { Logger } from '@n8n/backend-common';
 import type { TagEntity, ICredentialsDb, IWorkflowDb } from '@n8n/db';
 import {
 	Project,
@@ -9,6 +8,7 @@ import {
 	TagRepository,
 } from '@n8n/db';
 import { Service } from '@n8n/di';
+import { Logger } from 'n8n-core';
 import { type INode, type INodeCredentialsDetails, type IWorkflowBase } from 'n8n-workflow';
 import { v4 as uuid } from 'uuid';
 
@@ -57,7 +57,6 @@ export class ImportService {
 
 				const exists = workflow.id ? await tx.existsBy(WorkflowEntity, { id: workflow.id }) : false;
 
-				// @ts-ignore CAT-957
 				const upsertResult = await tx.upsert(WorkflowEntity, workflow, ['id']);
 				const workflowId = upsertResult.identifiers.at(0)?.id as string;
 

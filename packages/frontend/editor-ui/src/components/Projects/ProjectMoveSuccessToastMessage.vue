@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { ResourceType, getTruncatedProjectName } from '@/utils/projects.utils';
+import { truncate } from '@n8n/utils/string/truncate';
+import { ResourceType, splitName } from '@/utils/projects.utils';
 import type { ProjectListItem } from '@/types/projects.types';
 import { ProjectTypes } from '@/types/projects.types';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 
 const props = defineProps<{
 	routeName: string;
@@ -18,7 +19,8 @@ const i18n = useI18n();
 const isWorkflow = computed(() => props.resourceType === ResourceType.Workflow);
 const isTargetProjectTeam = computed(() => props.targetProject.type === ProjectTypes.Team);
 const targetProjectName = computed(() => {
-	return getTruncatedProjectName(props.targetProject?.name);
+	const { name, email } = splitName(props.targetProject?.name ?? '');
+	return truncate(name ?? email ?? '', 25);
 });
 </script>
 <template>

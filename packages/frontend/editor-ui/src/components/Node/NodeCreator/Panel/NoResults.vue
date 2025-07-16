@@ -7,7 +7,7 @@ import {
 import type { NodeFilterType } from '@/Interface';
 
 import NoResultsIcon from './NoResultsIcon.vue';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 
 export interface Props {
 	showIcon?: boolean;
@@ -53,9 +53,9 @@ const i18n = useI18n();
 					<span>{{ i18n.baseText('nodeCreator.noResults.requestTheNode') }}</span
 					>&nbsp;
 					<span>
-						<n8n-icon
+						<font-awesome-icon
 							:class="$style.external"
-							icon="external-link"
+							icon="external-link-alt"
 							:title="i18n.baseText('nodeCreator.noResults.requestTheNode')"
 						/>
 					</span>

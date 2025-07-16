@@ -6,46 +6,10 @@ import type { IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError, jsonParse } from 'n8n-workflow';
 import type { z } from 'zod';
 
-function makeAllPropertiesRequired(schema: JSONSchema7): JSONSchema7 {
-	function isPropertySchema(property: unknown): property is JSONSchema7 {
-		return typeof property === 'object' && property !== null && 'type' in property;
-	}
+export function generateSchema(schemaString: string): JSONSchema7 {
+	const parsedSchema = jsonParse<SchemaObject>(schemaString);
 
-	// Handle object properties
-	if (schema.type === 'object' && schema.properties) {
-		const properties = Object.keys(schema.properties);
-		if (properties.length > 0) {
-			schema.required = properties;
-		}
-
-		for (const key of properties) {
-			if (isPropertySchema(schema.properties[key])) {
-				makeAllPropertiesRequired(schema.properties[key]);
-			}
-		}
-	}
-
-	// Handle arrays
-	if (schema.type === 'array' && schema.items && isPropertySchema(schema.items)) {
-		schema.items = makeAllPropertiesRequired(schema.items);
-	}
-
-	return schema;
-}
-
-export function generateSchemaFromExample(
-	exampleJsonString: string,
-	allFieldsRequired = false,
-): JSONSchema7 {
-	const parsedExample = jsonParse<SchemaObject>(exampleJsonString);
-
-	const schema = generateJsonSchema(parsedExample) as JSONSchema7;
-
-	if (allFieldsRequired) {
-		return makeAllPropertiesRequired(schema);
-	}
-
-	return schema;
+	return generateJsonSchema(parsedSchema) as JSONSchema7;
 }
 
 export function convertJsonSchemaToZod<T extends z.ZodTypeAny = z.ZodTypeAny>(schema: JSONSchema7) {

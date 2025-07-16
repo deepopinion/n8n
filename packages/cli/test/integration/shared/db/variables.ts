@@ -1,4 +1,5 @@
-import { generateNanoId, VariablesRepository } from '@n8n/db';
+import { generateNanoId } from '@n8n/db';
+import { VariablesRepository } from '@n8n/db';
 import { Container } from '@n8n/di';
 import { randomString } from 'n8n-workflow';
 

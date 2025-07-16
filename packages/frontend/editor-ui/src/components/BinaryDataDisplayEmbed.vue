@@ -2,10 +2,10 @@
 import { ref, onMounted, computed } from 'vue';
 import { useWorkflowsStore } from '@/stores/workflows.store';
 import type { IBinaryData } from 'n8n-workflow';
-import { jsonParse, base64DecodeUTF8 } from 'n8n-workflow';
+import { jsonParse } from 'n8n-workflow';
 import VueJsonPretty from 'vue-json-pretty';
 import RunDataHtml from '@/components/RunDataHtml.vue';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 
 const props = defineProps<{
 	binaryData: IBinaryData;
@@ -28,13 +28,12 @@ onMounted(async () => {
 	const { id, data: binaryData, fileName, fileType, mimeType } = props.binaryData;
 	const isJSONData = fileType === 'json';
 	const isHTMLData = fileType === 'html';
+
 	if (!id) {
 		if (isJSONData || isHTMLData) {
-			data.value = isJSONData
-				? jsonParse(base64DecodeUTF8(binaryData))
-				: base64DecodeUTF8(binaryData);
+			data.value = jsonParse(atob(binaryData));
 		} else {
-			embedSource.value = `data:${mimeType};charset=utf-8;base64,${binaryData}`;
+			embedSource.value = 'data:' + mimeType + ';base64,' + binaryData;
 		}
 	} else {
 		try {

@@ -7,7 +7,7 @@ import {
 	type NodeTypeAndVersion,
 } from 'n8n-workflow';
 
-import { renderFormNode } from '../utils/formNodeUtils';
+import { renderFormNode } from '../formNodeUtils';
 
 describe('formNodeUtils', () => {
 	let webhookFunctions: MockProxy<IWebhookFunctions>;

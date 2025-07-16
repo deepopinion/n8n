@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, useTemplateRef } from 'vue';
-import get from 'lodash/get';
-import set from 'lodash/set';
-import unset from 'lodash/unset';
-
+import { computed, onMounted, ref } from 'vue';
+import { get, set, unset } from 'lodash-es';
 import type {
 	IDataObject,
 	NodeParameterValue,
@@ -33,12 +30,13 @@ import ParameterInputList from '@/components/ParameterInputList.vue';
 import type { IMenuItem, IUpdateInformation, ModalKey } from '@/Interface';
 import { LOG_STREAM_MODAL_KEY, MODAL_CONFIRM } from '@/constants';
 import Modal from '@/components/Modal.vue';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useMessage } from '@/composables/useMessage';
 import { useUIStore } from '@/stores/ui.store';
 import { hasPermission } from '@/utils/rbac/permissions';
 import { destinationToFakeINodeUi } from '@/components/SettingsLogStreaming/Helpers.ee';
-import type { BaseTextKey } from '@n8n/i18n';
+import type { BaseTextKey } from '@/plugins/i18n';
+import InlineNameEdit from '@/components/InlineNameEdit.vue';
 import SaveButton from '@/components/SaveButton.vue';
 import EventSelection from '@/components/SettingsLogStreaming/EventSelection.ee.vue';
 import { useTelemetry } from '@/composables/useTelemetry';
@@ -49,8 +47,6 @@ import {
 	sentryModalDescription,
 	syslogModalDescription,
 } from './descriptions.ee';
-import { useElementSize } from '@vueuse/core';
-import { N8nInlineTextEdit, N8nText } from '@n8n/design-system';
 
 defineOptions({ name: 'EventDestinationSettingsModal' });
 
@@ -355,9 +351,6 @@ function callEventBus(event: string, data: unknown) {
 		eventBus.emit(event, data);
 	}
 }
-
-const defNameRef = useTemplateRef('defNameRef');
-const { width } = useElementSize(defNameRef);
 </script>
 
 <template>
@@ -382,22 +375,20 @@ const { width } = useElementSize(defNameRef);
 			</template>
 			<template v-else>
 				<div :class="$style.header">
-					<div ref="defNameRef" :class="$style.destinationInfo">
-						<N8nInlineTextEdit
-							:max-width="width - 10"
-							data-test-id="subtitle-showing-type"
+					<div :class="$style.destinationInfo">
+						<InlineNameEdit
 							:model-value="headerLabel"
+							:subtitle="!isTypeAbstract ? i18n.baseText(typeLabelName) : 'Select type'"
 							:readonly="isTypeAbstract"
+							type="Credential"
+							data-test-id="subtitle-showing-type"
 							@update:model-value="onLabelChange"
 						/>
-						<N8nText size="small" tag="p" color="text-light">{{
-							!isTypeAbstract ? i18n.baseText(typeLabelName) : 'Select type'
-						}}</N8nText>
 					</div>
 					<div :class="$style.destinationActions">
 						<n8n-button
 							v-if="nodeParameters && hasOnceBeenSaved && unchanged"
-							:icon="testMessageSent ? (testMessageResult ? 'check' : 'triangle-alert') : undefined"
+							:icon="testMessageSent ? (testMessageResult ? 'check' : 'exclamation-triangle') : ''"
 							:title="
 								testMessageSent && testMessageResult
 									? 'Event sent and returned OK'
@@ -413,7 +404,7 @@ const { width } = useElementSize(defNameRef);
 							<n8n-icon-button
 								v-if="nodeParameters && hasOnceBeenSaved"
 								:title="i18n.baseText('settings.log-streaming.delete')"
-								icon="trash-2"
+								icon="trash"
 								type="tertiary"
 								:disabled="isSaving"
 								:loading="isDeleting"
@@ -594,11 +585,10 @@ const { width } = useElementSize(defNameRef);
 }
 
 .destinationInfo {
-	flex-grow: 1;
 	display: flex;
-	width: 100%;
-	flex-direction: column;
-	gap: var(--spacing-4xs);
+	align-items: center;
+	flex-direction: row;
+	flex-grow: 1;
 	margin-bottom: var(--spacing-l);
 }
 

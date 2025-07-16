@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useI18n } from '@n8n/i18n';
-import { type Project, ProjectTypes } from '@/types/projects.types';
-import { isIconOrEmoji, type IconOrEmoji } from '@n8n/design-system/components/N8nIconPicker/types';
+import { useI18n } from '@/composables/useI18n';
+import {
+	type Project,
+	type ProjectIcon as ProjectIconType,
+	ProjectTypes,
+} from '@/types/projects.types';
 
 type Props = {
 	currentProject: Project;
@@ -20,15 +23,13 @@ const emit = defineEmits<{
 
 const i18n = useI18n();
 
-const projectIcon = computed((): IconOrEmoji => {
+const projectIcon = computed((): ProjectIconType => {
 	if (props.currentProject?.type === ProjectTypes.Personal) {
 		return { type: 'icon', value: 'user' };
 	} else if (props.currentProject?.name) {
-		return isIconOrEmoji(props.currentProject.icon)
-			? props.currentProject.icon
-			: { type: 'icon', value: 'layers' };
+		return props.currentProject.icon ?? { type: 'icon', value: 'layer-group' };
 	} else {
-		return { type: 'icon', value: 'house' };
+		return { type: 'icon', value: 'home' };
 	}
 });
 

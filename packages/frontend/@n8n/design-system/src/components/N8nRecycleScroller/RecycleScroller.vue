@@ -1,13 +1,11 @@
-<script lang="ts" setup generic="Key extends string, Item extends ItemWithKey<Key>">
+<script lang="ts" setup>
 import type { ComponentPublicInstance } from 'vue';
 import { computed, onMounted, onBeforeMount, ref, nextTick, watch } from 'vue';
 
-import type { ItemWithKey } from '@n8n/design-system/types';
-
 interface RecycleScrollerProps {
 	itemSize: number;
-	items: Item[];
-	itemKey: Key;
+	items: Array<Record<string, string>>;
+	itemKey: string;
 	offset?: number;
 }
 
@@ -26,21 +24,18 @@ const windowHeight = ref(0);
 
 /** Cache */
 
-const itemSizeCache = ref<Record<Item[Key], number>>({} as Record<Item[Key], number>);
+const itemSizeCache = ref<Record<string, number>>({});
 const itemPositionCache = computed(() => {
-	return props.items.reduce<Record<Item[Key], number>>(
-		(acc, item, index) => {
-			const key = item[props.itemKey];
-			const prevItem = props.items[index - 1];
-			const prevItemPosition = prevItem ? acc[prevItem[props.itemKey]] : 0;
-			const prevItemSize = prevItem ? itemSizeCache.value[prevItem[props.itemKey]] : 0;
+	return props.items.reduce<Record<string, number>>((acc, item, index) => {
+		const key = item[props.itemKey];
+		const prevItem = props.items[index - 1];
+		const prevItemPosition = prevItem ? acc[prevItem[props.itemKey]] : 0;
+		const prevItemSize = prevItem ? itemSizeCache.value[prevItem[props.itemKey]] : 0;
 
-			acc[key] = prevItemPosition + prevItemSize;
+		acc[key] = prevItemPosition + prevItemSize;
 
-			return acc;
-		},
-		{} as Record<Item[Key], number>,
-	);
+		return acc;
+	}, {});
 });
 
 /** Indexes */
@@ -191,7 +186,7 @@ function onScroll() {
 				<div
 					v-for="item in visibleItems"
 					:key="item[itemKey]"
-					:ref="(element) => (itemRefs[`${item[itemKey]}`] = element)"
+					:ref="(element) => (itemRefs[item[itemKey]] = element)"
 					class="recycle-scroller-item"
 				>
 					<slot :item="item" :update-item-size="onUpdateItemSize" />

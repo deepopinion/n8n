@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { computed, useCssModule } from 'vue';
 import type { NodeConnectionType } from 'n8n-workflow';
 import { NodeConnectionTypes } from 'n8n-workflow';
@@ -40,7 +40,6 @@ function onDelete() {
 			data-test-id="add-connection-button"
 			type="tertiary"
 			size="small"
-			icon-size="medium"
 			icon="plus"
 			:title="i18n.baseText('node.add')"
 			@click="onAdd"
@@ -50,8 +49,7 @@ function onDelete() {
 			class="canvas-edge-toolbar-button"
 			type="tertiary"
 			size="small"
-			icon-size="medium"
-			icon="trash-2"
+			icon="trash"
 			:title="i18n.baseText('node.delete')"
 			@click="onDelete"
 		/>

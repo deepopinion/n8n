@@ -77,7 +77,7 @@ describe('ParameterOptions', () => {
 				iconOrientation: 'horizontal',
 			},
 		});
-		expect(container.querySelector('[data-icon="ellipsis"]')).toBeInTheDocument();
+		expect(container.querySelector('[data-icon="ellipsis-h"]')).toBeInTheDocument();
 	});
 
 	it('should render custom actions', async () => {

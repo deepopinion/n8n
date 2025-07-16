@@ -1,10 +1,11 @@
-import { inTest, Logger } from '@n8n/backend-common';
+import { inTest } from '@n8n/backend-common';
 import { GlobalConfig } from '@n8n/config';
 import { Container } from '@n8n/di';
 import convict from 'convict';
 import { flatten } from 'flat';
 import { readFileSync } from 'fs';
 import merge from 'lodash/merge';
+import { Logger } from 'n8n-core';
 import { setGlobalState, UserError } from 'n8n-workflow';
 import assert from 'node:assert';
 
@@ -23,7 +24,7 @@ if (inE2ETests) {
 	globalConfig.publicApi.disabled = true;
 	process.env.SKIP_STATISTICS_EVENTS = 'true';
 	globalConfig.auth.cookie.secure = false;
-	process.env.N8N_SKIP_AUTH_ON_OAUTH_CALLBACK = 'false';
+	process.env.N8N_SKIP_AUTH_ON_OAUTH_CALLBACK = 'true';
 }
 
 // Load schema after process.env has been overwritten
@@ -111,7 +112,7 @@ setGlobalState({
 	defaultTimezone: globalConfig.generic.timezone,
 });
 
-// eslint-disable-next-line import-x/no-default-export
+// eslint-disable-next-line import/no-default-export
 export default config;
 
 export type Config = typeof config;

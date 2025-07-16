@@ -1,11 +1,15 @@
 <script lang="ts" setup>
-import type { ButtonType, UserAction } from '@n8n/design-system';
+import type { ButtonType } from '@n8n/design-system';
 import { N8nIconButton, N8nActionToggle } from '@n8n/design-system';
-import type { IUser } from 'n8n-workflow';
-import { useTemplateRef } from 'vue';
+import { ref } from 'vue';
 
+type Action = {
+	label: string;
+	value: string;
+	disabled: boolean;
+};
 defineProps<{
-	actions: Array<UserAction<IUser>>;
+	actions: Action[];
 	disabled?: boolean;
 	type?: ButtonType;
 }>();
@@ -14,7 +18,7 @@ const emit = defineEmits<{
 	action: [id: string];
 }>();
 
-const actionToggleRef = useTemplateRef('actionToggleRef');
+const actionToggleRef = ref<InstanceType<typeof N8nActionToggle> | null>(null);
 
 defineExpose({
 	openActionToggle: (isOpen: boolean) => actionToggleRef.value?.openActionToggle(isOpen),
@@ -35,7 +39,7 @@ defineExpose({
 			<N8nIconButton
 				:disabled="disabled"
 				:class="[$style.buttonGroupDropdown]"
-				icon="chevron-down"
+				icon="angle-down"
 				:type="type ?? 'primary'"
 			/>
 		</N8nActionToggle>

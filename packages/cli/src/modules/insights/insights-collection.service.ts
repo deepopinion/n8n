@@ -1,9 +1,9 @@
-import { Logger } from '@n8n/backend-common';
 import { SharedWorkflowRepository } from '@n8n/db';
 import { OnLifecycleEvent, type WorkflowExecuteAfterContext } from '@n8n/decorators';
 import { Service } from '@n8n/di';
 import { In } from '@n8n/typeorm';
 import { DateTime } from 'luxon';
+import { Logger } from 'n8n-core';
 import { UnexpectedError, type ExecutionStatus, type WorkflowExecuteMode } from 'n8n-workflow';
 
 import { InsightsMetadata } from '@/modules/insights/database/entities/insights-metadata';
@@ -75,28 +75,20 @@ export class InsightsCollectionService {
 
 	startFlushingTimer() {
 		this.isAsynchronouslySavingInsights = true;
-		this.scheduleFlushing();
-		this.logger.debug('Started flushing timer');
-	}
-
-	scheduleFlushing() {
-		this.cancelScheduledFlushing();
+		this.stopFlushingTimer();
 		this.flushInsightsRawBufferTimer = setTimeout(
 			async () => await this.flushEvents(),
 			this.insightsConfig.flushIntervalSeconds * 1000,
 		);
-	}
-
-	cancelScheduledFlushing() {
-		if (this.flushInsightsRawBufferTimer !== undefined) {
-			clearTimeout(this.flushInsightsRawBufferTimer);
-			this.flushInsightsRawBufferTimer = undefined;
-		}
+		this.logger.debug('Started flushing timer');
 	}
 
 	stopFlushingTimer() {
-		this.cancelScheduledFlushing();
-		this.logger.debug('Stopped flushing timer');
+		if (this.flushInsightsRawBufferTimer !== undefined) {
+			clearTimeout(this.flushInsightsRawBufferTimer);
+			this.flushInsightsRawBufferTimer = undefined;
+			this.logger.debug('Stopped flushing timer');
+		}
 	}
 
 	async shutdown() {
@@ -108,7 +100,6 @@ export class InsightsCollectionService {
 
 		// Wait for all in-progress asynchronous flushes
 		// Flush any remaining events
-		this.logger.debug('Flushing remaining insights before shutdown');
 		await Promise.all([...this.flushesInProgress, this.flushEvents()]);
 	}
 
@@ -153,21 +144,18 @@ export class InsightsCollectionService {
 		}
 
 		if (!this.isAsynchronouslySavingInsights) {
-			this.logger.debug('Flushing insights synchronously (shutdown in progress)');
 			// If we are not asynchronously saving insights, we need to flush the events
 			await this.flushEvents();
 		}
 
 		// If the buffer is full, flush the events asynchronously
 		if (this.bufferedInsights.size >= this.insightsConfig.flushBatchSize) {
-			this.logger.debug(`Buffer is full (${this.bufferedInsights.size} insights), flushing events`);
 			// Fire and forget flush to avoid blocking the workflow execute after handler
 			void this.flushEvents();
 		}
 	}
 
 	private async saveInsightsMetadataAndRaw(insightsRawToInsertBuffer: Set<BufferedInsight>) {
-		this.logger.debug(`Flushing ${insightsRawToInsertBuffer.size} insights`);
 		const workflowIdNames: Map<string, string> = new Map();
 
 		for (const event of insightsRawToInsertBuffer) {
@@ -200,7 +188,6 @@ export class InsightsCollectionService {
 			return acc;
 		}, [] as InsightsMetadata[]);
 
-		this.logger.debug(`Saving ${metadataToUpsert.length} insights metadata for workflows`);
 		await this.insightsMetadataRepository.upsert(metadataToUpsert, ['workflowId']);
 
 		const upsertMetadata = await this.insightsMetadataRepository.findBy({
@@ -228,7 +215,6 @@ export class InsightsCollectionService {
 			events.push(insight);
 		}
 
-		this.logger.debug(`Inserting ${events.length} insights raw`);
 		await this.insightsRawRepository.insert(events);
 	}
 
@@ -236,12 +222,12 @@ export class InsightsCollectionService {
 		// Prevent flushing if there are no events to flush
 		if (this.bufferedInsights.size === 0) {
 			// reschedule the timer to flush again
-			this.scheduleFlushing();
+			this.startFlushingTimer();
 			return;
 		}
 
 		// Stop timer to prevent concurrent flush from timer
-		this.cancelScheduledFlushing();
+		this.stopFlushingTimer();
 
 		// Copy the buffer to a new set to avoid concurrent modification
 		// while we are flushing the events
@@ -258,7 +244,7 @@ export class InsightsCollectionService {
 					this.bufferedInsights.add(event);
 				}
 			} finally {
-				this.scheduleFlushing();
+				this.startFlushingTimer();
 				this.flushesInProgress.delete(flushPromise!);
 			}
 		})();

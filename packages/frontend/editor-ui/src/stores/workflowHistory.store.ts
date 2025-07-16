@@ -1,15 +1,14 @@
 import { computed } from 'vue';
 import { defineStore } from 'pinia';
 import { saveAs } from 'file-saver';
-import type { IWorkflowDb } from '@/Interface';
-import type { WorkflowDataUpdate } from '@n8n/rest-api-client/api/workflows';
+import type { IWorkflowDataUpdate, IWorkflowDb } from '@/Interface';
 import type {
 	WorkflowHistory,
 	WorkflowVersion,
 	WorkflowHistoryRequestParams,
 	WorkflowVersionId,
-} from '@n8n/rest-api-client/api/workflowHistory';
-import * as whApi from '@n8n/rest-api-client/api/workflowHistory';
+} from '@/types/workflowHistory';
+import * as whApi from '@/api/workflowHistory';
 import { useRootStore } from '@n8n/stores/useRootStore';
 import { useSettingsStore } from '@/stores/settings.store';
 import { useWorkflowsStore } from '@/stores/workflows.store';
@@ -69,7 +68,7 @@ export const useWorkflowHistoryStore = defineStore('workflowHistory', () => {
 		const newWorkflow = await getNewWorkflow(rootStore.restApiContext, {
 			name: `${name} (${data.formattedCreatedAt})`,
 		});
-		const newWorkflowData: WorkflowDataUpdate = {
+		const newWorkflowData: IWorkflowDataUpdate = {
 			nodes,
 			connections,
 			name: newWorkflow.name,
@@ -84,7 +83,7 @@ export const useWorkflowHistoryStore = defineStore('workflowHistory', () => {
 	): Promise<IWorkflowDb> => {
 		const workflowVersion = await getWorkflowVersion(workflowId, workflowVersionId);
 		const { connections, nodes } = workflowVersion;
-		const updateData: WorkflowDataUpdate = { connections, nodes };
+		const updateData: IWorkflowDataUpdate = { connections, nodes };
 
 		if (shouldDeactivate) {
 			updateData.active = false;

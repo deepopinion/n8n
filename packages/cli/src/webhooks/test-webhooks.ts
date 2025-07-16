@@ -1,4 +1,3 @@
-import { OnPubSubEvent } from '@n8n/decorators';
 import { Service } from '@n8n/di';
 import type express from 'express';
 import { InstanceSettings } from 'n8n-core';
@@ -25,8 +24,6 @@ import * as WebhookHelpers from '@/webhooks/webhook-helpers';
 import * as WorkflowExecuteAdditionalData from '@/workflow-execute-additional-data';
 import type { WorkflowRequest } from '@/workflows/workflow.request';
 
-import { authAllowlistedNodes } from './constants';
-import { sanitizeWebhookRequest } from './webhook-request-sanitizer';
 import { WebhookService } from './webhook.service';
 import type {
 	IWebhookResponseCallbackData,
@@ -116,10 +113,6 @@ export class TestWebhooks implements IWebhookManager {
 			throw new NotFoundError('Could not find node to process webhook.');
 		}
 
-		if (!authAllowlistedNodes.has(workflowStartNode.type)) {
-			sanitizeWebhookRequest(request);
-		}
-
 		return await new Promise(async (resolve, reject) => {
 			try {
 				const executionMode = 'manual';
@@ -175,33 +168,13 @@ export class TestWebhooks implements IWebhookManager {
 		});
 	}
 
-	@OnPubSubEvent('clear-test-webhooks', { instanceType: 'main' })
-	async handleClearTestWebhooks({
-		webhookKey,
-		workflowEntity,
-		pushRef,
-	}: {
-		webhookKey: string;
-		workflowEntity: IWorkflowBase;
-		pushRef: string;
-	}) {
-		if (!this.push.hasPushRef(pushRef)) return;
-
-		this.clearTimeout(webhookKey);
-
-		const workflow = this.toWorkflow(workflowEntity);
-
-		await this.deactivateWebhooks(workflow);
-	}
-
 	clearTimeout(key: string) {
 		const timeout = this.timeouts[key];
 
 		if (timeout) clearTimeout(timeout);
 	}
 
-	async getWebhookMethods(rawPath: string) {
-		const path = removeTrailingSlash(rawPath);
+	async getWebhookMethods(path: string) {
 		const allKeys = await this.registrations.getAllKeys();
 
 		const webhookMethods = allKeys

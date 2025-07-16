@@ -16,7 +16,7 @@ vi.mock('@/stores/ui.store', () => ({
 	})),
 }));
 
-vi.mock('@n8n/rest-api-client/api/npsSurvey', () => ({
+vi.mock('@/api/npsSurvey', () => ({
 	updateNpsSurveyState,
 }));
 

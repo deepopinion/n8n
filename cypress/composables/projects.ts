@@ -5,7 +5,6 @@ const workflowPage = new WorkflowPage();
 const credentialsModal = new CredentialsModal();
 
 export const getHomeButton = () => cy.getByTestId('project-home-menu-item');
-export const getPersonalProjectsButton = () => cy.getByTestId('project-personal-menu-item');
 export const getMenuItems = () => cy.getByTestId('project-menu-item');
 export const getAddProjectButton = () => {
 	cy.getByTestId('universal-add').should('be.visible').click();
@@ -63,8 +62,6 @@ export const addProjectMember = (email: string, role?: string) => {
 };
 export const getResourceMoveModal = () => cy.getByTestId('project-move-resource-modal');
 export const getProjectMoveSelect = () => cy.getByTestId('project-move-resource-modal-select');
-export const getProjectSharingSelect = () => cy.getByTestId('project-sharing-select');
-export const getMoveToFolderSelect = () => cy.getByTestId('move-to-folder-dropdown');
 
 export function createProject(name: string) {
 	getAddProjectButton().click();

@@ -1,6 +1,5 @@
 import type { Resource, ScopeOptions, Scope } from '@n8n/permissions';
-import type { EnterpriseEditionFeatureValue } from '@/Interface';
-import type { Role } from '@n8n/api-types';
+import type { EnterpriseEditionFeatureValue, IRole } from '@/Interface';
 
 export type AuthenticatedPermissionOptions = {
 	bypass?: () => boolean;
@@ -20,7 +19,7 @@ export type RBACPermissionOptions = {
 	resourceId?: string;
 	options?: ScopeOptions;
 };
-export type RolePermissionOptions = Role[];
+export type RolePermissionOptions = IRole[];
 
 export type PermissionType =
 	| 'authenticated'

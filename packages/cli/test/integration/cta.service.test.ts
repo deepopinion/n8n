@@ -1,4 +1,3 @@
-import { createManyWorkflows, testDb } from '@n8n/backend-test-utils';
 import type { User } from '@n8n/db';
 import { StatisticsNames } from '@n8n/db';
 import { Container } from '@n8n/di';
@@ -7,6 +6,8 @@ import { CtaService } from '@/services/cta.service';
 
 import { createUser } from './shared/db/users';
 import { createWorkflowStatisticsItem } from './shared/db/workflow-statistics';
+import { createManyWorkflows } from './shared/db/workflows';
+import * as testDb from './shared/test-db';
 
 describe('CtaService', () => {
 	let ctaService: CtaService;

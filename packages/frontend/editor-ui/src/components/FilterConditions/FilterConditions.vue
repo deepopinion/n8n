@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import isEmpty from 'lodash/isEmpty';
-import isEqual from 'lodash/isEqual';
+import { isEmpty, isEqual } from 'lodash-es';
 
 import {
 	type FilterConditionValue,
@@ -18,7 +17,7 @@ import {
 	DEFAULT_MAX_CONDITIONS,
 	DEFAULT_OPERATOR_VALUE,
 } from './constants';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useDebounce } from '@/composables/useDebounce';
 import Condition from './Condition.vue';
 import CombinatorSelect from './CombinatorSelect.vue';

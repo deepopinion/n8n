@@ -1,8 +1,6 @@
-import { createWorkflow, newWorkflow } from '@n8n/backend-test-utils';
 import { GlobalConfig } from '@n8n/config';
 import { WorkflowRepository } from '@n8n/db';
 import { Container } from '@n8n/di';
-import { DateTime } from 'luxon';
 import { parse as semverParse } from 'semver';
 import request, { type Response } from 'supertest';
 
@@ -11,6 +9,7 @@ import { N8N_VERSION } from '@/constants';
 import { EventService } from '@/events/event.service';
 import { PrometheusMetricsService } from '@/metrics/prometheus-metrics.service';
 import { CacheService } from '@/services/cache/cache.service';
+import { createWorkflow, newWorkflow } from '@test-integration/db/workflows';
 
 import { setupTestServer } from './shared/utils';
 
@@ -31,7 +30,6 @@ globalConfig.endpoints.metrics = {
 	includeCredentialTypeLabel: false,
 	includeNodeTypeLabel: false,
 	includeWorkflowIdLabel: false,
-	includeWorkflowNameLabel: false,
 	includeApiPathLabel: true,
 	includeApiMethodLabel: true,
 	includeApiStatusCodeLabel: true,
@@ -53,11 +51,6 @@ describe('PrometheusMetricsService', () => {
 	beforeEach(() => {
 		prometheusService.disableAllMetrics();
 		prometheusService.disableAllLabels();
-	});
-
-	afterEach(() => {
-		// Make sure fake timers aren't in effect after a test
-		jest.useRealTimers();
 	});
 
 	it('should return n8n version', async () => {
@@ -218,11 +211,9 @@ describe('PrometheusMetricsService', () => {
 		/**
 		 * Arrange
 		 */
-		const startTime = DateTime.now().toUnixInteger();
-		jest.useFakeTimers().setSystemTime(startTime * 1000);
-
 		prometheusService.enableMetric('routes');
 		await prometheusService.init(server.app);
+		await agent.get('/api/v1/workflows');
 
 		/**
 		 * Act
@@ -239,30 +230,26 @@ describe('PrometheusMetricsService', () => {
 
 		expect(lines).toContainEqual(expect.stringContaining('n8n_test_last_activity'));
 
-		const lastActivityLine = lines.find((line) => line.startsWith('n8n_test_last_activity'));
+		const lastActivityLine = lines.find((line) =>
+			line.startsWith('n8n_test_last_activity{timestamp='),
+		);
 
 		expect(lastActivityLine).toBeDefined();
-
-		const value = lastActivityLine!.split(' ')[1];
-
-		expect(parseInt(value, 10)).toBe(startTime);
+		expect(lastActivityLine?.endsWith('1')).toBe(true);
 
 		// Update last activity
-		jest.advanceTimersByTime(1000);
 		await agent.get('/api/v1/workflows');
 
 		response = await agent.get('/metrics');
 		const updatedLines = toLines(response);
 
 		const newLastActivityLine = updatedLines.find((line) =>
-			line.startsWith('n8n_test_last_activity'),
+			line.startsWith('n8n_test_last_activity{timestamp='),
 		);
 
 		expect(newLastActivityLine).toBeDefined();
-
-		const newValue = newLastActivityLine!.split(' ')[1];
-
-		expect(parseInt(newValue, 10)).toBe(startTime + 1);
+		// Timestamp label should be different
+		expect(newLastActivityLine).not.toBe(lastActivityLine);
 	});
 
 	it('should return labels in route metrics if enabled', async () => {

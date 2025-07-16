@@ -1,14 +1,15 @@
-import { UserError, NodeOperationError } from 'n8n-workflow';
+import { NodeOperationError, UserError } from 'n8n-workflow';
 import type {
+	FieldType,
 	INodeParameters,
+	AssignmentCollectionValue,
 	IDataObject,
 	IExecuteFunctions,
 	INodeExecutionData,
 } from 'n8n-workflow';
 
-import { metricHandlers } from './metricHandlers';
 import { getGoogleSheet, getSheet } from './evaluationTriggerUtils';
-import { composeReturnItem } from '../../Set/v2/helpers/utils';
+import { composeReturnItem, validateEntry } from '../../Set/v2/helpers/utils';
 
 export async function setOutput(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 	const evaluationNode = this.getNode();
@@ -95,16 +96,46 @@ export async function setMetrics(this: IExecuteFunctions): Promise<INodeExecutio
 	const metrics: INodeExecutionData[] = [];
 
 	for (let i = 0; i < items.length; i++) {
-		const metric = this.getNodeParameter('metric', i, {}) as keyof typeof metricHandlers;
-		if (!metricHandlers.hasOwnProperty(metric)) {
-			throw new NodeOperationError(this.getNode(), 'Unknown metric');
-		}
-		const newData = await metricHandlers[metric].call(this, i);
+		const dataToSave = this.getNodeParameter('metrics', i, {}) as AssignmentCollectionValue;
 
 		const newItem: INodeExecutionData = {
 			json: {},
 			pairedItem: { item: i },
 		};
+		const newData = Object.fromEntries(
+			(dataToSave?.assignments ?? []).map((assignment) => {
+				const assignmentValue =
+					typeof assignment.value === 'number' ? assignment.value : Number(assignment.value);
+
+				if (isNaN(assignmentValue)) {
+					throw new NodeOperationError(
+						this.getNode(),
+						`Value for '${assignment.name}' isn't a number`,
+						{
+							description: `It’s currently '${assignment.value}'. Metrics must be numeric.`,
+						},
+					);
+				}
+
+				if (!assignment.name || isNaN(assignmentValue)) {
+					throw new NodeOperationError(this.getNode(), 'Metric name missing', {
+						description: 'Make sure each metric you define has a name',
+					});
+				}
+
+				const { name, value } = validateEntry(
+					assignment.name,
+					assignment.type as FieldType,
+					assignmentValue,
+					this.getNode(),
+					i,
+					false,
+					1,
+				);
+
+				return [name, value];
+			}),
+		);
 
 		const returnItem = composeReturnItem.call(
 			this,
@@ -144,20 +175,6 @@ export function setOutputs(parameters: INodeParameters) {
 		return [
 			{ type: 'main', displayName: 'Evaluation' },
 			{ type: 'main', displayName: 'Normal' },
-		];
-	}
-
-	return [{ type: 'main' }];
-}
-
-export function setInputs(parameters: INodeParameters) {
-	if (
-		parameters.operation === 'setMetrics' &&
-		['correctness', 'helpfulness'].includes(parameters.metric as string)
-	) {
-		return [
-			{ type: 'main' },
-			{ type: 'ai_languageModel', displayName: 'Model', maxConnections: 1 },
 		];
 	}
 

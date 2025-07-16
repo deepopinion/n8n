@@ -28,7 +28,7 @@ export const defaultMenuItem = template.bind({});
 defaultMenuItem.args = {
 	item: {
 		id: 'workflows',
-		icon: 'home',
+		icon: 'heart',
 		label: 'Workflows',
 	},
 };
@@ -37,7 +37,7 @@ export const withSecondaryIcon = template.bind({});
 withSecondaryIcon.args = {
 	item: {
 		id: 'workflows',
-		icon: 'home',
+		icon: 'heart',
 		label: 'Workflows',
 		secondaryIcon: { name: 'lock', size: 'small' },
 	},
@@ -47,7 +47,7 @@ export const withSecondaryIconTooltip = template.bind({});
 withSecondaryIconTooltip.args = {
 	item: {
 		id: 'workflows',
-		icon: 'home',
+		icon: 'heart',
 		label: 'Workflows',
 		secondaryIcon: {
 			name: 'lock',

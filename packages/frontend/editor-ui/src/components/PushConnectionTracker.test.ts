@@ -29,9 +29,7 @@ describe('PushConnectionTracker', () => {
 		});
 		setActivePinia(pinia);
 
-		return createComponentRenderer(PushConnectionTracker, {
-			global: { stubs: { N8nIcon: true } },
-		})();
+		return createComponentRenderer(PushConnectionTracker)();
 	};
 
 	it('should not render error when connected and connection requested', () => {

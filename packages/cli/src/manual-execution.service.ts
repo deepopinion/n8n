@@ -1,5 +1,3 @@
-import { Logger } from '@n8n/backend-common';
-import { TOOL_EXECUTOR_NODE_NAME } from '@n8n/constants';
 import { Service } from '@n8n/di';
 import * as a from 'assert/strict';
 import {
@@ -7,9 +5,11 @@ import {
 	filterDisabledNodes,
 	recreateNodeExecutionStack,
 	WorkflowExecute,
+	Logger,
+	isTool,
 	rewireGraph,
 } from 'n8n-core';
-import { NodeHelpers } from 'n8n-workflow';
+import { MANUAL_TRIGGER_NODE_TYPE } from 'n8n-workflow';
 import type {
 	IExecuteData,
 	IPinData,
@@ -43,7 +43,15 @@ export class ManualExecutionService {
 			startNode = workflow.getNode(data.startNodes[0].name) ?? undefined;
 		}
 
-		return startNode;
+		if (startNode) {
+			return startNode;
+		}
+
+		const manualTrigger = workflow
+			.getTriggerNodes()
+			.find((node) => node.type === MANUAL_TRIGGER_NODE_TYPE);
+
+		return manualTrigger;
 	}
 
 	// eslint-disable-next-line @typescript-eslint/promise-function-async
@@ -105,8 +113,7 @@ export class ManualExecutionService {
 			return workflowExecute.processRunExecutionData(workflow);
 		} else if (
 			data.runData === undefined ||
-			(data.partialExecutionVersion !== 2 && (!data.startNodes || data.startNodes.length === 0)) ||
-			data.executionMode === 'evaluation'
+			(data.partialExecutionVersion !== 2 && (!data.startNodes || data.startNodes.length === 0))
 		) {
 			// Full Execution
 			// TODO: When the old partial execution logic is removed this block can
@@ -129,12 +136,8 @@ export class ManualExecutionService {
 					`Could not find a node named "${data.destinationNode}" in the workflow.`,
 				);
 
-				const destinationNodeType = workflow.nodeTypes.getByNameAndVersion(
-					destinationNode.type,
-					destinationNode.typeVersion,
-				);
 				// Rewire graph to be able to execute the destination tool node
-				if (NodeHelpers.isTool(destinationNodeType.description, destinationNode.parameters)) {
+				if (isTool(destinationNode, workflow.nodeTypes)) {
 					const graph = rewireGraph(
 						destinationNode,
 						DirectedGraph.fromWorkflow(workflow),
@@ -144,14 +147,7 @@ export class ManualExecutionService {
 					workflow = graph.toWorkflow({
 						...workflow,
 					});
-
-					// Save original destination
-					if (data.executionData) {
-						data.executionData.startData = data.executionData.startData ?? {};
-						data.executionData.startData.originalDestinationNode = data.destinationNode;
-					}
-					// Set destination to Tool Executor
-					data.destinationNode = TOOL_EXECUTOR_NODE_NAME;
+					data.destinationNode = graph.getDirectChildConnections(destinationNode).at(0)?.to?.name;
 				}
 			}
 

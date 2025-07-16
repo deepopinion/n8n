@@ -6,14 +6,13 @@ import type {
 	WorkflowHistory,
 	WorkflowVersionId,
 	WorkflowHistoryActionTypes,
-} from '@n8n/rest-api-client/api/workflowHistory';
-import { useI18n } from '@n8n/i18n';
-import type { IUser } from 'n8n-workflow';
+} from '@/types/workflowHistory';
+import { useI18n } from '@/composables/useI18n';
 
 const props = defineProps<{
 	item: WorkflowHistory;
 	index: number;
-	actions: Array<UserAction<IUser>>;
+	actions: UserAction[];
 	isActive: boolean;
 }>();
 const emit = defineEmits<{
@@ -63,8 +62,7 @@ const idLabel = computed<string>(() =>
 	i18n.baseText('workflowHistory.item.id', { interpolate: { id: props.item.versionId } }),
 );
 
-const onAction = (value: string) => {
-	const action = value as WorkflowHistoryActionTypes[number];
+const onAction = (action: WorkflowHistoryActionTypes[number]) => {
 	emit('action', {
 		action,
 		id: props.item.versionId,

@@ -1,6 +1,6 @@
-import { testDb } from '@n8n/backend-test-utils';
-
 import { setupTestServer } from '@test-integration/utils';
+
+import * as testDb from './shared/test-db';
 
 const testServer = setupTestServer({ endpointGroups: ['health'] });
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Logo from '@/components/Logo/Logo.vue';
 import SSOLogin from '@/components/SSOLogin.vue';
-import type { FormFieldValueUpdate, IFormBoxConfig } from '@/Interface';
+import type { IFormBoxConfig } from '@/Interface';
 import { useSettingsStore } from '@/stores/settings.store';
 import type { EmailOrLdapLoginIdAndPassword } from './SigninView.vue';
 
@@ -19,17 +19,17 @@ withDefaults(
 );
 
 const emit = defineEmits<{
-	update: [FormFieldValueUpdate];
+	update: [{ name: string; value: string }];
 	submit: [values: EmailOrLdapLoginIdAndPassword];
 	secondaryClick: [];
 }>();
 
-const onUpdate = (e: FormFieldValueUpdate) => {
+const onUpdate = (e: { name: string; value: string }) => {
 	emit('update', e);
 };
 
-const onSubmit = (data: unknown) => {
-	emit('submit', data as EmailOrLdapLoginIdAndPassword);
+const onSubmit = (values: EmailOrLdapLoginIdAndPassword) => {
+	emit('submit', values);
 };
 
 const onSecondaryClick = () => {
@@ -45,10 +45,10 @@ const {
 	<div :class="$style.container">
 		<Logo location="authView" :release-channel="releaseChannel" />
 		<div v-if="subtitle" :class="$style.textContainer">
-			<N8nText size="large">{{ subtitle }}</N8nText>
+			<n8n-text size="large">{{ subtitle }}</n8n-text>
 		</div>
 		<div :class="$style.formContainer">
-			<N8nFormBox
+			<n8n-form-box
 				v-bind="form"
 				data-test-id="auth-form"
 				:button-loading="formLoading"
@@ -57,7 +57,7 @@ const {
 				@update="onUpdate"
 			>
 				<SSOLogin v-if="withSso" />
-			</N8nFormBox>
+			</n8n-form-box>
 		</div>
 	</div>
 </template>
@@ -84,5 +84,11 @@ body {
 
 .formContainer {
 	padding-bottom: var(--spacing-xl);
+}
+</style>
+
+<style lang="scss">
+.el-checkbox__label span {
+	font-size: var(--font-size-2xs) !important;
 }
 </style>

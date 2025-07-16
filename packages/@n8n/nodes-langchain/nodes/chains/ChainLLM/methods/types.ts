@@ -38,5 +38,4 @@ export interface ChainExecutionParams {
 	llm: BaseLanguageModel;
 	outputParser?: N8nOutputParser;
 	messages?: MessageTemplate[];
-	fallbackLlm?: BaseLanguageModel | null;
 }

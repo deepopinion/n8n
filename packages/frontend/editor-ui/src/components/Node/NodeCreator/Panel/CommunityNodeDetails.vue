@@ -4,11 +4,10 @@ import { useViewStacks } from '../composables/useViewStacks';
 import { useUsersStore } from '@/stores/users.store';
 import { useCommunityNodesStore } from '@/stores/communityNodes.store';
 import { useToast } from '@/composables/useToast';
-import { i18n } from '@n8n/i18n';
+import { i18n } from '@/plugins/i18n';
 import { useNodeTypesStore } from '@/stores/nodeTypes.store';
 import { useNodeCreatorStore } from '@/stores/nodeCreator.store';
 import { useCredentialsStore } from '@/stores/credentials.store';
-import OfficialIcon from 'virtual:icons/mdi/verified';
 
 import { getNodeIconSource } from '@/utils/nodeIcon';
 
@@ -16,13 +15,7 @@ import { prepareCommunityNodeDetailsViewStack, removePreviewToken } from '../uti
 
 import { N8nText } from '@n8n/design-system';
 
-const {
-	activeViewStack,
-	pushViewStack,
-	popViewStack,
-	getAllNodeCreateElements,
-	updateCurrentViewStack,
-} = useViewStacks();
+const { activeViewStack, pushViewStack, popViewStack, getAllNodeCreateElements } = useViewStacks();
 
 const { communityNodeDetails } = activeViewStack;
 
@@ -42,8 +35,6 @@ const updateViewStack = (key: string) => {
 		const nodeActions = nodeCreatorStore.actions?.[installedNode.key] || [];
 
 		popViewStack();
-
-		updateCurrentViewStack({ searchItems: nodeCreatorStore.mergedNodes });
 
 		const viewStack = prepareCommunityNodeDetailsViewStack(
 			installedNode,
@@ -104,46 +95,33 @@ const onInstall = async () => {
 </script>
 
 <template>
-	<div v-if="communityNodeDetails" :class="$style.container">
+	<div :class="$style.container">
 		<div :class="$style.header">
 			<div :class="$style.title">
 				<NodeIcon
-					v-if="communityNodeDetails.nodeIcon"
+					v-if="communityNodeDetails?.nodeIcon"
 					:class="$style.nodeIcon"
 					:icon-source="communityNodeDetails.nodeIcon"
 					:circle="false"
 					:show-tooltip="false"
 				/>
-				<span>{{ communityNodeDetails.title }}</span>
-				<N8nTooltip v-if="communityNodeDetails.official" placement="bottom" :show-after="500">
-					<template #content>
-						{{
-							i18n.baseText('generic.officialNode.tooltip', {
-								interpolate: {
-									author: communityNodeDetails.companyName ?? communityNodeDetails.title,
-								},
-							})
-						}}
-					</template>
-					<OfficialIcon :class="$style.officialIcon" />
-				</N8nTooltip>
+				<span>{{ communityNodeDetails?.title }}</span>
 			</div>
 			<div>
-				<div v-if="communityNodeDetails.installed" :class="$style.installed">
-					<N8nIcon v-if="!communityNodeDetails.official" :class="$style.installedIcon" icon="box" />
+				<div v-if="communityNodeDetails?.installed" :class="$style.installed">
+					<FontAwesomeIcon :class="$style.installedIcon" icon="cube" />
 					<N8nText color="text-light" size="small" bold>
 						{{ i18n.baseText('communityNodeDetails.installed') }}
 					</N8nText>
 				</div>
-
 				<N8nButton
-					v-if="isOwner && !communityNodeDetails.installed"
+					v-else-if="isOwner"
 					:loading="loading"
 					:disabled="loading"
-					:label="i18n.baseText('communityNodeDetails.install')"
+					label="Install Node"
 					size="small"
-					data-test-id="install-community-node-button"
 					@click="onInstall"
+					data-test-id="install-community-node-button"
 				/>
 			</div>
 		</div>
@@ -160,7 +138,6 @@ const onInstall = async () => {
 }
 .header {
 	display: flex;
-	gap: var(--spacing-2xs);
 	align-items: center;
 	justify-content: space-between;
 }
@@ -180,14 +157,6 @@ const onInstall = async () => {
 	margin-right: var(--spacing-3xs);
 	color: var(--color-text-base);
 	font-size: var(--font-size-2xs);
-}
-
-.officialIcon {
-	display: inline-flex;
-	flex-shrink: 0;
-	margin-left: var(--spacing-4xs);
-	color: var(--color-text-base);
-	width: 14px;
 }
 
 .installed {

@@ -1,6 +1,5 @@
 import {
 	computed,
-	inject,
 	onBeforeUnmount,
 	onMounted,
 	ref,
@@ -16,11 +15,11 @@ import { ensureSyntaxTree } from '@codemirror/language';
 import type { IDataObject } from 'n8n-workflow';
 import { Expression, ExpressionExtensions } from 'n8n-workflow';
 
-import { EXPRESSION_EDITOR_PARSER_TIMEOUT, ExpressionLocalResolveContextSymbol } from '@/constants';
+import { EXPRESSION_EDITOR_PARSER_TIMEOUT } from '@/constants';
 import { useNDVStore } from '@/stores/ndv.store';
 
-import type { TargetItem, TargetNodeParameterContext } from '@/Interface';
-import { type ResolveParameterOptions, useWorkflowHelpers } from '@/composables/useWorkflowHelpers';
+import type { TargetItem } from '@/Interface';
+import { useWorkflowHelpers } from '@/composables/useWorkflowHelpers';
 import { highlighter } from '@/plugins/codemirror/resolvableHighlighter';
 import { closeCursorInfoBox } from '@/plugins/codemirror/tooltips/InfoBoxTooltip';
 import type { Html, Plaintext, RawSegment, Resolvable, Segment } from '@/types/expressions';
@@ -34,18 +33,16 @@ import {
 	type SelectionRange,
 } from '@codemirror/state';
 import { EditorView, type ViewUpdate } from '@codemirror/view';
-import debounce from 'lodash/debounce';
-import isEqual from 'lodash/isEqual';
-import { useI18n } from '@n8n/i18n';
+import { debounce, isEqual } from 'lodash-es';
+import { useRouter } from 'vue-router';
+import { useI18n } from '../composables/useI18n';
 import { useWorkflowsStore } from '../stores/workflows.store';
 import { useAutocompleteTelemetry } from './useAutocompleteTelemetry';
 import { ignoreUpdateAnnotation } from '../utils/forceParse';
-import { TARGET_NODE_PARAMETER_FACET } from '@/plugins/codemirror/completions/constants';
 
 export const useExpressionEditor = ({
 	editorRef,
 	editorValue,
-	targetNodeParameterContext,
 	extensions = [],
 	additionalData = {},
 	skipSegments = [],
@@ -55,7 +52,6 @@ export const useExpressionEditor = ({
 }: {
 	editorRef: MaybeRefOrGetter<HTMLElement | undefined>;
 	editorValue?: MaybeRefOrGetter<string>;
-	targetNodeParameterContext?: MaybeRefOrGetter<TargetNodeParameterContext>;
 	extensions?: MaybeRefOrGetter<Extension[]>;
 	additionalData?: MaybeRefOrGetter<IDataObject>;
 	skipSegments?: MaybeRefOrGetter<string[]>;
@@ -65,7 +61,8 @@ export const useExpressionEditor = ({
 }) => {
 	const ndvStore = useNDVStore();
 	const workflowsStore = useWorkflowsStore();
-	const workflowHelpers = useWorkflowHelpers();
+	const router = useRouter();
+	const workflowHelpers = useWorkflowHelpers({ router });
 	const i18n = useI18n();
 	const editor = ref<EditorView>();
 	const hasFocus = ref(false);
@@ -77,10 +74,6 @@ export const useExpressionEditor = ({
 	const autocompleteStatus = ref<'pending' | 'active' | null>(null);
 	const dragging = ref(false);
 	const hasChanges = ref(false);
-	const expressionLocalResolveContext = inject(
-		ExpressionLocalResolveContextSymbol,
-		computed(() => undefined),
-	);
 
 	const emitChanges = debounce(onChange, 300);
 
@@ -206,7 +199,6 @@ export const useExpressionEditor = ({
 		const state = EditorState.create({
 			doc: toValue(editorValue),
 			extensions: [
-				TARGET_NODE_PARAMETER_FACET.of(toValue(targetNodeParameterContext)),
 				customExtensions.value.of(toValue(extensions)),
 				readOnlyExtensions.value.of([EditorState.readOnly.of(toValue(isReadOnly))]),
 				telemetryExtensions.value.of([]),
@@ -314,23 +306,12 @@ export const useExpressionEditor = ({
 		};
 
 		try {
-			if (expressionLocalResolveContext.value) {
-				result.resolved = workflowHelpers.resolveExpression('=' + resolvable, undefined, {
-					...expressionLocalResolveContext.value,
-					additionalKeys: toValue(additionalData),
-				});
-			} else if (!ndvStore.activeNode && toValue(targetNodeParameterContext) === undefined) {
+			if (!ndvStore.activeNode) {
 				// e.g. credential modal
 				result.resolved = Expression.resolveWithoutWorkflow(resolvable, toValue(additionalData));
 			} else {
-				let opts: ResolveParameterOptions = {
-					additionalKeys: toValue(additionalData),
-					contextNodeName: toValue(targetNodeParameterContext)?.nodeName,
-				};
-				if (
-					toValue(targetNodeParameterContext) === undefined &&
-					ndvStore.isInputParentOfActiveNode
-				) {
+				let opts: Record<string, unknown> = { additionalKeys: toValue(additionalData) };
+				if (ndvStore.isInputParentOfActiveNode) {
 					opts = {
 						targetItem: target ?? undefined,
 						inputNodeName: ndvStore.ndvInputNodeName,

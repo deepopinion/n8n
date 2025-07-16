@@ -23,13 +23,13 @@ const props = withDefaults(defineProps<AlertProps>(), {
 const icon = computed(() => {
 	switch (props.type) {
 		case 'success':
-			return 'circle-check';
+			return 'check-circle';
 		case 'warning':
-			return 'triangle-alert';
+			return 'exclamation-triangle';
 		case 'error':
-			return 'circle-x';
+			return 'times-circle';
 		default:
-			return 'info';
+			return 'info-circle';
 	}
 });
 

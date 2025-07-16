@@ -7,12 +7,11 @@ import markdownTaskLists from 'markdown-it-task-lists';
 import { computed, ref } from 'vue';
 import xss, { friendlyAttrValue, whiteList } from 'xss';
 
-import { markdownYoutubeEmbed, YOUTUBE_EMBED_SRC_REGEX, type YoutubeEmbedConfig } from './youtube';
-import { toggleCheckbox } from '../../utils/markdown';
+import { escapeMarkdown, toggleCheckbox } from '../../utils/markdown';
 import N8nLoading from '../N8nLoading';
 
 interface IImage {
-	id: string | number;
+	id: string;
 	url: string;
 }
 
@@ -20,11 +19,10 @@ interface Options {
 	markdown: MarkdownOptions;
 	linkAttributes: markdownLink.Config;
 	tasklists: markdownTaskLists.Config;
-	youtube: YoutubeEmbedConfig;
 }
 
 interface MarkdownProps {
-	content?: string | null;
+	content?: string;
 	withMultiBreaks?: boolean;
 	images?: IImage[];
 	loading?: boolean;
@@ -44,7 +42,7 @@ const props = withDefaults(defineProps<MarkdownProps>(), {
 	theme: 'markdown',
 	options: () => ({
 		markdown: {
-			html: false,
+			html: true,
 			linkify: true,
 			typographer: true,
 			breaks: true,
@@ -60,7 +58,6 @@ const props = withDefaults(defineProps<MarkdownProps>(), {
 			label: true,
 			labelAfter: true,
 		},
-		youtube: {},
 	}),
 });
 
@@ -70,22 +67,11 @@ const { options } = props;
 const md = new Markdown(options.markdown)
 	.use(markdownLink, options.linkAttributes)
 	.use(markdownEmoji)
-	.use(markdownTaskLists, options.tasklists)
-	.use(markdownYoutubeEmbed, options.youtube);
+	.use(markdownTaskLists, options.tasklists);
 
 const xssWhiteList = {
 	...whiteList,
 	label: ['class', 'for'],
-	iframe: [
-		'width',
-		'height',
-		'src',
-		'title',
-		'frameborder',
-		'allow',
-		'referrerpolicy',
-		'allowfullscreen',
-	],
 };
 
 const htmlContent = computed(() => {
@@ -110,8 +96,7 @@ const htmlContent = computed(() => {
 	if (props.withMultiBreaks) {
 		contentToRender = contentToRender.replaceAll('\n\n', '\n&nbsp;\n');
 	}
-	const html = md.render(contentToRender);
-
+	const html = md.render(escapeMarkdown(contentToRender));
 	const safeHtml = xss(html, {
 		onTagAttr(tag, name, value) {
 			if (tag === 'img' && name === 'src') {
@@ -127,19 +112,6 @@ const htmlContent = computed(() => {
 					return '';
 				}
 			}
-
-			if (tag === 'iframe') {
-				if (name === 'src') {
-					// Only allow YouTube as src for iframes embeds
-					if (YOUTUBE_EMBED_SRC_REGEX.test(value)) {
-						return `src=${friendlyAttrValue(value)}`;
-					} else {
-						return '';
-					}
-				}
-				return;
-			}
-
 			// Return nothing, means keep the default handling measure
 			return;
 		},
@@ -223,18 +195,15 @@ const onCheckboxChange = (index: number) => {
 
 <template>
 	<div class="n8n-markdown">
-		<!-- Needed to support YouTube player embeds. HTML rendered here is sanitized. -->
-		<!-- eslint-disable vue/no-v-html -->
 		<div
 			v-if="!loading"
 			ref="editor"
+			v-n8n-html="htmlContent"
 			:class="$style[theme]"
 			@click="onClick"
 			@mousedown="onMouseDown"
 			@change="onChange"
-			v-html="htmlContent"
 		/>
-		<!-- eslint-enable vue/no-v-html -->
 		<div v-else :class="$style.markdown">
 			<div v-for="(_, index) in loadingBlocks" :key="index">
 				<N8nLoading :loading="loading" :rows="loadingRows" animated variant="p" />
@@ -419,14 +388,6 @@ input[type='checkbox'] + label {
 		display: block;
 		padding: var(--spacing-s);
 		overflow-x: auto;
-	}
-
-	iframe {
-		aspect-ratio: 16/9 auto;
-	}
-
-	summary {
-		cursor: pointer;
 	}
 }
 

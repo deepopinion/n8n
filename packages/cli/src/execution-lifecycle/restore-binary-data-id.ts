@@ -1,7 +1,6 @@
-import { Logger } from '@n8n/backend-common';
 import { Container } from '@n8n/di';
 import type { BinaryData } from 'n8n-core';
-import { BinaryDataConfig, BinaryDataService } from 'n8n-core';
+import { BinaryDataConfig, BinaryDataService, Logger } from 'n8n-core';
 import type { IRun, WorkflowExecuteMode } from 'n8n-workflow';
 
 /**

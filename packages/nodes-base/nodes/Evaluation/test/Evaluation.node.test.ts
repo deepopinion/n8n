@@ -4,7 +4,6 @@ import {
 	type AssignmentCollectionValue,
 	type IExecuteFunctions,
 	type INodeTypes,
-	type NodeParameterValueType,
 } from 'n8n-workflow';
 
 import { GoogleSheet } from '../../Google/Sheet/v2/helpers/GoogleSheet';
@@ -45,11 +44,6 @@ describe('Test Evaluation', () => {
 			return { sheetId: 1, title: sheetName };
 		});
 
-		test('credential test for googleApi should be in methods', async () => {
-			const evaluationNode = new Evaluation();
-			expect(evaluationNode.methods.credentialTest.googleApiCredentialTest).toBeDefined();
-		});
-
 		test('should throw error if output values is empty', async () => {
 			mockExecuteFunctions.getNodeParameter.mockImplementation(
 				(key: string, _: number, fallbackValue?: string | number | boolean | object) => {
@@ -63,7 +57,7 @@ describe('Test Evaluation', () => {
 						sheetMode: 'id',
 						operation: 'setOutputs',
 					};
-					return (mockParams[key] ?? fallbackValue) as NodeParameterValueType;
+					return mockParams[key] ?? fallbackValue;
 				},
 			);
 
@@ -89,7 +83,7 @@ describe('Test Evaluation', () => {
 						sheetMode: 'id',
 						operation: 'setOutputs',
 					};
-					return (mockParams[key] ?? fallbackValue) as NodeParameterValueType;
+					return mockParams[key] ?? fallbackValue;
 				},
 			);
 
@@ -126,7 +120,7 @@ describe('Test Evaluation', () => {
 						sheetMode: 'id',
 						operation: 'setOutputs',
 					};
-					return (mockParams[key] ?? fallbackValue) as NodeParameterValueType;
+					return mockParams[key] ?? fallbackValue;
 				},
 			);
 			mockExecuteFunctions.getParentNodes.mockReturnValue([]);
@@ -153,7 +147,7 @@ describe('Test Evaluation', () => {
 						sheetMode: 'id',
 						operation: 'setOutputs',
 					};
-					return (mockParams[key] ?? fallbackValue) as NodeParameterValueType;
+					return mockParams[key] ?? fallbackValue;
 				},
 			);
 
@@ -194,9 +188,6 @@ describe('Test Evaluation', () => {
 					}
 					if (param === 'operation') {
 						return 'setMetrics';
-					}
-					if (param === 'metric') {
-						return 'customMetrics';
 					}
 					return param;
 				}),
@@ -303,7 +294,7 @@ describe('Test Evaluation', () => {
 					const mockParams: { [key: string]: unknown } = {
 						operation: 'checkIfEvaluating',
 					};
-					return (mockParams[key] ?? fallbackValue) as NodeParameterValueType;
+					return mockParams[key] ?? fallbackValue;
 				},
 			);
 		});

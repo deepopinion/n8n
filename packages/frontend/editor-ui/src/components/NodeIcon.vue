@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import type { SimplifiedNodeType } from '@/Interface';
+import type { IVersionNode, SimplifiedNodeType } from '@/Interface';
 import { getNodeIconSource, type NodeIconSource } from '@/utils/nodeIcon';
 import { N8nNodeIcon } from '@n8n/design-system';
 import { computed } from 'vue';
-import type { VersionNode } from '@n8n/rest-api-client/api/versions';
 
 type Props = {
 	size?: number;
@@ -16,7 +15,7 @@ type Props = {
 	// NodeIcon needs iconSource OR nodeType, would be better with an intersection type
 	// but it breaks Vue template type checking
 	iconSource?: NodeIconSource;
-	nodeType?: SimplifiedNodeType | VersionNode | null;
+	nodeType?: SimplifiedNodeType | IVersionNode | null;
 };
 
 const props = withDefaults(defineProps<Props>(), {
@@ -62,9 +61,7 @@ const badge = computed(() => {
 	return iconSource.value.badge;
 });
 
-const nodeTypeName = computed(() =>
-	props.nodeName && props.nodeName !== '' ? props.nodeName : props.nodeType?.displayName,
-);
+const nodeTypeName = computed(() => props.nodeName ?? props.nodeType?.displayName);
 </script>
 
 <template>

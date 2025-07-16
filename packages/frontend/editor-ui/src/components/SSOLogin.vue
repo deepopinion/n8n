@@ -1,22 +1,15 @@
 <script lang="ts" setup>
 import { useSSOStore } from '@/stores/sso.store';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useToast } from '@/composables/useToast';
-import { useRoute } from 'vue-router';
 
 const i18n = useI18n();
 const ssoStore = useSSOStore();
 const toast = useToast();
-const route = useRoute();
 
 const onSSOLogin = async () => {
 	try {
-		const redirectUrl = ssoStore.isDefaultAuthenticationSaml
-			? await ssoStore.getSSORedirectUrl(
-					typeof route.query?.redirect === 'string' ? route.query.redirect : '',
-				)
-			: ssoStore.oidc.loginUrl;
-		window.location.href = redirectUrl ?? '';
+		window.location.href = await ssoStore.getSSORedirectUrl();
 	} catch (error) {
 		toast.showError(error, 'Error', error.message);
 	}
@@ -28,7 +21,7 @@ const onSSOLogin = async () => {
 		<div :class="$style.divider">
 			<span>{{ i18n.baseText('sso.login.divider') }}</span>
 		</div>
-		<N8nButton
+		<n8n-button
 			size="large"
 			type="primary"
 			outline

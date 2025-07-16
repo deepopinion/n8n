@@ -1,13 +1,20 @@
 import { createPinia, setActivePinia } from 'pinia';
+import { useSettingsStore } from '@/stores/settings.store';
 import { useSSOStore } from '@/stores/sso.store';
-import type { UserManagementAuthenticationMethod } from '@/Interface';
+import { merge } from 'lodash-es';
+import { SETTINGS_STORE_DEFAULT_STATE } from '@/__tests__/utils';
+import type { FrontendSettings } from '@n8n/api-types';
 
 let ssoStore: ReturnType<typeof useSSOStore>;
+let settingsStore: ReturnType<typeof useSettingsStore>;
+
+const DEFAULT_SETTINGS: FrontendSettings = SETTINGS_STORE_DEFAULT_STATE.settings;
 
 describe('SSO store', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia());
 		ssoStore = useSSOStore();
+		settingsStore = useSettingsStore();
 	});
 
 	test.each([
@@ -19,19 +26,21 @@ describe('SSO store', () => {
 	])(
 		'should check SSO login button availability when authenticationMethod is %s and enterprise feature is %s and sso login is set to %s',
 		(authenticationMethod, saml, loginEnabled, expectation) => {
-			ssoStore.initialize({
-				authenticationMethod: authenticationMethod as UserManagementAuthenticationMethod,
-				config: {
-					saml: {
-						loginEnabled,
+			settingsStore.setSettings(
+				merge({}, DEFAULT_SETTINGS, {
+					userManagement: {
+						authenticationMethod,
 					},
-				},
-				features: {
-					saml,
-					ldap: false,
-					oidc: false,
-				},
-			});
+					enterprise: {
+						saml,
+					},
+					sso: {
+						saml: {
+							loginEnabled,
+						},
+					},
+				}),
+			);
 
 			expect(ssoStore.showSsoLoginButton).toBe(expectation);
 		},

@@ -2,7 +2,7 @@
 import VariablesForm from '@/components/VariablesForm.vue';
 import VariablesUsageBadge from '@/components/VariablesUsageBadge.vue';
 import { useDocumentTitle } from '@/composables/useDocumentTitle';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useMessage } from '@/composables/useMessage';
 import { useTelemetry } from '@/composables/useTelemetry';
 import { useToast } from '@/composables/useToast';
@@ -14,18 +14,16 @@ import { useUsersStore } from '@/stores/users.store';
 import { computed, onMounted, ref, useTemplateRef } from 'vue';
 import { useRoute, useRouter, type LocationQueryRaw } from 'vue-router';
 
-import ResourcesListLayout from '@/components/layouts/ResourcesListLayout.vue';
-import type {
-	BaseFilters,
-	Resource,
-	VariableResource,
-	DatatableColumn,
-	EnvironmentVariable,
-} from '@/Interface';
+import ResourcesListLayout, {
+	type BaseFilters,
+	type Resource,
+	type VariableResource,
+} from '@/components/layouts/ResourcesListLayout.vue';
 
 import { usePageRedirectionHelper } from '@/composables/usePageRedirectionHelper';
 import { EnterpriseEditionFeature, MODAL_CONFIRM } from '@/constants';
-import { getResourcePermissions } from '@n8n/permissions';
+import type { DatatableColumn, EnvironmentVariable } from '@/Interface';
+import { getResourcePermissions } from '@/permissions';
 import {
 	N8nActionBox,
 	N8nBadge,
@@ -36,8 +34,7 @@ import {
 } from '@n8n/design-system';
 import { uid } from '@n8n/design-system/utils';
 import { useAsyncState } from '@vueuse/core';
-import pickBy from 'lodash/pickBy';
-import type { ComponentExposed } from 'vue-component-type-helpers';
+import { pickBy } from 'lodash-es';
 
 const settingsStore = useSettingsStore();
 const environmentsStore = useEnvironmentsStore();
@@ -50,7 +47,7 @@ const sourceControlStore = useSourceControlStore();
 const route = useRoute();
 const router = useRouter();
 
-const layoutRef = useTemplateRef<ComponentExposed<typeof ResourcesListLayout>>('layoutRef');
+const layoutRef = useTemplateRef<InstanceType<typeof ResourcesListLayout>>('layoutRef');
 
 const { showError } = useToast();
 
@@ -404,10 +401,6 @@ onMounted(() => {
 			.action-buttons {
 				opacity: 1;
 			}
-		}
-
-		td:nth-child(2) {
-			white-space: normal;
 		}
 	}
 

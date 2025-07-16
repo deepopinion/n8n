@@ -28,16 +28,15 @@ export class ExecutionError extends ApplicationError {
 	 * Populate error `message` and `description` from error `stack`.
 	 */
 	private populateFromStack() {
-		const stackRows = this.stack && typeof this.stack === 'string' ? this.stack.split('\n') : [];
+		const stackRows = this.stack.split('\n');
 
 		if (stackRows.length === 0) {
 			this.message = 'Unknown error';
-			return;
 		}
 
 		const messageRow = stackRows.find((line) => line.includes('Error:'));
 		const lineNumberRow = stackRows.find((line) => line.includes('Code:'));
-		const lineNumberDisplay = this.toLineNumberDisplay(lineNumberRow) || '';
+		const lineNumberDisplay = this.toLineNumberDisplay(lineNumberRow);
 
 		if (!messageRow) {
 			this.message = `Unknown error ${lineNumberDisplay}`;
@@ -53,7 +52,7 @@ export class ExecutionError extends ApplicationError {
 			return;
 		}
 
-		this.message = `${errorDetails} ${lineNumberDisplay}`.trim();
+		this.message = `${errorDetails} ${lineNumberDisplay}`;
 	}
 
 	private toLineNumberDisplay(lineNumberRow?: string) {
@@ -75,16 +74,10 @@ export class ExecutionError extends ApplicationError {
 	private toErrorDetailsAndType(messageRow?: string) {
 		if (!messageRow) return [null, null];
 
-		// Remove "Error: " prefix added by stacktrace formatting
-		messageRow = messageRow.replace(/^Error: /, '');
-
-		const colonIndex = messageRow.indexOf(': ');
-		if (colonIndex === -1) {
-			return [messageRow.trim(), null];
-		}
-
-		const errorType = messageRow.substring(0, colonIndex).trim();
-		const errorDetails = messageRow.substring(colonIndex + 2).trim();
+		const [errorDetails, errorType] = messageRow
+			.split(':')
+			.reverse()
+			.map((i) => i.trim());
 
 		return [errorDetails, errorType === 'Error' ? null : errorType];
 	}

@@ -18,7 +18,7 @@ export function blankCompletions(context: CompletionContext): CompletionResult |
 
 	return {
 		from: word.to,
-		options: dollarOptions(context).map(stripExcessParens(context)),
+		options: dollarOptions().map(stripExcessParens(context)),
 		filter: false,
 	};
 }

@@ -817,7 +817,6 @@ describe('useFlattenSchema', () => {
 			expect(
 				useFlattenSchema().flattenSchema({
 					schema,
-					isDataEmpty: false,
 				}).length,
 			).toBe(3);
 		});
@@ -836,18 +835,8 @@ describe('useFlattenSchema', () => {
 					},
 				],
 			};
-			const node1Schema = flattenSchema({
-				schema,
-				expressionPrefix: '$("First Node")',
-				depth: 1,
-				isDataEmpty: false,
-			});
-			const node2Schema = flattenSchema({
-				schema,
-				expressionPrefix: '$("Second Node")',
-				depth: 1,
-				isDataEmpty: false,
-			});
+			const node1Schema = flattenSchema({ schema, expressionPrefix: '$("First Node")', depth: 1 });
+			const node2Schema = flattenSchema({ schema, expressionPrefix: '$("Second Node")', depth: 1 });
 
 			expect(node1Schema[0].id).not.toBe(node2Schema[0].id);
 		});

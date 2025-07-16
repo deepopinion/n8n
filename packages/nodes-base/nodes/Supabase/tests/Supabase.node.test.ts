@@ -1,5 +1,5 @@
 import { mock } from 'jest-mock-extended';
-import get from 'lodash/get';
+import { get } from 'lodash';
 import {
 	type IDataObject,
 	type IExecuteFunctions,
@@ -33,8 +33,8 @@ describe('Test Supabase Node', () => {
 			getNodeParameter(
 				parameterName: string,
 				itemIndex: number,
-				fallbackValue?: IDataObject,
-				options?: IGetNodeParameterOptions,
+				fallbackValue?: IDataObject | undefined,
+				options?: IGetNodeParameterOptions | undefined,
 			) {
 				const parameter = options?.extractValue ? `${parameterName}.value` : parameterName;
 				const parameterValue = get(nodeParameters, parameter, fallbackValue);

@@ -6,7 +6,7 @@ import NodeCredentials from '@/components/NodeCredentials.vue';
 import { useCredentialsStore } from '@/stores/credentials.store';
 import { N8nOption, N8nSelect } from '@n8n/design-system';
 import type { INodeUi, INodeUpdatePropertiesInformation } from '@/Interface';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 
 type Props = {
 	activeCredentialType: string;
@@ -70,7 +70,8 @@ function isSupported(name: string): boolean {
 	}
 
 	if (
-		checkedCredType.extends?.some((parentType: string) => supported.extends.includes(parentType))
+		checkedCredType.extends &&
+		checkedCredType.extends.some((parentType: string) => supported.extends.includes(parentType))
 	) {
 		return true;
 	}

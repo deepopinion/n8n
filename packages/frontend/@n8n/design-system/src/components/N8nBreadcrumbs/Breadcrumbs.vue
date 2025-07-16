@@ -1,13 +1,9 @@
-<script lang="ts" setup generic="UserType extends IUser">
+<script lang="ts" setup>
 import { computed, ref, watch } from 'vue';
 
-import type { IUser, UserAction } from '@n8n/design-system/types';
+import type { UserAction } from '@n8n/design-system/types';
 
-import N8nActionToggle from '../N8nActionToggle';
-import N8nLink from '../N8nLink';
 import N8nLoading from '../N8nLoading';
-import N8nText from '../N8nText';
-import N8nTooltip from '../N8nTooltip';
 
 export type PathItem = {
 	id: string;
@@ -70,7 +66,7 @@ const dropdownDisabled = computed(() => {
 	return props.pathTruncated && !hasHiddenItems.value;
 });
 
-const hiddenItemActions = computed((): Array<UserAction<UserType>> => {
+const hiddenItemActions = computed((): UserAction[] => {
 	return loadedHiddenItems.value.map((item) => ({
 		value: item.id,
 		label: item.label,
@@ -136,7 +132,7 @@ const emitItemHover = (id: string) => {
 	emit('itemHover', item);
 };
 
-const onHiddenItemMouseUp = (item: UserAction<UserType>) => {
+const onHiddenItemMouseUp = (item: UserAction) => {
 	const pathItem = [...props.items, ...loadedHiddenItems.value].find((i) => i.id === item.value);
 	if (!pathItem || !props.dragActive) {
 		return;
@@ -181,13 +177,16 @@ const handleTooltipClose = () => {
 			>
 				<!-- Show interactive dropdown for larger versions -->
 				<div v-if="props.theme !== 'small'" :class="$style['hidden-items-menu']">
-					<N8nActionToggle
+					<n8n-action-toggle
 						:actions="hiddenItemActions"
 						:loading="isLoadingHiddenItems"
 						:loading-row-count="loadingSkeletonRows"
 						:disabled="dropdownDisabled"
 						:class="$style['action-toggle']"
-						:popper-class="`${$style['hidden-items-menu-popper']} ${dragActive ? $style.dragging : ''}`"
+						:popper-class="{
+							[$style['hidden-items-menu-popper']]: true,
+							[$style.dragging]: dragActive,
+						}"
 						:trigger="hiddenItemsTrigger"
 						theme="dark"
 						placement="bottom"
@@ -198,11 +197,11 @@ const handleTooltipClose = () => {
 						@action="emitItemSelected"
 						@item-mouseup="onHiddenItemMouseUp"
 					>
-						<N8nText :bold="true" :class="$style.dots">...</N8nText>
-					</N8nActionToggle>
+						<n8n-text :bold="true" :class="$style.dots">...</n8n-text>
+					</n8n-action-toggle>
 				</div>
 				<!-- Just a tooltip for smaller versions -->
-				<N8nTooltip
+				<n8n-tooltip
 					v-else
 					:popper-class="$style.tooltip"
 					:disabled="dropdownDisabled"
@@ -223,12 +222,12 @@ const handleTooltipClose = () => {
 						</div>
 						<div v-else :class="$style.tooltipContent">
 							<div data-test-id="hidden-items-tooltip">
-								<N8nText>{{ loadedHiddenItems.map((item) => item.label).join(' / ') }}</N8nText>
+								<n8n-text>{{ loadedHiddenItems.map((item) => item.label).join(' / ') }}</n8n-text>
 							</div>
 						</div>
 					</template>
 					<span :class="$style['tooltip-ellipsis']">...</span>
-				</N8nTooltip>
+				</n8n-tooltip>
 			</li>
 			<li v-if="showEllipsis" :class="$style.separator">{{ separator }}</li>
 			<template v-for="(item, index) in items" :key="item.id">
@@ -246,8 +245,8 @@ const handleTooltipClose = () => {
 					@mouseenter="emitItemHover(item.id)"
 					@mouseup="onItemMouseUp(item)"
 				>
-					<N8nLink v-if="item.href" :href="item.href" theme="text">{{ item.label }}</N8nLink>
-					<N8nText v-else>{{ item.label }}</N8nText>
+					<n8n-link v-if="item.href" :href="item.href" theme="text">{{ item.label }}</n8n-link>
+					<n8n-text v-else>{{ item.label }}</n8n-text>
 				</li>
 				<li v-if="index !== items.length - 1" :class="$style.separator">
 					{{ separator }}

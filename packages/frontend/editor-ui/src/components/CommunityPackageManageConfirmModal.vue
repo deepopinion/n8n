@@ -4,13 +4,10 @@ import { COMMUNITY_PACKAGE_CONFIRM_MODAL_KEY, COMMUNITY_PACKAGE_MANAGE_ACTIONS }
 import { useToast } from '@/composables/useToast';
 import { useCommunityNodesStore } from '@/stores/communityNodes.store';
 import { createEventBus } from '@n8n/utils/event-bus';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useTelemetry } from '@/composables/useTelemetry';
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useNodeTypesStore } from '@/stores/nodeTypes.store';
-import type { CommunityNodeType } from '@n8n/api-types';
-import { useSettingsStore } from '@/stores/settings.store';
-import semver from 'semver';
 
 export type CommunityPackageManageMode = 'uninstall' | 'update' | 'view-documentation';
 
@@ -23,8 +20,6 @@ interface Props {
 const props = defineProps<Props>();
 
 const communityNodesStore = useCommunityNodesStore();
-const nodeTypesStore = useNodeTypesStore();
-const settingsStore = useSettingsStore();
 
 const modalBus = createEventBus();
 
@@ -34,24 +29,9 @@ const telemetry = useTelemetry();
 
 const loading = ref(false);
 
-const isUsingVerifiedAndUnverifiedPackages =
-	settingsStore.isCommunityNodesFeatureEnabled && settingsStore.isUnverifiedPackagesEnabled;
-const isUsingVerifiedPackagesOnly =
-	settingsStore.isCommunityNodesFeatureEnabled && !settingsStore.isUnverifiedPackagesEnabled;
-
-const communityStorePackage = computed(
+const activePackage = computed(
 	() => communityNodesStore.installedPackages[props.activePackageName],
 );
-const updateVersion = computed(() => {
-	return settingsStore.isUnverifiedPackagesEnabled
-		? communityStorePackage.value.updateAvailable
-		: nodeTypeStorePackage.value?.npmVersion;
-});
-const nodeTypeStorePackage = ref<CommunityNodeType>();
-
-const isLatestPackageVerified = ref<boolean>(true);
-
-const packageVersion = ref<string>(communityStorePackage.value.updateAvailable ?? '');
 
 const getModalContent = computed(() => {
 	if (props.mode === COMMUNITY_PACKAGE_MANAGE_ACTIONS.UNINSTALL) {
@@ -75,11 +55,10 @@ const getModalContent = computed(() => {
 			},
 		}),
 		description: i18n.baseText('settings.communityNodes.confirmModal.update.description'),
-		warning: i18n.baseText('settings.communityNodes.confirmModal.update.warning'),
 		message: i18n.baseText('settings.communityNodes.confirmModal.update.message', {
 			interpolate: {
 				packageName: props.activePackageName,
-				version: packageVersion.value,
+				version: activePackage.value.updateAvailable ?? '',
 			},
 		}),
 		buttonLabel: i18n.baseText('settings.communityNodes.confirmModal.update.buttonLabel'),
@@ -104,11 +83,11 @@ const onConfirmButtonClick = async () => {
 const onUninstall = async () => {
 	try {
 		telemetry.track('user started cnr package deletion', {
-			package_name: communityStorePackage.value.packageName,
-			package_node_names: communityStorePackage.value.installedNodes.map((node) => node.name),
-			package_version: communityStorePackage.value.installedVersion,
-			package_author: communityStorePackage.value.authorName,
-			package_author_email: communityStorePackage.value.authorEmail,
+			package_name: activePackage.value.packageName,
+			package_node_names: activePackage.value.installedNodes.map((node) => node.name),
+			package_version: activePackage.value.installedVersion,
+			package_author: activePackage.value.authorName,
+			package_author_email: activePackage.value.authorEmail,
 		});
 		loading.value = true;
 		await communityNodesStore.uninstallPackage(props.activePackageName);
@@ -128,34 +107,23 @@ const onUninstall = async () => {
 const onUpdate = async () => {
 	try {
 		telemetry.track('user started cnr package update', {
-			package_name: communityStorePackage.value.packageName,
-			package_node_names: communityStorePackage.value.installedNodes.map((node) => node.name),
-			package_version_current: communityStorePackage.value.installedVersion,
-			package_version_new: communityStorePackage.value.updateAvailable,
-			package_author: communityStorePackage.value.authorName,
-			package_author_email: communityStorePackage.value.authorEmail,
+			package_name: activePackage.value.packageName,
+			package_node_names: activePackage.value.installedNodes.map((node) => node.name),
+			package_version_current: activePackage.value.installedVersion,
+			package_version_new: activePackage.value.updateAvailable,
+			package_author: activePackage.value.authorName,
+			package_author_email: activePackage.value.authorEmail,
 		});
 		loading.value = true;
-
-		if (settingsStore.isUnverifiedPackagesEnabled) {
-			await communityNodesStore.updatePackage(props.activePackageName);
-		} else if (settingsStore.isCommunityNodesFeatureEnabled) {
-			await communityNodesStore.updatePackage(
-				props.activePackageName,
-				updateVersion.value,
-				nodeTypeStorePackage.value?.checksum,
-			);
-		} else {
-			throw new Error('Community nodes feature is not correctly enabled.');
-		}
-
+		const updatedVersion = activePackage.value.updateAvailable;
+		await communityNodesStore.updatePackage(props.activePackageName);
 		await useNodeTypesStore().getNodeTypes();
 		toast.showMessage({
 			title: i18n.baseText('settings.communityNodes.messages.update.success.title'),
 			message: i18n.baseText('settings.communityNodes.messages.update.success.message', {
 				interpolate: {
 					packageName: props.activePackageName,
-					version: updateVersion.value ?? '',
+					version: updatedVersion ?? '',
 				},
 			}),
 			type: 'success',
@@ -167,47 +135,6 @@ const onUpdate = async () => {
 		modalBus.emit('close');
 	}
 };
-
-async function fetchPackageInfo(packageName: string) {
-	await nodeTypesStore.loadNodeTypesIfNotLoaded();
-	const nodeType = nodeTypesStore.visibleNodeTypes.find((nodeType) =>
-		nodeType.name.includes(packageName),
-	);
-
-	if (nodeType) {
-		const communityNodeAttributes = await nodeTypesStore.getCommunityNodeAttributes(nodeType?.name);
-
-		nodeTypeStorePackage.value = communityNodeAttributes ?? undefined;
-	}
-}
-
-function setIsVerifiedLatestPackage() {
-	if (
-		isUsingVerifiedAndUnverifiedPackages &&
-		nodeTypeStorePackage.value?.npmVersion &&
-		communityStorePackage.value.updateAvailable
-	) {
-		isLatestPackageVerified.value = semver.eq(
-			nodeTypeStorePackage.value.npmVersion,
-			communityStorePackage.value.updateAvailable,
-		);
-	}
-}
-
-function setPackageVersion() {
-	if (isUsingVerifiedPackagesOnly) {
-		packageVersion.value = nodeTypeStorePackage.value?.npmVersion ?? packageVersion.value;
-	}
-}
-
-onMounted(async () => {
-	if (props.activePackageName) {
-		await fetchPackageInfo(props.activePackageName);
-	}
-
-	setIsVerifiedLatestPackage();
-	setPackageVersion();
-});
 </script>
 
 <template>
@@ -229,11 +156,6 @@ onMounted(async () => {
 				<n8n-info-tip theme="info" type="note" :bold="false">
 					<span v-text="getModalContent.description"></span>
 				</n8n-info-tip>
-				<n8n-notice
-					v-if="!isLatestPackageVerified"
-					data-test-id="communityPackageManageConfirmModal-warning"
-					:content="getModalContent.warning"
-				/>
 			</div>
 		</template>
 		<template #footer>
@@ -253,7 +175,6 @@ onMounted(async () => {
 .descriptionContainer {
 	display: flex;
 	margin: var(--spacing-s) 0;
-	flex-direction: column;
 }
 
 .descriptionIcon {

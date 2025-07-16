@@ -3,7 +3,6 @@ import {
 	ManualRunQueryDto,
 	TransferWorkflowBodyDto,
 } from '@n8n/api-types';
-import { Logger } from '@n8n/backend-common';
 import { GlobalConfig } from '@n8n/config';
 import type { Project } from '@n8n/db';
 import {
@@ -14,7 +13,6 @@ import {
 	TagRepository,
 	SharedWorkflowRepository,
 	WorkflowRepository,
-	AuthenticatedRequest,
 } from '@n8n/db';
 import {
 	Body,
@@ -33,6 +31,7 @@ import {
 import { In, type FindOptionsRelations } from '@n8n/typeorm';
 import axios from 'axios';
 import express from 'express';
+import { Logger } from 'n8n-core';
 import { UnexpectedError } from 'n8n-workflow';
 import { v4 as uuid } from 'uuid';
 
@@ -46,6 +45,7 @@ import { validateEntity } from '@/generic-helpers';
 import type { IWorkflowResponse } from '@/interfaces';
 import { License } from '@/license';
 import { listQueryMiddleware } from '@/middlewares';
+import { AuthenticatedRequest } from '@/requests';
 import * as ResponseHelper from '@/response-helper';
 import { FolderService } from '@/services/folder.service';
 import { NamingService } from '@/services/naming.service';
@@ -169,7 +169,6 @@ export class WorkflowsController {
 						project.id,
 						transactionManager,
 					);
-					// @ts-ignore CAT-957
 					await transactionManager.update(WorkflowEntity, { id: workflow.id }, { parentFolder });
 				} catch {}
 			}

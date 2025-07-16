@@ -13,6 +13,7 @@ import {
 } from '@/constants';
 import { useRootStore } from '@n8n/stores/useRootStore';
 import { useNDVStore } from '@/stores/ndv.store';
+import { usePostHog } from '@/stores/posthog.store';
 import { useSettingsStore } from '@/stores/settings.store';
 import { useUIStore } from '@/stores/ui.store';
 
@@ -96,7 +97,11 @@ export class Telemetry {
 		}
 	}
 
-	track(event: string, properties?: ITelemetryTrackProperties) {
+	track(
+		event: string,
+		properties?: ITelemetryTrackProperties,
+		options: { withPostHog?: boolean } = {},
+	) {
 		if (!this.rudderStack) return;
 
 		const updatedProperties = {
@@ -110,6 +115,10 @@ export class Telemetry {
 				ip: '0.0.0.0',
 			},
 		});
+
+		if (options.withPostHog) {
+			usePostHog().capture(event, updatedProperties);
+		}
 	}
 
 	page(route: RouteLocation) {
@@ -161,7 +170,7 @@ export class Telemetry {
 
 			switch (event) {
 				case 'askAi.generationFinished':
-					this.track('Ai code generation finished', properties);
+					this.track('Ai code generation finished', properties, { withPostHog: true });
 				default:
 					break;
 			}
@@ -175,7 +184,7 @@ export class Telemetry {
 
 			switch (event) {
 				case 'generationFinished':
-					this.track('Ai Transform code generation finished', properties);
+					this.track('Ai Transform code generation finished', properties, { withPostHog: true });
 				default:
 					break;
 			}
@@ -193,10 +202,14 @@ export class Telemetry {
 			};
 			const changeName = changeNameMap[nodeType] || APPEND_ATTRIBUTION_DEFAULT_PATH;
 			if (change.name === changeName) {
-				this.track('User toggled n8n reference option', {
-					node: nodeType,
-					toValue: change.value,
-				});
+				this.track(
+					'User toggled n8n reference option',
+					{
+						node: nodeType,
+						toValue: change.value,
+					},
+					{ withPostHog: true },
+				);
 			}
 		}
 	}

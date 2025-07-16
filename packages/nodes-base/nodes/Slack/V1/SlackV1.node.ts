@@ -762,6 +762,7 @@ export class SlackV1 implements INodeType {
 									} else if (block.type === 'section') {
 										const textUi = (blockUi.textUi as IDataObject).textValue as IDataObject;
 										if (textUi) {
+											// eslint-disable-next-line @typescript-eslint/no-shadow
 											const text: Text = {};
 											if (textUi.type === 'plainText') {
 												text.type = 'plain_text';
@@ -826,7 +827,7 @@ export class SlackV1 implements INodeType {
 													const confirm: Confirm = {};
 													const titleUi = (confirmUi.titleUi as IDataObject)
 														.titleValue as IDataObject;
-
+													// eslint-disable-next-line @typescript-eslint/no-shadow
 													const textUi = (confirmUi.textUi as IDataObject).textValue as IDataObject;
 													const confirmTextUi = (confirmUi.confirmTextUi as IDataObject)
 														.confirmValue as IDataObject;
@@ -978,7 +979,7 @@ export class SlackV1 implements INodeType {
 					if (operation === 'getPermalink') {
 						const channel = this.getNodeParameter('channelId', i) as string;
 						const timestamp = this.getNodeParameter('timestamp', i) as string;
-
+						// eslint-disable-next-line @typescript-eslint/no-shadow
 						const qs = {
 							channel,
 							message_ts: timestamp,
@@ -1269,6 +1270,7 @@ export class SlackV1 implements INodeType {
 
 						const additionalFields = this.getNodeParameter('additionalFields', i);
 
+						// eslint-disable-next-line @typescript-eslint/no-shadow
 						const qs: IDataObject = {};
 
 						Object.assign(qs, additionalFields);
@@ -1347,6 +1349,7 @@ export class SlackV1 implements INodeType {
 					if (operation === 'get') {
 						const additionalFields = this.getNodeParameter('additionalFields', i);
 
+						// eslint-disable-next-line @typescript-eslint/no-shadow
 						const qs: IDataObject = {};
 
 						Object.assign(qs, additionalFields);

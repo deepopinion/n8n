@@ -9,10 +9,7 @@ export class PasswordUtility {
 		return await hash(plaintext, SALT_ROUNDS);
 	}
 
-	async compare(plaintext: string, hashed: string | null) {
-		if (hashed === null) {
-			return false;
-		}
+	async compare(plaintext: string, hashed: string) {
 		return await compare(plaintext, hashed);
 	}
 }

@@ -1,27 +1,30 @@
 import { WorkflowRepository } from '@n8n/db';
-import { Command } from '@n8n/decorators';
 import { Container } from '@n8n/di';
-import { z } from 'zod';
+import { Flags } from '@oclif/core';
 
 import { BaseCommand } from '../base-command';
 
-const flagsSchema = z.object({
-	active: z
-		.string()
-		.describe('Filters workflows by active status. Can be true or false')
-		.optional(),
-	onlyId: z.boolean().describe('Outputs workflow IDs only, one per line.').default(false),
-});
+export class ListWorkflowCommand extends BaseCommand {
+	static description = '\nList workflows';
 
-@Command({
-	name: 'list:workflow',
-	description: 'List workflows',
-	examples: ['', '--active=true --onlyId', '--active=false'],
-	flagsSchema,
-})
-export class ListWorkflowCommand extends BaseCommand<z.infer<typeof flagsSchema>> {
+	static examples = [
+		'$ n8n list:workflow',
+		'$ n8n list:workflow --active=true --onlyId',
+		'$ n8n list:workflow --active=false',
+	];
+
+	static flags = {
+		help: Flags.help({ char: 'h' }),
+		active: Flags.string({
+			description: 'Filters workflows by active status. Can be true or false',
+		}),
+		onlyId: Flags.boolean({
+			description: 'Outputs workflow IDs only, one per line.',
+		}),
+	};
+
 	async run() {
-		const { flags } = this;
+		const { flags } = await this.parse(ListWorkflowCommand);
 
 		if (flags.active !== undefined && !['true', 'false'].includes(flags.active)) {
 			this.error('The --active flag has to be passed using true or false');

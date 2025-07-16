@@ -1,4 +1,4 @@
-<script lang="ts" setup generic="UserType extends IUser = IUser">
+<script lang="ts" setup>
 import { computed } from 'vue';
 
 import { useI18n } from '../../composables/useI18n';
@@ -8,10 +8,10 @@ import N8nBadge from '../N8nBadge';
 import N8nUserInfo from '../N8nUserInfo';
 
 interface UsersListProps {
-	users: UserType[];
+	users: IUser[];
 	readonly?: boolean;
-	currentUserId?: string | null;
-	actions?: Array<UserAction<UserType>>;
+	currentUserId?: string;
+	actions?: UserAction[];
 	isSamlLoginEnabled?: boolean;
 }
 
@@ -26,7 +26,7 @@ const props = withDefaults(defineProps<UsersListProps>(), {
 const { t } = useI18n();
 
 const sortedUsers = computed(() =>
-	[...props.users].sort((a: UserType, b: UserType) => {
+	[...props.users].sort((a: IUser, b: IUser) => {
 		if (!a.email || !b.email) {
 			throw new Error('Expected all users to have email');
 		}
@@ -64,7 +64,7 @@ const sortedUsers = computed(() =>
 );
 
 const defaultGuard = () => true;
-const getActions = (user: UserType): Array<UserAction<UserType>> => {
+const getActions = (user: IUser): UserAction[] => {
 	if (user.isOwner) return [];
 
 	return props.actions.filter((action) => (action.guard ?? defaultGuard)(user));
@@ -73,7 +73,7 @@ const getActions = (user: UserType): Array<UserAction<UserType>> => {
 const emit = defineEmits<{
 	action: [value: { action: string; userId: string }];
 }>();
-const onUserAction = (user: UserType, action: string) =>
+const onUserAction = (user: IUser, action: string) =>
 	emit('action', {
 		action,
 		userId: user.id,

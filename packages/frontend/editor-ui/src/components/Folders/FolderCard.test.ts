@@ -2,8 +2,8 @@ import { createComponentRenderer } from '@/__tests__/render';
 import userEvent from '@testing-library/user-event';
 import FolderCard from './FolderCard.vue';
 import { createPinia, setActivePinia } from 'pinia';
-import type { FolderResource, FolderPathItem, UserAction } from '@/Interface';
-import type { IUser } from 'n8n-workflow';
+import type { FolderResource } from '../layouts/ResourcesListLayout.vue';
+import type { FolderPathItem, UserAction } from '@/Interface';
 
 vi.mock('vue-router', () => {
 	const push = vi.fn();
@@ -54,7 +54,7 @@ const renderComponent = createComponentRenderer(FolderCard, {
 		actions: [
 			{ label: 'Open', value: 'open', disabled: false },
 			{ label: 'Delete', value: 'delete', disabled: false },
-		] as const satisfies Array<UserAction<IUser>>,
+		] as const satisfies UserAction[],
 		breadcrumbs: DEFAULT_BREADCRUMBS,
 	},
 	global: {

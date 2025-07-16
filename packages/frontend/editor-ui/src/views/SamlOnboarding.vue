@@ -4,15 +4,15 @@ import { useRouter } from 'vue-router';
 import type { IFormBoxConfig } from '@n8n/design-system';
 import AuthView from '@/views/AuthView.vue';
 import { VIEWS } from '@/constants';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useToast } from '@/composables/useToast';
-import { useUsersStore } from '@/stores/users.store';
+import { useSSOStore } from '@/stores/sso.store';
 
 const router = useRouter();
 const locale = useI18n();
 const toast = useToast();
 
-const usersStore = useUsersStore();
+const ssoStore = useSSOStore();
 
 const loading = ref(false);
 const FORM_CONFIG: IFormBoxConfig = reactive({
@@ -21,7 +21,7 @@ const FORM_CONFIG: IFormBoxConfig = reactive({
 	inputs: [
 		{
 			name: 'firstName',
-			initialValue: usersStore.currentUser?.firstName,
+			initialValue: ssoStore.userData?.firstName,
 			properties: {
 				label: locale.baseText('auth.firstName'),
 				maxlength: 32,
@@ -32,7 +32,7 @@ const FORM_CONFIG: IFormBoxConfig = reactive({
 		},
 		{
 			name: 'lastName',
-			initialValue: usersStore.currentUser?.lastName,
+			initialValue: ssoStore.userData?.lastName,
 			properties: {
 				label: locale.baseText('auth.lastName'),
 				maxlength: 32,
@@ -54,7 +54,7 @@ const onSubmit = async (values: { [key: string]: string }) => {
 	if (!isFormWithFirstAndLastName(values)) return;
 	try {
 		loading.value = true;
-		await usersStore.updateUserName(values);
+		await ssoStore.updateUser(values);
 		await router.push({ name: VIEWS.HOMEPAGE });
 	} catch (error) {
 		loading.value = false;

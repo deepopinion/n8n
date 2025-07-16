@@ -7,7 +7,6 @@ import { SSHClientsManager } from '../../../ssh-clients-manager';
 import { getSSHTunnelFunctions } from '../ssh-tunnel-helper-functions';
 
 describe('getSSHTunnelFunctions', () => {
-	const abortController = new AbortController();
 	const credentials = mock<SSHCredentials>();
 	const sshClientsManager = mockInstance(SSHClientsManager);
 	const sshTunnelFunctions = getSSHTunnelFunctions();
@@ -18,22 +17,9 @@ describe('getSSHTunnelFunctions', () => {
 
 	describe('getSSHClient', () => {
 		it('should invoke sshClientsManager.getClient', async () => {
-			await sshTunnelFunctions.getSSHClient(credentials, abortController);
+			await sshTunnelFunctions.getSSHClient(credentials);
 
-			expect(sshClientsManager.getClient).toHaveBeenCalledWith(credentials, abortController);
-		});
-	});
-
-	describe('updateLastUsed', () => {
-		it('should invoke sshClientsManager.updateLastUsed', async () => {
-			// ARRANGE
-			const client = await sshTunnelFunctions.getSSHClient(credentials, abortController);
-
-			// ACT
-			sshTunnelFunctions.updateLastUsed(client);
-
-			// ASSERT
-			expect(sshClientsManager.updateLastUsed).toHaveBeenCalledWith(client);
+			expect(sshClientsManager.getClient).toHaveBeenCalledWith(credentials);
 		});
 	});
 });

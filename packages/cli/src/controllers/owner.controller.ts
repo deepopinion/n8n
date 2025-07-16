@@ -1,8 +1,8 @@
 import { DismissBannerRequestDto, OwnerSetupRequestDto } from '@n8n/api-types';
-import { Logger } from '@n8n/backend-common';
-import { AuthenticatedRequest, SettingsRepository, UserRepository } from '@n8n/db';
+import { SettingsRepository, UserRepository } from '@n8n/db';
 import { Body, GlobalScope, Post, RestController } from '@n8n/decorators';
 import { Response } from 'express';
+import { Logger } from 'n8n-core';
 
 import { AuthService } from '@/auth/auth.service';
 import config from '@/config';
@@ -10,6 +10,7 @@ import { BadRequestError } from '@/errors/response-errors/bad-request.error';
 import { EventService } from '@/events/event.service';
 import { validateEntity } from '@/generic-helpers';
 import { PostHogClient } from '@/posthog';
+import { AuthenticatedRequest } from '@/requests';
 import { BannerService } from '@/services/banner.service';
 import { PasswordUtility } from '@/services/password.utility';
 import { UserService } from '@/services/user.service';
@@ -67,7 +68,7 @@ export class OwnerController {
 
 		this.logger.debug('Setting isInstanceOwnerSetUp updated successfully');
 
-		this.authService.issueCookie(res, owner, req.authInfo?.usedMfa ?? false, req.browserId);
+		this.authService.issueCookie(res, owner, req.browserId);
 
 		this.eventService.emit('instance-owner-setup', { userId: owner.id });
 

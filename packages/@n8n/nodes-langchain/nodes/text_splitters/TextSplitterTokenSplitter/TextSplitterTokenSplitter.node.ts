@@ -1,3 +1,5 @@
+/* eslint-disable n8n-nodes-base/node-dirname-against-convention */
+import { TokenTextSplitter } from '@langchain/textsplitters';
 import {
 	NodeConnectionTypes,
 	type INodeType,
@@ -8,8 +10,6 @@ import {
 
 import { logWrapper } from '@utils/logWrapper';
 import { getConnectionHintNoticeField } from '@utils/sharedFields';
-
-import { TokenTextSplitter } from './TokenTextSplitter';
 
 export class TextSplitterTokenSplitter implements INodeType {
 	description: INodeTypeDescription = {
@@ -36,9 +36,9 @@ export class TextSplitterTokenSplitter implements INodeType {
 				],
 			},
 		},
-
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
 		inputs: [],
-
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
 		outputs: [NodeConnectionTypes.AiTextSplitter],
 		outputNames: ['Text Splitter'],
 		properties: [
@@ -71,6 +71,9 @@ export class TextSplitterTokenSplitter implements INodeType {
 			disallowedSpecial: 'all',
 			encodingName: 'cl100k_base',
 			keepSeparator: false,
+			// allowedSpecial: 'all',
+			// disallowedSpecial: 'all',
+			// encodingName: 'cl100k_base',
 		});
 
 		return {

@@ -33,5 +33,4 @@ export interface ChatOptions {
 	disabled?: Ref<boolean>;
 	allowFileUploads?: Ref<boolean> | boolean;
 	allowedFilesMimeTypes?: Ref<string> | string;
-	enableStreaming?: boolean;
 }

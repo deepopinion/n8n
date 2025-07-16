@@ -84,7 +84,7 @@ describe('Google Sheets, getMappingColumns', () => {
 				readOnly: true,
 				removed: true,
 				required: false,
-				type: 'number',
+				type: 'string',
 			},
 		]);
 	});

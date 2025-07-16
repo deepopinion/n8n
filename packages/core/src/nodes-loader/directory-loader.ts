@@ -1,4 +1,3 @@
-import { isContainedWithin, Logger } from '@n8n/backend-common';
 import { Container } from '@n8n/di';
 import uniqBy from 'lodash/uniqBy';
 import type {
@@ -16,12 +15,12 @@ import type {
 	IVersionedNodeType,
 	KnownNodesAndCredentials,
 } from 'n8n-workflow';
-import { ApplicationError, isSubNodeType, UnexpectedError } from 'n8n-workflow';
-import { realpathSync } from 'node:fs';
+import { ApplicationError, isSubNodeType } from 'n8n-workflow';
 import * as path from 'path';
 
 import { UnrecognizedCredentialTypeError } from '@/errors/unrecognized-credential-type.error';
 import { UnrecognizedNodeTypeError } from '@/errors/unrecognized-node-type.error';
+import { Logger } from '@/logging/logger';
 
 import {
 	commonCORSParameters,
@@ -84,22 +83,13 @@ export abstract class DirectoryLoader {
 		readonly directory: string,
 		protected excludeNodes: string[] = [],
 		protected includeNodes: string[] = [],
-	) {
-		// If `directory` is a symlink, we try to resolve it to its real path
-		try {
-			this.directory = realpathSync(directory);
-		} catch (error) {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-			if (error.code !== 'ENOENT') throw error;
-		}
-	}
+	) {}
 
 	abstract packageName: string;
 
 	abstract loadAll(): Promise<void>;
 
 	reset() {
-		this.unloadAll();
 		this.loadedNodes = [];
 		this.nodeTypes = {};
 		this.credentialTypes = {};
@@ -242,7 +232,6 @@ export abstract class DirectoryLoader {
 			sourcePath: filePath,
 		};
 
-		if (this.isLazyLoaded) return;
 		this.types.credentials.push(tempCredential);
 	}
 
@@ -383,13 +372,6 @@ export abstract class DirectoryLoader {
 
 	private getIconPath(icon: string, filePath: string) {
 		const iconPath = path.join(path.dirname(filePath), icon.replace('file:', ''));
-
-		if (!isContainedWithin(this.directory, path.join(this.directory, iconPath))) {
-			throw new UnexpectedError(
-				`Icon path "${iconPath}" is not contained within the package directory "${this.directory}"`,
-			);
-		}
-
 		return `icons/${this.packageName}/${iconPath}`;
 	}
 
@@ -467,14 +449,5 @@ export abstract class DirectoryLoader {
 		}
 
 		return;
-	}
-
-	private unloadAll() {
-		const filesToUnload = Object.keys(require.cache).filter((filePath) =>
-			filePath.startsWith(this.directory),
-		);
-		filesToUnload.forEach((filePath) => {
-			delete require.cache[filePath];
-		});
 	}
 }

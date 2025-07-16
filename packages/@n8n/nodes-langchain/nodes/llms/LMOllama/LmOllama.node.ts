@@ -1,3 +1,5 @@
+/* eslint-disable n8n-nodes-base/node-dirname-against-convention */
+
 import { Ollama } from '@langchain/community/llms/ollama';
 import {
 	NodeConnectionTypes,
@@ -16,7 +18,7 @@ import { N8nLlmTracing } from '../N8nLlmTracing';
 export class LmOllama implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Ollama Model',
-
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-name-miscased
 		name: 'lmOllama',
 		icon: 'file:ollama.svg',
 		group: ['transform'],
@@ -39,9 +41,9 @@ export class LmOllama implements INodeType {
 				],
 			},
 		},
-
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
 		inputs: [],
-
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
 		outputs: [NodeConnectionTypes.AiLanguageModel],
 		outputNames: ['Model'],
 		...ollamaDescription,

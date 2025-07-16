@@ -12,7 +12,7 @@ import { sortByQueryMiddleware } from '../sort-by';
 describe('List query middleware', () => {
 	let mockReq: ListQuery.Request;
 	let mockRes: Response;
-	const nextFn: NextFunction = jest.fn();
+	let nextFn: NextFunction = jest.fn();
 	let args: [ListQuery.Request, Response, NextFunction];
 
 	let sendErrorResponse: jest.SpyInstance;

@@ -1,5 +1,5 @@
 import { stringify } from 'flatted';
-import pick from 'lodash/pick';
+import { pick } from 'lodash';
 import type {
 	IDataObject,
 	IRunData,

@@ -8,15 +8,13 @@ import { useWorkflowsStore } from '@/stores/workflows.store';
 import { useNDVStore } from '@/stores/ndv.store';
 import { useNodeHelpers } from '@/composables/useNodeHelpers';
 import { useToast } from '@/composables/useToast';
-import { useI18n } from '@n8n/i18n';
-import { nonExistingJsonPath, PiPWindowSymbol } from '@/constants';
+import { useI18n } from '@/composables/useI18n';
+import { nonExistingJsonPath } from '@/constants';
 import { useClipboard } from '@/composables/useClipboard';
 import { usePinnedData } from '@/composables/usePinnedData';
-import { inject, computed } from 'vue';
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useTelemetry } from '@/composables/useTelemetry';
-import { N8nIconButton } from '@n8n/design-system';
-import { ElDropdown, ElDropdownItem, ElDropdownMenu } from 'element-plus';
 
 type JsonPathData = {
 	path: string;
@@ -38,17 +36,12 @@ const props = withDefaults(
 		selectedJsonPath: nonExistingJsonPath,
 	},
 );
-
-const pipWindow = inject(PiPWindowSymbol);
-const isInPiPWindow = computed(() => pipWindow?.value !== undefined);
-
 const ndvStore = useNDVStore();
 const workflowsStore = useWorkflowsStore();
 
-const clipboard = useClipboard();
-
 const i18n = useI18n();
 const nodeHelpers = useNodeHelpers();
+const clipboard = useClipboard();
 const { activeNode } = ndvStore;
 const pinnedData = usePinnedData(activeNode);
 const { showToast } = useToast();
@@ -183,55 +176,50 @@ function handleCopyClick(commandData: { command: string }) {
 
 <template>
 	<div :class="$style.actionsGroup" data-test-id="ndv-json-actions">
-		<N8nIconButton
+		<n8n-icon-button
 			v-if="noSelection"
 			:title="i18n.baseText('runData.copyToClipboard')"
-			icon="files"
+			icon="copy"
 			type="tertiary"
 			:circle="false"
 			@click="handleCopyClick({ command: 'value' })"
 		/>
-		<ElDropdown
-			v-else
-			trigger="click"
-			:teleported="
-				!isInPiPWindow // disabling teleport ensures the menu is rendered in PiP window
-			"
-			@command="handleCopyClick"
-		>
+		<el-dropdown v-else trigger="click" @command="handleCopyClick">
 			<span class="el-dropdown-link">
-				<N8nIconButton
+				<n8n-icon-button
 					:title="i18n.baseText('runData.copyToClipboard')"
-					icon="files"
+					icon="copy"
 					type="tertiary"
 					:circle="false"
 				/>
 			</span>
 			<template #dropdown>
-				<ElDropdownMenu>
-					<ElDropdownItem :command="{ command: 'value' }">
+				<el-dropdown-menu>
+					<el-dropdown-item :command="{ command: 'value' }">
 						{{ i18n.baseText('runData.copyValue') }}
-					</ElDropdownItem>
-					<ElDropdownItem :command="{ command: 'itemPath' }" divided>
+					</el-dropdown-item>
+					<el-dropdown-item :command="{ command: 'itemPath' }" divided>
 						{{ i18n.baseText('runData.copyItemPath') }}
-					</ElDropdownItem>
-					<ElDropdownItem :command="{ command: 'parameterPath' }">
+					</el-dropdown-item>
+					<el-dropdown-item :command="{ command: 'parameterPath' }">
 						{{ i18n.baseText('runData.copyParameterPath') }}
-					</ElDropdownItem>
-				</ElDropdownMenu>
+					</el-dropdown-item>
+				</el-dropdown-menu>
 			</template>
-		</ElDropdown>
+		</el-dropdown>
 	</div>
 </template>
 
 <style lang="scss" module>
 .actionsGroup {
-	position: absolute;
+	position: sticky;
+	height: 0;
+	overflow: visible;
 	z-index: 10;
 	top: 0;
-	right: 0;
 	padding-right: var(--spacing-s);
 	opacity: 0;
 	transition: opacity 0.3s ease;
+	text-align: right;
 }
 </style>

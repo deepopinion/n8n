@@ -37,6 +37,7 @@ export function createRequireResolver({
 			throw new ExecutionError(error);
 		}
 
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		return require(request) as unknown;
 	};
 }

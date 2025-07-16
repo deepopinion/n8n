@@ -24,18 +24,8 @@ export const useProjectPages = () => {
 			route.name === VIEWS.SHARED_CREDENTIALS,
 	);
 
-	const isProjectsSubPage = computed(
-		() =>
-			route.name === VIEWS.PROJECTS_WORKFLOWS ||
-			route.name === VIEWS.PROJECTS_CREDENTIALS ||
-			route.name === VIEWS.PROJECTS_EXECUTIONS ||
-			route.name === VIEWS.PROJECT_SETTINGS ||
-			route.name === VIEWS.PROJECTS_FOLDERS,
-	);
-
 	return reactive({
 		isOverviewSubPage,
 		isSharedSubPage,
-		isProjectsSubPage,
 	});
 };

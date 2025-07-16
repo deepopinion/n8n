@@ -1,4 +1,4 @@
-<script lang="ts" setup generic="Item extends DatatableRow">
+<script lang="ts" setup>
 import { computed, ref } from 'vue';
 
 import { useI18n } from '../../composables/useI18n';
@@ -13,7 +13,7 @@ const ALL_ROWS = -1;
 
 interface DatatableProps {
 	columns: DatatableColumn[];
-	rows: Item[];
+	rows: DatatableRow[];
 	currentPage?: number;
 	pagination?: boolean;
 	rowsPerPage?: number;
@@ -69,7 +69,7 @@ function onRowsPerPageChange(value: number) {
 	}
 }
 
-function getTdValue(row: Item, column: DatatableColumn) {
+function getTdValue(row: DatatableRow, column: DatatableColumn) {
 	return getValueByPath<DatatableRowDataType>(row, column.path);
 }
 

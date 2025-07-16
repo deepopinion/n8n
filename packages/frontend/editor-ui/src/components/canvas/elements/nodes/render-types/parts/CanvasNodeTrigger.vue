@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import KeyboardShortcutTooltip from '@/components/KeyboardShortcutTooltip.vue';
 import { useCanvasOperations } from '@/composables/useCanvasOperations';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useRunWorkflow } from '@/composables/useRunWorkflow';
 import { CHAT_TRIGGER_NODE_TYPE } from '@/constants';
 import { useLogsStore } from '@/stores/logs.store';
@@ -39,16 +39,11 @@ const i18n = useI18n();
 const workflowsStore = useWorkflowsStore();
 const logsStore = useLogsStore();
 const { runEntireWorkflow } = useRunWorkflow({ router });
-const { startChat } = useCanvasOperations();
+const { startChat } = useCanvasOperations({ router });
 
 const isChatOpen = computed(() => logsStore.isOpen);
 const isExecuting = computed(() => workflowsStore.isWorkflowRunning);
 const testId = computed(() => `execute-workflow-button-${name}`);
-
-async function handleClickExecute() {
-	workflowsStore.setSelectedTriggerNodeName(name);
-	await runEntireWorkflow('node', name);
-}
 </script>
 
 <template>
@@ -56,7 +51,7 @@ async function handleClickExecute() {
 	<div :class="containerClass" @click.stop.prevent @mousedown.stop.prevent>
 		<div>
 			<div :class="$style.bolt">
-				<N8nIcon icon="bolt-filled" size="large" />
+				<FontAwesomeIcon icon="bolt" size="lg" />
 			</div>
 
 			<template v-if="!readOnly">
@@ -64,7 +59,6 @@ async function handleClickExecute() {
 					<N8nButton
 						v-if="isChatOpen"
 						type="secondary"
-						icon="message-circle"
 						size="large"
 						:disabled="isExecuting"
 						:data-test-id="testId"
@@ -78,7 +72,6 @@ async function handleClickExecute() {
 					>
 						<N8nButton
 							type="primary"
-							icon="message-circle"
 							size="large"
 							:disabled="isExecuting"
 							:data-test-id="testId"
@@ -90,12 +83,11 @@ async function handleClickExecute() {
 				<N8nButton
 					v-else
 					type="primary"
-					icon="flask-conical"
 					size="large"
 					:disabled="isExecuting"
 					:data-test-id="testId"
 					:label="i18n.baseText('nodeView.runButtonText.executeWorkflow')"
-					@click.capture="handleClickExecute"
+					@click.capture="runEntireWorkflow('node', name)"
 				/>
 			</template>
 		</div>

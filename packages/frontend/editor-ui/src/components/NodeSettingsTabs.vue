@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import type { ITab } from '@/Interface';
-import { COMMUNITY_NODES_INSTALLATION_DOCS_URL } from '@/constants';
+import {
+	BUILTIN_NODES_DOCS_URL,
+	COMMUNITY_NODES_INSTALLATION_DOCS_URL,
+	NPM_PACKAGE_DOCS_BASE_URL,
+} from '@/constants';
 import { useNDVStore } from '@/stores/ndv.store';
 import { useWorkflowsStore } from '@/stores/workflows.store';
 import type { INodeTypeDescription } from 'n8n-workflow';
@@ -8,18 +12,15 @@ import { NodeConnectionTypes } from 'n8n-workflow';
 import { computed } from 'vue';
 
 import { useExternalHooks } from '@/composables/useExternalHooks';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useTelemetry } from '@/composables/useTelemetry';
 import { isCommunityPackageName } from '@/utils/nodeTypesUtils';
-import { N8nTabs } from '@n8n/design-system';
-import { useNodeDocsUrl } from '@/composables/useNodeDocsUrl';
 
-export type Tab = 'settings' | 'params' | 'communityNode' | 'docs';
+type Tab = 'settings' | 'params';
 type Props = {
 	modelValue?: Tab;
 	nodeType?: INodeTypeDescription | null;
 	pushRef?: string;
-	hideDocs?: boolean;
 };
 
 const props = withDefaults(defineProps<Props>(), {
@@ -36,7 +37,6 @@ const ndvStore = useNDVStore();
 const workflowsStore = useWorkflowsStore();
 const i18n = useI18n();
 const telemetry = useTelemetry();
-const { docsUrl } = useNodeDocsUrl({ nodeType: () => props.nodeType });
 
 const activeNode = computed(() => ndvStore.activeNode);
 
@@ -51,15 +51,38 @@ const isCommunityNode = computed(() => {
 const packageName = computed(() => props.nodeType?.name.split('.')[0] ?? '');
 
 const documentationUrl = computed(() => {
-	if (props.hideDocs) {
+	const nodeType = props.nodeType;
+
+	if (!nodeType) {
 		return '';
 	}
 
-	return docsUrl.value;
+	if (nodeType.documentationUrl && nodeType.documentationUrl.startsWith('http')) {
+		return nodeType.documentationUrl;
+	}
+
+	const utmParams = new URLSearchParams({
+		utm_source: 'n8n_app',
+		utm_medium: 'node_settings_modal-credential_link',
+		utm_campaign: nodeType.name,
+	});
+
+	// Built-in node documentation available via its codex entry
+	const primaryDocUrl = nodeType.codex?.resources?.primaryDocumentation?.[0]?.url;
+	if (primaryDocUrl) {
+		return `${primaryDocUrl}?${utmParams.toString()}`;
+	}
+
+	if (isCommunityNode.value) {
+		return `${NPM_PACKAGE_DOCS_BASE_URL}${packageName.value}`;
+	}
+
+	// Fallback to the root of the node documentation
+	return `${BUILTIN_NODES_DOCS_URL}?${utmParams.toString()}`;
 });
 
-const options = computed(() => {
-	const options: Array<ITab<Tab>> = [
+const options = computed<ITab[]>(() => {
+	const options: ITab[] = [
 		{
 			label: i18n.baseText('nodeSettings.parameters'),
 			value: 'params',
@@ -72,7 +95,7 @@ const options = computed(() => {
 
 	if (isCommunityNode.value) {
 		options.push({
-			icon: 'box',
+			icon: 'cube',
 			value: 'communityNode',
 			align: 'right',
 			tooltip: i18n.baseText('generic.communityNode.tooltip', {
@@ -96,7 +119,7 @@ const options = computed(() => {
 	return options;
 });
 
-function onTabSelect(tab: string | number) {
+function onTabSelect(tab: string) {
 	if (tab === 'docs' && props.nodeType) {
 		void externalHooks.run('dataDisplay.onDocumentationUrlClick', {
 			nodeType: props.nodeType,
@@ -124,7 +147,7 @@ function onTabSelect(tab: string | number) {
 	}
 }
 
-function onTooltipClick(tab: string | number, event: MouseEvent) {
+function onTooltipClick(tab: string, event: MouseEvent) {
 	if (tab === 'communityNode' && (event.target as Element).localName === 'a') {
 		telemetry.track('user clicked cnr docs link', { source: 'node details view' });
 	}

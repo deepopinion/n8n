@@ -1,4 +1,4 @@
-import type { IExecuteFunctions, IDataObject } from 'n8n-workflow';
+import type { INodeExecutionData, IExecuteFunctions, IDataObject } from 'n8n-workflow';
 
 import {
 	validateSessionAndWindowId,
@@ -7,7 +7,6 @@ import {
 	validateAirtopApiResponse,
 } from '../../GenericFunctions';
 import { apiRequest } from '../../transport';
-import type { IAirtopResponse } from '../../transport/types';
 
 /**
  * Execute the node operation. Creates and terminates a new session if needed.
@@ -24,34 +23,23 @@ export async function executeRequestWithSessionManagement(
 		path: string;
 		body: IDataObject;
 	},
-): Promise<IAirtopResponse> {
-	let airtopSessionId = '';
-	try {
-		const { sessionId, windowId } = shouldCreateNewSession.call(this, index)
-			? await createSessionAndWindow.call(this, index)
-			: validateSessionAndWindowId.call(this, index);
-		airtopSessionId = sessionId;
+): Promise<INodeExecutionData[]> {
+	const { sessionId, windowId } = shouldCreateNewSession.call(this, index)
+		? await createSessionAndWindow.call(this, index)
+		: validateSessionAndWindowId.call(this, index);
 
-		const shouldTerminateSession = this.getNodeParameter('autoTerminateSession', index, false);
+	const shouldTerminateSession = this.getNodeParameter('autoTerminateSession', index, false);
 
-		const endpoint = request.path.replace('{sessionId}', sessionId).replace('{windowId}', windowId);
-		const response = await apiRequest.call(this, request.method, endpoint, request.body);
+	const endpoint = request.path.replace('{sessionId}', sessionId).replace('{windowId}', windowId);
+	const response = await apiRequest.call(this, request.method, endpoint, request.body);
 
-		validateAirtopApiResponse(this.getNode(), response);
+	validateAirtopApiResponse(this.getNode(), response);
 
-		if (shouldTerminateSession) {
-			await apiRequest.call(this, 'DELETE', `/sessions/${sessionId}`);
-			this.logger.info(`[${this.getNode().name}] Session terminated.`);
-			return response;
-		}
-
-		return { sessionId, windowId, ...response };
-	} catch (error) {
-		// terminate session on error
-		if (airtopSessionId) {
-			await apiRequest.call(this, 'DELETE', `/sessions/${airtopSessionId}`);
-			this.logger.info(`[${this.getNode().name}] Session terminated.`);
-		}
-		throw error;
+	if (shouldTerminateSession) {
+		await apiRequest.call(this, 'DELETE', `/sessions/${sessionId}`);
+		this.logger.info(`[${this.getNode().name}] Session terminated.`);
+		return this.helpers.returnJsonArray({ ...response });
 	}
+
+	return this.helpers.returnJsonArray({ sessionId, windowId, ...response });
 }

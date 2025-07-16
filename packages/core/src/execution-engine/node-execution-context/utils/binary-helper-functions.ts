@@ -4,7 +4,6 @@ import FileType from 'file-type';
 import { IncomingMessage } from 'http';
 import iconv from 'iconv-lite';
 import { extension, lookup } from 'mime-types';
-import type { StringValue as TimeUnitValue } from 'ms';
 import type {
 	BinaryHelperFunctions,
 	IBinaryData,
@@ -187,7 +186,7 @@ export async function copyBinaryFile(
  * Takes a buffer and converts it into the format n8n uses. It encodes the binary data as
  * base64 and adds metadata.
  */
-
+// eslint-disable-next-line complexity
 export async function prepareBinaryData(
 	binaryData: Buffer | Readable,
 	executionId: string,
@@ -280,7 +279,7 @@ export const getBinaryHelperFunctions = (
 	getBinaryMetadata,
 	binaryToBuffer,
 	binaryToString,
-	createBinarySignedUrl(binaryData: IBinaryData, expiresIn?: TimeUnitValue) {
+	createBinarySignedUrl(binaryData: IBinaryData, expiresIn?: string) {
 		const token = Container.get(BinaryDataService).createSignedToken(binaryData, expiresIn);
 		return `${restApiUrl}/binary-data/signed?token=${token}`;
 	},

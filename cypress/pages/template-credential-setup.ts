@@ -9,10 +9,6 @@ export const getters = {
 	skipLink: () => cy.get('a:contains("Skip")'),
 	title: (title: string) => cy.get(`h1:contains(${title})`),
 	infoCallout: () => cy.getByTestId('info-callout'),
-
-	namePreview: () =>
-		cy.getByTestId('credential-name').find('span[data-test-id=inline-edit-preview]'),
-	nameInput: () => cy.getByTestId('credential-name').find('input'),
 };
 
 export const visitTemplateCredentialSetupPage = (templateId: number) => {
@@ -26,8 +22,7 @@ export const visitTemplateCredentialSetupPage = (templateId: number) => {
  */
 export const fillInDummyCredentialsForApp = (appName: string) => {
 	formStep.getCreateAppCredentialsButton(appName).click();
-	credentialsModal.getters.namePreview().click();
-	credentialsModal.getters.nameInput().type('test');
+	credentialsModal.getters.editCredentialModal().find('input:first()').type('test');
 	credentialsModal.actions.save(false);
 	credentialsModal.actions.close();
 };

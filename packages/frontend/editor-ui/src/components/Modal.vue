@@ -98,13 +98,6 @@ function handleEnter() {
 	emit('enter');
 }
 
-function onOpened() {
-	// Triggers when the Dialog opening animation ends.
-	// This can be helpful at positioning dropdowns etc correctly,
-	// as the dialog doesn't now move anymore at this point.
-	props.eventBus?.emit('opened');
-}
-
 function onWindowKeydown(event: KeyboardEvent) {
 	if (event?.keyCode === 13) handleEnter();
 }
@@ -157,7 +150,6 @@ function getCustomClass() {
 		:data-test-id="`${name}-modal`"
 		:modal-class="center ? $style.center : ''"
 		:z-index="APP_Z_INDEXES.MODALS"
-		@opened="onOpened"
 	>
 		<template v-if="$slots.header" #header>
 			<slot v-if="!loading" name="header" />

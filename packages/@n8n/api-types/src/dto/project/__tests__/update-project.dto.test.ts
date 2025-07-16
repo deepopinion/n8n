@@ -4,13 +4,13 @@ describe('UpdateProjectDto', () => {
 	describe('Valid requests', () => {
 		test.each([
 			{
-				name: 'just the name',
+				name: 'with just the name',
 				request: {
 					name: 'My Updated Project',
 				},
 			},
 			{
-				name: 'name and emoji icon',
+				name: 'with name and emoji icon',
 				request: {
 					name: 'My Updated Project',
 					icon: {
@@ -20,7 +20,7 @@ describe('UpdateProjectDto', () => {
 				},
 			},
 			{
-				name: 'name and regular icon',
+				name: 'with name and regular icon',
 				request: {
 					name: 'My Updated Project',
 					icon: {
@@ -30,19 +30,7 @@ describe('UpdateProjectDto', () => {
 				},
 			},
 			{
-				name: 'just the description',
-				request: {
-					description: 'My Updated Project Description',
-				},
-			},
-			{
-				name: 'an empty description',
-				request: {
-					description: '',
-				},
-			},
-			{
-				name: 'just the relations',
+				name: 'with relations',
 				request: {
 					relations: [
 						{
@@ -53,7 +41,7 @@ describe('UpdateProjectDto', () => {
 				},
 			},
 			{
-				name: 'all fields',
+				name: 'with all fields',
 				request: {
 					name: 'My Updated Project',
 					icon: {
@@ -66,10 +54,9 @@ describe('UpdateProjectDto', () => {
 							role: 'project:admin',
 						},
 					],
-					description: 'My Updated Project Description',
 				},
 			},
-		])('should pass validation for $name', ({ request }) => {
+		])('should validate $name', ({ request }) => {
 			const result = UpdateProjectDto.safeParse(request);
 			expect(result.success).toBe(true);
 		});
@@ -80,11 +67,6 @@ describe('UpdateProjectDto', () => {
 			{
 				name: 'invalid name type',
 				request: { name: 123 },
-				expectedErrorPath: ['name'],
-			},
-			{
-				name: 'empty name',
-				request: { name: '', icon: { type: 'emoji', value: '🚀' } },
 				expectedErrorPath: ['name'],
 			},
 			{
@@ -125,16 +107,6 @@ describe('UpdateProjectDto', () => {
 					],
 				},
 				expectedErrorPath: ['relations', 0, 'role'],
-			},
-			{
-				name: 'invalid description type',
-				request: { description: 123 },
-				expectedErrorPath: ['description'],
-			},
-			{
-				name: 'description too long',
-				request: { description: 'a'.repeat(513) },
-				expectedErrorPath: ['description'],
 			},
 		])('should fail validation for $name', ({ request, expectedErrorPath }) => {
 			const result = UpdateProjectDto.safeParse(request);

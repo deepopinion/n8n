@@ -1,6 +1,6 @@
 import { createTagsApi } from '@/api/tags';
 import { STORES } from '@n8n/stores';
-import type { ITag } from '@n8n/rest-api-client/api/tags';
+import type { ITag } from '@/Interface';
 import { defineStore } from 'pinia';
 import { useRootStore } from '@n8n/stores/useRootStore';
 import { computed, ref } from 'vue';

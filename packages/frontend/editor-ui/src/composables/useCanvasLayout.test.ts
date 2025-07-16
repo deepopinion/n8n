@@ -55,7 +55,6 @@ describe('useCanvasLayout', () => {
 
 		const { layout } = createTestSetup(nodes, connections);
 		const result = layout('all');
-
 		expect(result).toMatchSnapshot();
 		expect(matchesGrid(result)).toBe(true);
 	});
@@ -154,8 +153,8 @@ describe('useCanvasLayout', () => {
 	test('should not reorder nodes vertically as it affects execution order', () => {
 		const nodes = [
 			createCanvasGraphNode({ id: 'node1', position: { x: 0, y: 0 } }),
-			createCanvasGraphNode({ id: 'node2', position: { x: 400, y: 208 } }),
-			createCanvasGraphNode({ id: 'node3', position: { x: 400, y: -208 } }),
+			createCanvasGraphNode({ id: 'node2', position: { x: 400, y: 200 } }),
+			createCanvasGraphNode({ id: 'node3', position: { x: 400, y: -200 } }),
 		];
 
 		const connections: Array<[string, string]> = [

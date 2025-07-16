@@ -1,4 +1,4 @@
-import get from 'lodash/get';
+import { get } from 'lodash';
 import type {
 	IDataObject,
 	IExecuteFunctions,
@@ -37,8 +37,8 @@ const createMockExecuteFunction = (nodeParameters: IDataObject) => {
 		getNodeParameter(
 			parameterName: string,
 			_itemIndex: number,
-			fallbackValue?: IDataObject,
-			options?: IGetNodeParameterOptions,
+			fallbackValue?: IDataObject | undefined,
+			options?: IGetNodeParameterOptions | undefined,
 		) {
 			const parameter = options?.extractValue ? `${parameterName}.value` : parameterName;
 			return get(nodeParameters, parameter, fallbackValue);

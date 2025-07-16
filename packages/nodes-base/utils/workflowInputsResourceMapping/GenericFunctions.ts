@@ -1,6 +1,6 @@
 import { json as generateSchemaFromExample, type SchemaObject } from 'generate-schema';
 import type { JSONSchema7 } from 'json-schema';
-import pickBy from 'lodash/pickBy';
+import _ from 'lodash';
 import type {
 	FieldValueOption,
 	FieldType,
@@ -157,7 +157,7 @@ export function getCurrentWorkflowInputData(this: IExecuteFunctions | ISupplyDat
 		const filteredInputData: INodeExecutionData[] = inputData.map(({ json, binary }, index) => ({
 			index,
 			pairedItem: { item: index },
-			json: pickBy(json, (_v, key) => !removedKeys.has(key)),
+			json: _.pickBy(json, (_v, key) => !removedKeys.has(key)),
 			binary,
 		}));
 

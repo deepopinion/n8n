@@ -14,7 +14,7 @@ export type UserErrorOptions = Omit<BaseErrorOptions, 'level'> & {
  * Default level: info
  */
 export class UserError extends BaseError {
-	declare readonly description: string | null | undefined;
+	readonly description: string | null | undefined;
 
 	constructor(message: string, opts: UserErrorOptions = {}) {
 		opts.level = opts.level ?? 'info';

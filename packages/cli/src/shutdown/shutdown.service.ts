@@ -1,8 +1,7 @@
-import { Logger } from '@n8n/backend-common';
 import type { ShutdownHandler } from '@n8n/decorators';
 import { ShutdownRegistryMetadata } from '@n8n/decorators';
 import { Container, Service } from '@n8n/di';
-import { ErrorReporter } from 'n8n-core';
+import { ErrorReporter, Logger } from 'n8n-core';
 import { assert, UnexpectedError, UserError } from 'n8n-workflow';
 
 /** Error reported when a listener fails to shutdown gracefully */

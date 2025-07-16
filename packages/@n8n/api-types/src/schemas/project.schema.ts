@@ -12,10 +12,8 @@ export const projectIconSchema = z.object({
 });
 export type ProjectIcon = z.infer<typeof projectIconSchema>;
 
-export const projectDescriptionSchema = z.string().max(512);
-
 export const projectRelationSchema = z.object({
-	userId: z.string().min(1),
-	role: projectRoleSchema.exclude(['project:personalOwner']),
+	userId: z.string(),
+	role: projectRoleSchema,
 });
 export type ProjectRelation = z.infer<typeof projectRelationSchema>;

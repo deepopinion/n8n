@@ -39,7 +39,7 @@ describe('components', () => {
 				it('should render icon button', () => {
 					const wrapper = render(N8nButton, {
 						props: {
-							icon: 'circle-plus',
+							icon: 'plus-circle',
 						},
 						slots,
 						global: {

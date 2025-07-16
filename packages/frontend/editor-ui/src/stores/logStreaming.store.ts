@@ -7,7 +7,7 @@ import {
 	hasDestinationId,
 	saveDestinationToDb,
 	sendTestMessageToDestination,
-} from '@n8n/rest-api-client/api/eventbus.ee';
+} from '@/api/eventbus.ee';
 import { useRootStore } from '@n8n/stores/useRootStore';
 import { ref } from 'vue';
 

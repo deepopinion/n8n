@@ -317,27 +317,21 @@ export class GoogleSheet {
 	 * Returns the given sheet data in a structured way
 	 */
 	convertSheetDataArrayToObjectArray(
-		sheet: SheetRangeData,
+		data: SheetRangeData,
 		startRow: number,
 		columnKeys: string[],
 		addEmpty?: boolean,
-		includeHeadersWithEmptyCells?: boolean,
 	): IDataObject[] {
 		const returnData = [];
 
-		for (let rowIndex = startRow; rowIndex < sheet.length; rowIndex++) {
+		for (let rowIndex = startRow; rowIndex < data.length; rowIndex++) {
 			const item: IDataObject = {};
-
-			const rowCount = sheet[rowIndex].length;
-			const columnCount = includeHeadersWithEmptyCells ? columnKeys.length : rowCount;
-
-			for (let columnIndex = 0; columnIndex < columnCount; columnIndex++) {
+			for (let columnIndex = 0; columnIndex < data[rowIndex].length; columnIndex++) {
 				const key = columnKeys[columnIndex];
 				if (key) {
-					item[key] = sheet[rowIndex][columnIndex] || '';
+					item[key] = data[rowIndex][columnIndex];
 				}
 			}
-
 			if (Object.keys(item).length || addEmpty === true) {
 				returnData.push(item);
 			}
@@ -354,7 +348,6 @@ export class GoogleSheet {
 		inputData: string[][],
 		keyRow: number,
 		dataStartRow: number,
-		includeHeadersWithEmptyCells?: boolean,
 	): IDataObject[] {
 		const keys: string[] = [];
 
@@ -368,13 +361,7 @@ export class GoogleSheet {
 			keys.push(inputData[keyRow][columnIndex] || `col_${columnIndex}`);
 		}
 
-		return this.convertSheetDataArrayToObjectArray(
-			inputData,
-			dataStartRow,
-			keys,
-			false,
-			includeHeadersWithEmptyCells,
-		);
+		return this.convertSheetDataArrayToObjectArray(inputData, dataStartRow, keys);
 	}
 
 	testFilter(inputData: string[][], keyRow: number, dataStartRow: number): string[] {

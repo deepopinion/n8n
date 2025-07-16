@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 import type { ExecutionStatus, INodeConnections, NodeConnectionType } from 'n8n-workflow';
 import type {
 	DefaultEdge,
@@ -122,7 +123,6 @@ export interface CanvasNodeData {
 		status?: ExecutionStatus;
 		waiting?: string;
 		running: boolean;
-		waitingForNext?: boolean;
 	};
 	runData: {
 		outputMap: ExecutionOutputMap;
@@ -175,7 +175,7 @@ export type CanvasEventBusEvents = {
 	fitView: never;
 	'saved:workflow': never;
 	'open:execution': IExecutionResponse;
-	'nodes:select': { ids: string[]; panIntoView?: boolean };
+	'nodes:select': { ids: string[] };
 	'nodes:action': {
 		ids: string[];
 		action: keyof CanvasNodeEventBusEvents;

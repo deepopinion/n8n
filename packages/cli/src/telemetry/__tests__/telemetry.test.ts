@@ -1,4 +1,3 @@
-import { mockInstance } from '@n8n/backend-test-utils';
 import type { GlobalConfig } from '@n8n/config';
 import type RudderStack from '@rudderstack/rudder-sdk-node';
 import { mock } from 'jest-mock-extended';
@@ -7,6 +6,7 @@ import { InstanceSettings } from 'n8n-core';
 import config from '@/config';
 import { PostHogClient } from '@/posthog';
 import { Telemetry } from '@/telemetry';
+import { mockInstance } from '@test/mocking';
 
 jest.unmock('@/telemetry');
 jest.mock('@/posthog');

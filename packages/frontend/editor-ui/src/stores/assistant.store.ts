@@ -23,7 +23,7 @@ import { deepCopy } from 'n8n-workflow';
 import { ndvEventBus, codeNodeEditorEventBus } from '@/event-bus';
 import { useNDVStore } from './ndv.store';
 import type { IUpdateInformation } from '@/Interface';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useTelemetry } from '@/composables/useTelemetry';
 import { useToast } from '@/composables/useToast';
 import { useUIStore } from './ui.store';
@@ -113,11 +113,6 @@ export const useAssistantStore = defineStore(STORES.ASSISTANT, () => {
 	const canShowAssistantButtonsOnCanvas = computed(
 		() => isAssistantEnabled.value && EDITABLE_CANVAS_VIEWS.includes(route.name as VIEWS),
 	);
-	const hideAssistantFloatingButton = computed(
-		() =>
-			(route.name === VIEWS.WORKFLOW || route.name === VIEWS.NEW_WORKFLOW) &&
-			!workflowsStore.activeNode(),
-	);
 
 	const unreadCount = computed(
 		() =>
@@ -164,14 +159,6 @@ export const useAssistantStore = defineStore(STORES.ASSISTANT, () => {
 				resetAssistantChat();
 			}
 		}, ASK_AI_SLIDE_OUT_DURATION_MS + 50);
-	}
-
-	function toggleChatOpen() {
-		if (chatWindowOpen.value) {
-			closeChat();
-		} else {
-			openChat();
-		}
 	}
 
 	function addAssistantMessages(newMessages: ChatRequest.MessageResponse[], id: string) {
@@ -304,12 +291,16 @@ export const useAssistantStore = defineStore(STORES.ASSISTANT, () => {
 	function onEachStreamingMessage(response: ChatRequest.ResponsePayload, id: string) {
 		if (response.sessionId && !currentSessionId.value) {
 			currentSessionId.value = response.sessionId;
-			telemetry.track('Assistant session started', {
-				chat_session_id: currentSessionId.value,
-				task: chatSessionTask.value,
-				node_type: chatSessionError.value?.node.type,
-				credential_type: chatSessionCredType.value?.name,
-			});
+			telemetry.track(
+				'Assistant session started',
+				{
+					chat_session_id: currentSessionId.value,
+					task: chatSessionTask.value,
+					node_type: chatSessionError.value?.node.type,
+					credential_type: chatSessionCredType.value?.name,
+				},
+				{ withPostHog: true },
+			);
 			// Track first user message in support chat now that we have a session id
 			if (usersMessages.value.length === 1 && chatSessionTask.value === 'support') {
 				const firstUserMessage = usersMessages.value[0] as ChatUI.TextMessage;
@@ -827,7 +818,6 @@ export const useAssistantStore = defineStore(STORES.ASSISTANT, () => {
 	return {
 		isAssistantEnabled,
 		canShowAssistantButtonsOnCanvas,
-		hideAssistantFloatingButton,
 		chatWidth,
 		chatMessages,
 		unreadCount,
@@ -841,7 +831,6 @@ export const useAssistantStore = defineStore(STORES.ASSISTANT, () => {
 		trackUserOpenedAssistant,
 		closeChat,
 		openChat,
-		toggleChatOpen,
 		updateWindowWidth,
 		isNodeErrorActive,
 		initErrorHelper,

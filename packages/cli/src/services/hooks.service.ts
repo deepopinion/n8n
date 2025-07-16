@@ -1,10 +1,4 @@
-import type {
-	AuthenticatedRequest,
-	Settings,
-	CredentialsEntity,
-	User,
-	WorkflowEntity,
-} from '@n8n/db';
+import type { Settings, CredentialsEntity, User, WorkflowEntity } from '@n8n/db';
 import {
 	CredentialsRepository,
 	WorkflowRepository,
@@ -20,6 +14,7 @@ import type { NextFunction, Response } from 'express';
 
 import { AuthService } from '@/auth/auth.service';
 import type { Invitation } from '@/interfaces';
+import type { AuthenticatedRequest } from '@/requests';
 import { UserService } from '@/services/user.service';
 
 /**
@@ -28,12 +23,6 @@ import { UserService } from '@/services/user.service';
  */
 @Service()
 export class HooksService {
-	private innerAuthMiddleware: (
-		req: AuthenticatedRequest,
-		res: Response,
-		next: NextFunction,
-	) => Promise<void>;
-
 	constructor(
 		private readonly userService: UserService,
 		private readonly authService: AuthService,
@@ -41,9 +30,7 @@ export class HooksService {
 		private readonly settingsRepository: SettingsRepository,
 		private readonly workflowRepository: WorkflowRepository,
 		private readonly credentialsRepository: CredentialsRepository,
-	) {
-		this.innerAuthMiddleware = authService.createAuthMiddleware(false);
-	}
+	) {}
 
 	/**
 	 * Invite users to instance during signup
@@ -57,10 +44,7 @@ export class HooksService {
 	 * the user after instance is provisioned
 	 */
 	issueCookie(res: Response, user: User) {
-		// TODO: The information on user has mfa enabled here, is missing!!
-		// This could be a security problem!!
-		// This is in just for the hackmation!!
-		return this.authService.issueCookie(res, user, user.mfaEnabled);
+		return this.authService.issueCookie(res, user);
 	}
 
 	/**
@@ -116,7 +100,7 @@ export class HooksService {
 	 * 1. To authenticate the /proxy routes in the hooks
 	 */
 	async authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-		return await this.innerAuthMiddleware(req, res, next);
+		return await this.authService.authMiddleware(req, res, next);
 	}
 
 	getRudderStackClient(key: string, options: constructorOptions): RudderStack {

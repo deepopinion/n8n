@@ -8,14 +8,14 @@ import type {
 } from '@langchain/core/load/serializable';
 import type { BaseMessage } from '@langchain/core/messages';
 import type { LLMResult } from '@langchain/core/outputs';
-import pick from 'lodash/pick';
+import { encodingForModel } from '@langchain/core/utils/tiktoken';
+import { pick } from 'lodash';
 import type { IDataObject, ISupplyDataFunctions, JsonObject } from 'n8n-workflow';
 import { NodeConnectionTypes, NodeError, NodeOperationError } from 'n8n-workflow';
 
 import { logAiEvent } from '@utils/helpers';
-import { estimateTokensFromStringList } from '@utils/tokenizer/token-estimator';
 
-type TokensUsageParser = (result: LLMResult) => {
+type TokensUsageParser = (llmOutput: LLMResult['llmOutput']) => {
 	completionTokens: number;
 	promptTokens: number;
 	totalTokens: number;
@@ -41,8 +41,6 @@ export class N8nLlmTracing extends BaseCallbackHandler {
 
 	completionTokensEstimate = 0;
 
-	#parentRunIndex?: number;
-
 	/**
 	 * A map to associate LLM run IDs to run details.
 	 * Key: Unique identifier for each LLM run (run ID)
@@ -53,9 +51,9 @@ export class N8nLlmTracing extends BaseCallbackHandler {
 
 	options = {
 		// Default(OpenAI format) parser
-		tokensUsageParser: (result: LLMResult) => {
-			const completionTokens = (result?.llmOutput?.tokenUsage?.completionTokens as number) ?? 0;
-			const promptTokens = (result?.llmOutput?.tokenUsage?.promptTokens as number) ?? 0;
+		tokensUsageParser: (llmOutput: LLMResult['llmOutput']) => {
+			const completionTokens = (llmOutput?.tokenUsage?.completionTokens as number) ?? 0;
+			const promptTokens = (llmOutput?.tokenUsage?.promptTokens as number) ?? 0;
 
 			return {
 				completionTokens,
@@ -84,7 +82,13 @@ export class N8nLlmTracing extends BaseCallbackHandler {
 
 	async estimateTokensFromStringList(list: string[]) {
 		const embeddingModel = getModelNameForTiktoken(TIKTOKEN_ESTIMATE_MODEL);
-		return await estimateTokensFromStringList(list, embeddingModel);
+		const encoder = await encodingForModel(embeddingModel);
+
+		const encodedListLength = await Promise.all(
+			list.map(async (text) => encoder.encode(text).length),
+		);
+
+		return encodedListLength.reduce((acc, curr) => acc + curr, 0);
 	}
 
 	async handleLLMEnd(output: LLMResult, runId: string) {
@@ -101,7 +105,7 @@ export class N8nLlmTracing extends BaseCallbackHandler {
 			promptTokens: 0,
 			totalTokens: 0,
 		};
-		const tokenUsage = this.options.tokensUsageParser(output);
+		const tokenUsage = this.options.tokensUsageParser(output.llmOutput);
 
 		if (output.generations.length > 0) {
 			tokenUsageEstimate.completionTokens = await this.estimateTokensFromGeneration(
@@ -137,16 +141,9 @@ export class N8nLlmTracing extends BaseCallbackHandler {
 						return message;
 					});
 
-		const sourceNodeRunIndex =
-			this.#parentRunIndex !== undefined ? this.#parentRunIndex + runDetails.index : undefined;
-
-		this.executionFunctions.addOutputData(
-			this.connectionType,
-			runDetails.index,
-			[[{ json: { ...response } }]],
-			undefined,
-			sourceNodeRunIndex,
-		);
+		this.executionFunctions.addOutputData(this.connectionType, runDetails.index, [
+			[{ json: { ...response } }],
+		]);
 
 		logAiEvent(this.executionFunctions, 'ai-llm-generated-output', {
 			messages: parsedMessages,
@@ -157,27 +154,19 @@ export class N8nLlmTracing extends BaseCallbackHandler {
 
 	async handleLLMStart(llm: Serialized, prompts: string[], runId: string) {
 		const estimatedTokens = await this.estimateTokensFromStringList(prompts);
-		const sourceNodeRunIndex =
-			this.#parentRunIndex !== undefined
-				? this.#parentRunIndex + this.executionFunctions.getNextRunIndex()
-				: undefined;
 
 		const options = llm.type === 'constructor' ? llm.kwargs : llm;
-		const { index } = this.executionFunctions.addInputData(
-			this.connectionType,
+		const { index } = this.executionFunctions.addInputData(this.connectionType, [
 			[
-				[
-					{
-						json: {
-							messages: prompts,
-							estimatedTokens,
-							options,
-						},
+				{
+					json: {
+						messages: prompts,
+						estimatedTokens,
+						options,
 					},
-				],
+				},
 			],
-			sourceNodeRunIndex,
-		);
+		]);
 
 		// Save the run details for later use when processing `handleLLMEnd` event
 		this.runsMap[runId] = {
@@ -188,7 +177,11 @@ export class N8nLlmTracing extends BaseCallbackHandler {
 		this.promptTokensEstimate = estimatedTokens;
 	}
 
-	async handleLLMError(error: IDataObject | Error, runId: string, parentRunId?: string) {
+	async handleLLMError(
+		error: IDataObject | Error,
+		runId: string,
+		parentRunId?: string | undefined,
+	) {
 		const runDetails = this.runsMap[runId] ?? { index: Object.keys(this.runsMap).length };
 
 		// Filter out non-x- headers to avoid leaking sensitive information in logs
@@ -224,10 +217,5 @@ export class N8nLlmTracing extends BaseCallbackHandler {
 			runId,
 			parentRunId,
 		});
-	}
-
-	// Used to associate subsequent runs with the correct parent run in subnodes of subnodes
-	setParentRunIndex(runIndex: number) {
-		this.#parentRunIndex = runIndex;
 	}
 }

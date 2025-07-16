@@ -1,4 +1,3 @@
-import { Logger } from '@n8n/backend-common';
 import { GlobalConfig } from '@n8n/config';
 import { Service } from '@n8n/di';
 import type {
@@ -23,7 +22,7 @@ import {
 import { DateUtils } from '@n8n/typeorm/util/DateUtils';
 import { parse, stringify } from 'flatted';
 import pick from 'lodash/pick';
-import { BinaryDataService, ErrorReporter } from 'n8n-core';
+import { BinaryDataService, ErrorReporter, Logger } from 'n8n-core';
 import { ExecutionCancelledError, UnexpectedError } from 'n8n-workflow';
 import type {
 	AnnotationVote,
@@ -68,7 +67,7 @@ export interface IGetExecutionsQueryFilter {
 	workflowId?: string;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	waitTill?: FindOperator<any> | boolean;
-	metadata?: Array<{ key: string; value: string; exactMatch?: boolean }>;
+	metadata?: Array<{ key: string; value: string }>;
 	startedAfter?: string;
 	startedBefore?: string;
 }
@@ -88,11 +87,7 @@ function parseFiltersToQueryBuilder(
 	if (filters?.metadata) {
 		qb.leftJoin(ExecutionMetadata, 'md', 'md.executionId = execution.id');
 		for (const md of filters.metadata) {
-			if (md.exactMatch) {
-				qb.andWhere('md.key = :key AND md.value = :value', md);
-			} else {
-				qb.andWhere('md.key = :key AND LOWER(md.value) LIKE LOWER(:value)', md);
-			}
+			qb.andWhere('md.key = :key AND md.value = :value', md);
 		}
 	}
 	if (filters?.startedAfter) {
@@ -987,20 +982,19 @@ export class ExecutionRepository extends Repository<ExecutionEntity> {
 		if (startedAfter) qb.andWhere({ startedAt: moreThanOrEqual(startedAfter) });
 
 		if (metadata?.length === 1) {
-			const [{ key, value, exactMatch }] = metadata;
+			const [{ key, value }] = metadata;
 
-			const executionIdMatch = 'md.executionId = execution.id';
-			const keyMatch = exactMatch ? 'md.key = :key' : 'LOWER(md.key) = LOWER(:key)';
-			const valueMatch = exactMatch ? 'md.value = :value' : 'LOWER(md.value) LIKE LOWER(:value)';
-
-			const matches = [executionIdMatch, keyMatch, valueMatch];
-
-			qb.innerJoin(ExecutionMetadata, 'md', matches.join(' AND '));
+			qb.innerJoin(
+				ExecutionMetadata,
+				'md',
+				'md.executionId = execution.id AND md.key = :key AND md.value = :value',
+			);
 
 			qb.setParameter('key', key);
-			qb.setParameter('value', exactMatch ? value : `%${value}%`);
+			qb.setParameter('value', value);
 		}
 
+		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		if (annotationTags?.length || vote) {
 			// If there is a filter by one or multiple tags or by vote - we need to join the annotations table
 			qb.innerJoin('execution.annotation', 'annotation');
@@ -1054,32 +1048,13 @@ export class ExecutionRepository extends Repository<ExecutionEntity> {
 			subQuery.leftJoin('execution.annotation', 'annotation');
 		}
 
-		const qb = this.manager
+		return this.manager
 			.createQueryBuilder()
 			.select(['e.*', 'ate.id AS "annotation_tags_id"', 'ate.name AS "annotation_tags_name"'])
 			.from(`(${subQuery.getQuery()})`, 'e')
 			.setParameters(subQuery.getParameters())
 			.leftJoin(AnnotationTagMapping, 'atm', 'atm.annotationId = e.annotation_id')
 			.leftJoin(AnnotationTagEntity, 'ate', 'ate.id = atm.tagId');
-
-		// Sort the final result after the joins again, because there is no
-		// guarantee that the order is unchanged after performing joins. Especially
-		// postgres and MySQL returned to the natural order again, listing
-		// executions in the order they were created.
-		if (query.kind === 'range') {
-			if (query.order?.startedAt === 'DESC') {
-				const table = qb.escape('e');
-				const startedAt = qb.escape('startedAt');
-				const createdAt = qb.escape('createdAt');
-				qb.orderBy({ [`COALESCE(${table}.${startedAt}, ${table}.${createdAt})`]: 'DESC' });
-			} else if (query.order?.top) {
-				qb.orderBy(`(CASE WHEN e.status = '${query.order.top}' THEN 0 ELSE 1 END)`);
-			} else {
-				qb.orderBy({ 'e.id': 'DESC' });
-			}
-		}
-
-		return qb;
 	}
 
 	async getAllIds() {

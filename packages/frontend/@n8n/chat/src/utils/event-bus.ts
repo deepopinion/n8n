@@ -1,4 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-restricted-types
+// eslint-disable-next-line @typescript-eslint/ban-types
 export type CallbackFn = Function;
 export type UnregisterFn = () => void;
 

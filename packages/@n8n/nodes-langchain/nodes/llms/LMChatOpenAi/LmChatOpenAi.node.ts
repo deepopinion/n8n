@@ -1,3 +1,5 @@
+/* eslint-disable n8n-nodes-base/node-dirname-against-convention */
+
 import { ChatOpenAI, type ClientOptions } from '@langchain/openai';
 import {
 	NodeConnectionTypes,
@@ -7,7 +9,7 @@ import {
 	type SupplyData,
 } from 'n8n-workflow';
 
-import { getProxyAgent } from '@utils/httpProxyAgent';
+import { getHttpProxyAgent } from '@utils/httpProxyAgent';
 import { getConnectionHintNoticeField } from '@utils/sharedFields';
 
 import { searchModels } from './methods/loadModels';
@@ -24,7 +26,7 @@ export class LmChatOpenAi implements INodeType {
 
 	description: INodeTypeDescription = {
 		displayName: 'OpenAI Chat Model',
-
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-name-miscased
 		name: 'lmChatOpenAi',
 		icon: { light: 'file:openAiLight.svg', dark: 'file:openAiLight.dark.svg' },
 		group: ['transform'],
@@ -47,9 +49,9 @@ export class LmChatOpenAi implements INodeType {
 				],
 			},
 		},
-
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
 		inputs: [],
-
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
 		outputs: [NodeConnectionTypes.AiLanguageModel],
 		outputNames: ['Model'],
 		credentials: [
@@ -147,7 +149,7 @@ export class LmChatOpenAi implements INodeType {
 				displayName: 'Model',
 				name: 'model',
 				type: 'resourceLocator',
-				default: { mode: 'list', value: 'gpt-4.1-mini' },
+				default: { mode: 'list', value: 'gpt-4o-mini' },
 				required: true,
 				modes: [
 					{
@@ -164,7 +166,7 @@ export class LmChatOpenAi implements INodeType {
 						displayName: 'ID',
 						name: 'id',
 						type: 'string',
-						placeholder: 'gpt-4.1-mini',
+						placeholder: 'gpt-4o-mini',
 					},
 				],
 				description: 'The model. Choose from the list, or specify an ID.',
@@ -345,18 +347,13 @@ export class LmChatOpenAi implements INodeType {
 			reasoningEffort?: 'low' | 'medium' | 'high';
 		};
 
-		const configuration: ClientOptions = {};
-
+		const configuration: ClientOptions = {
+			httpAgent: getHttpProxyAgent(),
+		};
 		if (options.baseURL) {
 			configuration.baseURL = options.baseURL;
 		} else if (credentials.url) {
 			configuration.baseURL = credentials.url as string;
-		}
-
-		if (configuration.baseURL) {
-			configuration.fetchOptions = {
-				dispatcher: getProxyAgent(configuration.baseURL ?? 'https://api.openai.com/v1'),
-			};
 		}
 
 		// Extra options to send to OpenAI, that are not directly supported by LangChain
@@ -370,7 +367,7 @@ export class LmChatOpenAi implements INodeType {
 
 		const model = new ChatOpenAI({
 			openAIApiKey: credentials.apiKey as string,
-			model: modelName,
+			modelName,
 			...options,
 			timeout: options.timeout ?? 60000,
 			maxRetries: options.maxRetries ?? 2,

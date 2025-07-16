@@ -10,7 +10,6 @@ import { CanvasConnectionMode } from '@/types';
 import type { Connection } from '@vue-flow/core';
 import { isValidCanvasConnectionMode, isValidNodeConnectionType } from '@/utils/typeGuards';
 import { NodeConnectionTypes } from 'n8n-workflow';
-import { NODE_MIN_INPUT_ITEMS_COUNT } from '@/constants';
 
 /**
  * Maps multiple legacy n8n connections to VueFlow connections
@@ -33,7 +32,7 @@ export function mapLegacyConnectionsToCanvasConnections(
 				toPorts?.forEach((toPort) => {
 					const toNodeName = toPort.node;
 					const toId = nodes.find((node) => node.name === toNodeName)?.id ?? '';
-					const toConnectionType = toPort.type;
+					const toConnectionType = toPort.type as NodeConnectionType;
 					const toIndex = toPort.index;
 
 					const sourceHandle = createCanvasConnectionHandleString({
@@ -247,15 +246,18 @@ export function checkOverlap(node1: BoundingBox, node2: BoundingBox) {
 /**
  * Inserts spacers between endpoints to visually separate them
  */
-export function insertSpacersBetweenEndpoints<T>(endpoints: T[], requiredEndpointsCount = 0) {
+export function insertSpacersBetweenEndpoints<T>(
+	endpoints: T[],
+	requiredEndpointsCount = 0,
+	minEndpointsCount = 4,
+) {
 	const endpointsWithSpacers: Array<T | null> = [...endpoints];
 	const optionalNonMainInputsCount = endpointsWithSpacers.length - requiredEndpointsCount;
-	const spacerCount =
-		NODE_MIN_INPUT_ITEMS_COUNT - requiredEndpointsCount - optionalNonMainInputsCount;
+	const spacerCount = minEndpointsCount - requiredEndpointsCount - optionalNonMainInputsCount;
 
 	// Insert `null` in between required non-main inputs and non-required non-main inputs
-	// to separate them visually if there are less than `minEndpointsCount` inputs in total
-	if (endpointsWithSpacers.length < NODE_MIN_INPUT_ITEMS_COUNT) {
+	// to separate them visually if there are less than 4 inputs in total
+	if (endpointsWithSpacers.length < minEndpointsCount) {
 		for (let i = 0; i < spacerCount; i++) {
 			endpointsWithSpacers.splice(requiredEndpointsCount + i, 0, null);
 		}

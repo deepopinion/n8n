@@ -2,6 +2,10 @@ import { ref } from 'vue';
 import { useViewportAutoAdjust } from './useViewportAutoAdjust';
 import { waitFor } from '@testing-library/vue';
 
+vi.mock('@/stores/settings.store', () => ({
+	useSettingsStore: vi.fn(() => ({ isNewLogsEnabled: true })),
+}));
+
 describe(useViewportAutoAdjust, () => {
 	afterAll(() => {
 		vi.clearAllMocks();

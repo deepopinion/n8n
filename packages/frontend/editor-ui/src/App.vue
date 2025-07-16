@@ -9,7 +9,7 @@ import Modals from '@/components/Modals.vue';
 import Telemetry from '@/components/Telemetry.vue';
 import AskAssistantFloatingButton from '@/components/AskAssistant/Chat/AskAssistantFloatingButton.vue';
 import AssistantsHub from '@/components/AskAssistant/AssistantsHub.vue';
-import { loadLanguage } from '@n8n/i18n';
+import { loadLanguage } from '@/plugins/i18n';
 import { APP_MODALS_ELEMENT_ID, HIRING_BANNER, VIEWS } from '@/constants';
 import { useRootStore } from '@n8n/stores/useRootStore';
 import { useAssistantStore } from '@/stores/assistant.store';
@@ -19,8 +19,6 @@ import { useUsersStore } from '@/stores/users.store';
 import { useSettingsStore } from '@/stores/settings.store';
 import { useHistoryHelper } from '@/composables/useHistoryHelper';
 import { useStyles } from './composables/useStyles';
-import { locale } from '@n8n/design-system';
-import axios from 'axios';
 
 const route = useRoute();
 const rootStore = useRootStore();
@@ -38,10 +36,7 @@ useHistoryHelper(route);
 const loading = ref(true);
 const defaultLocale = computed(() => rootStore.defaultLocale);
 const isDemoMode = computed(() => route.name === VIEWS.DEMO);
-const showAssistantFloatingButton = computed(
-	() =>
-		assistantStore.canShowAssistantButtonsOnCanvas && !assistantStore.hideAssistantFloatingButton,
-);
+const showAssistantButton = computed(() => assistantStore.canShowAssistantButtonsOnCanvas);
 const hasContentFooter = ref(false);
 const appGrid = ref<Element | null>(null);
 
@@ -84,15 +79,9 @@ watch(route, (r) => {
 	);
 });
 
-watch(
-	defaultLocale,
-	(newLocale) => {
-		void loadLanguage(newLocale);
-		void locale.use(newLocale);
-		axios.defaults.headers.common['Accept-Language'] = newLocale;
-	},
-	{ immediate: true },
-);
+watch(defaultLocale, (newLocale) => {
+	void loadLanguage(newLocale);
+});
 </script>
 
 <template>
@@ -132,7 +121,7 @@ watch(
 				<Modals />
 			</div>
 			<Telemetry />
-			<AskAssistantFloatingButton v-if="showAssistantFloatingButton" />
+			<AskAssistantFloatingButton v-if="showAssistantButton" />
 		</div>
 		<AssistantsHub />
 	</div>

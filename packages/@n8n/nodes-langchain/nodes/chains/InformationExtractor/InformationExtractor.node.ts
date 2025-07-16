@@ -11,13 +11,8 @@ import type {
 } from 'n8n-workflow';
 import type { z } from 'zod';
 
-import {
-	buildJsonSchemaExampleNotice,
-	inputSchemaField,
-	jsonSchemaExampleField,
-	schemaTypeField,
-} from '@utils/descriptions';
-import { convertJsonSchemaToZod, generateSchemaFromExample } from '@utils/schemaParsing';
+import { inputSchemaField, jsonSchemaExampleField, schemaTypeField } from '@utils/descriptions';
+import { convertJsonSchemaToZod, generateSchema } from '@utils/schemaParsing';
 import { getBatchingOptionFields } from '@utils/sharedFields';
 
 import { SYSTEM_PROMPT_TEMPLATE } from './constants';
@@ -32,8 +27,7 @@ export class InformationExtractor implements INodeType {
 		icon: 'fa:project-diagram',
 		iconColor: 'black',
 		group: ['transform'],
-		version: [1, 1.1, 1.2],
-		defaultVersion: 1.2,
+		version: [1, 1.1],
 		description: 'Extract information from text in a structured format',
 		codex: {
 			alias: ['NER', 'parse', 'parsing', 'JSON', 'data extraction', 'structured'],
@@ -94,11 +88,6 @@ export class InformationExtractor implements INodeType {
 	"cities": ["Los Angeles", "San Francisco", "San Diego"]
 }`,
 			},
-			buildJsonSchemaExampleNotice({
-				showExtraProps: {
-					'@version': [{ _cnd: { gte: 1.2 } }],
-				},
-			}),
 			{
 				...inputSchemaField,
 				default: `{
@@ -115,6 +104,18 @@ export class InformationExtractor implements INodeType {
 		}
 	}
 }`,
+			},
+			{
+				displayName:
+					'The schema has to be defined in the <a target="_blank" href="https://json-schema.org/">JSON Schema</a> format. Look at <a target="_blank" href="https://json-schema.org/learn/miscellaneous-examples.html">this</a> page for examples.',
+				name: 'notice',
+				type: 'notice',
+				default: '',
+				displayOptions: {
+					show: {
+						schemaType: ['manual'],
+					},
+				},
 			},
 			{
 				displayName: 'Attributes',
@@ -253,10 +254,7 @@ export class InformationExtractor implements INodeType {
 
 			if (schemaType === 'fromJson') {
 				const jsonExample = this.getNodeParameter('jsonSchemaExample', 0, '') as string;
-				// Enforce all fields to be required in the generated schema if the node version is 1.2 or higher
-				const jsonExampleAllFieldsRequired = this.getNode().typeVersion >= 1.2;
-
-				jsonSchema = generateSchemaFromExample(jsonExample, jsonExampleAllFieldsRequired);
+				jsonSchema = generateSchema(jsonExample);
 			} else {
 				const inputSchema = this.getNodeParameter('inputSchema', 0, '') as string;
 				jsonSchema = jsonParse<JSONSchema7>(inputSchema);

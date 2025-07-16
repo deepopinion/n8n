@@ -208,10 +208,7 @@ export class SeaTableTriggerV2 implements INodeType {
 			const newRows: any = [];
 			for (const row of rows) {
 				if (assetColumnType === 'digital-sign') {
-					const signature = (row[assetColumn] as IColumnDigitalSignature) || {
-						sign_time: undefined,
-					};
-
+					const signature = (row[assetColumn] as IColumnDigitalSignature) || [];
 					if (signature.sign_time) {
 						if (new Date(signature.sign_time) > new Date(startDate)) {
 							newRows.push(signature);

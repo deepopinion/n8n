@@ -1,7 +1,6 @@
 import type { Embeddings } from '@langchain/core/embeddings';
-import type { BaseDocumentCompressor } from '@langchain/core/retrievers/document_compressors';
 import type { VectorStore } from '@langchain/core/vectorstores';
-import { NodeConnectionTypes, type IExecuteFunctions, type INodeExecutionData } from 'n8n-workflow';
+import type { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 
 import { getMetadataFiltersValues, logAiEvent } from '@utils/helpers';
 
@@ -30,8 +29,6 @@ export async function handleLoadOperation<T extends VectorStore = VectorStore>(
 		// Get the search parameters from the node
 		const prompt = context.getNodeParameter('prompt', itemIndex) as string;
 		const topK = context.getNodeParameter('topK', itemIndex, 4) as number;
-		const useReranker = context.getNodeParameter('useReranker', itemIndex, false) as boolean;
-
 		const includeDocumentMetadata = context.getNodeParameter(
 			'includeDocumentMetadata',
 			itemIndex,
@@ -42,22 +39,7 @@ export async function handleLoadOperation<T extends VectorStore = VectorStore>(
 		const embeddedPrompt = await embeddings.embedQuery(prompt);
 
 		// Get the most similar documents to the embedded prompt
-		let docs = await vectorStore.similaritySearchVectorWithScore(embeddedPrompt, topK, filter);
-
-		// If reranker is used, rerank the documents
-		if (useReranker && docs.length > 0) {
-			const reranker = (await context.getInputConnectionData(
-				NodeConnectionTypes.AiReranker,
-				0,
-			)) as BaseDocumentCompressor;
-			const documents = docs.map(([doc]) => doc);
-
-			const rerankedDocuments = await reranker.compressDocuments(documents, prompt);
-			docs = rerankedDocuments.map((doc) => {
-				const { relevanceScore, ...metadata } = doc.metadata || {};
-				return [{ ...doc, metadata }, relevanceScore];
-			});
-		}
+		const docs = await vectorStore.similaritySearchVectorWithScore(embeddedPrompt, topK, filter);
 
 		// Format the documents for the output
 		const serializedDocs = docs.map(([doc, score]) => {

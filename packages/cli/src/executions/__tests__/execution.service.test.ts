@@ -1,5 +1,5 @@
-import { mockInstance } from '@n8n/backend-test-utils';
-import type { IExecutionResponse, ExecutionRepository } from '@n8n/db';
+import type { IExecutionResponse } from '@n8n/db';
+import type { ExecutionRepository } from '@n8n/db';
 import { mock } from 'jest-mock-extended';
 import { WorkflowOperationError } from 'n8n-workflow';
 
@@ -13,6 +13,7 @@ import type { ExecutionRequest } from '@/executions/execution.types';
 import { ScalingService } from '@/scaling/scaling.service';
 import type { Job } from '@/scaling/scaling.types';
 import type { WaitTracker } from '@/wait-tracker';
+import { mockInstance } from '@test/mocking';
 
 describe('ExecutionService', () => {
 	const scalingService = mockInstance(ScalingService);
@@ -69,13 +70,12 @@ describe('ExecutionService', () => {
 			/**
 			 * Arrange
 			 */
-			executionRepository.findWithUnflattenedData.mockResolvedValue(undefined);
-			const req = mock<ExecutionRequest.Stop>({ params: { id: '1234' } });
+			executionRepository.findSingleExecution.mockResolvedValue(undefined);
 
 			/**
 			 * Act
 			 */
-			const stop = executionService.stop(req.params.id, []);
+			const stop = executionService.stop('inexistent-123');
 
 			/**
 			 * Assert
@@ -88,13 +88,12 @@ describe('ExecutionService', () => {
 			 * Arrange
 			 */
 			const execution = mock<IExecutionResponse>({ id: '123', status: 'success' });
-			executionRepository.findWithUnflattenedData.mockResolvedValue(execution);
-			const req = mock<ExecutionRequest.Stop>({ params: { id: execution.id } });
+			executionRepository.findSingleExecution.mockResolvedValue(execution);
 
 			/**
 			 * Act
 			 */
-			const stop = executionService.stop(req.params.id, [execution.id]);
+			const stop = executionService.stop(execution.id);
 
 			/**
 			 * Assert
@@ -108,18 +107,16 @@ describe('ExecutionService', () => {
 				 * Arrange
 				 */
 				const execution = mock<IExecutionResponse>({ id: '123', status: 'running' });
-				executionRepository.findWithUnflattenedData.mockResolvedValue(execution);
+				executionRepository.findSingleExecution.mockResolvedValue(execution);
 				concurrencyControl.has.mockReturnValue(false);
 				activeExecutions.has.mockReturnValue(true);
 				waitTracker.has.mockReturnValue(false);
 				executionRepository.stopDuringRun.mockResolvedValue(mock<IExecutionResponse>());
 
-				const req = mock<ExecutionRequest.Stop>({ params: { id: execution.id } });
-
 				/**
 				 * Act
 				 */
-				await executionService.stop(req.params.id, [execution.id]);
+				await executionService.stop(execution.id);
 
 				/**
 				 * Assert
@@ -135,18 +132,16 @@ describe('ExecutionService', () => {
 				 * Arrange
 				 */
 				const execution = mock<IExecutionResponse>({ id: '123', status: 'waiting' });
-				executionRepository.findWithUnflattenedData.mockResolvedValue(execution);
+				executionRepository.findSingleExecution.mockResolvedValue(execution);
 				concurrencyControl.has.mockReturnValue(false);
 				activeExecutions.has.mockReturnValue(true);
 				waitTracker.has.mockReturnValue(true);
 				executionRepository.stopDuringRun.mockResolvedValue(mock<IExecutionResponse>());
 
-				const req = mock<ExecutionRequest.Stop>({ params: { id: execution.id } });
-
 				/**
 				 * Act
 				 */
-				await executionService.stop(req.params.id, [execution.id]);
+				await executionService.stop(execution.id);
 
 				/**
 				 * Assert
@@ -162,18 +157,16 @@ describe('ExecutionService', () => {
 				 * Arrange
 				 */
 				const execution = mock<IExecutionResponse>({ id: '123', status: 'new', mode: 'trigger' });
-				executionRepository.findWithUnflattenedData.mockResolvedValue(execution);
+				executionRepository.findSingleExecution.mockResolvedValue(execution);
 				concurrencyControl.has.mockReturnValue(true);
 				activeExecutions.has.mockReturnValue(false);
 				waitTracker.has.mockReturnValue(false);
 				executionRepository.stopBeforeRun.mockResolvedValue(mock<IExecutionResponse>());
 
-				const req = mock<ExecutionRequest.Stop>({ params: { id: execution.id } });
-
 				/**
 				 * Act
 				 */
-				await executionService.stop(req.params.id, [execution.id]);
+				await executionService.stop(execution.id);
 
 				/**
 				 * Assert
@@ -200,13 +193,11 @@ describe('ExecutionService', () => {
 						mode: 'manual',
 						status: 'running',
 					});
-					executionRepository.findWithUnflattenedData.mockResolvedValue(execution);
+					executionRepository.findSingleExecution.mockResolvedValue(execution);
 					concurrencyControl.has.mockReturnValue(false);
 					activeExecutions.has.mockReturnValue(true);
 					waitTracker.has.mockReturnValue(false);
-
-					const req = mock<ExecutionRequest.Stop>({ params: { id: execution.id } });
-					const job = mock<Job>({ data: { executionId: execution.id } });
+					const job = mock<Job>({ data: { executionId: '123' } });
 					scalingService.findJobsByStatus.mockResolvedValue([job]);
 					executionRepository.stopDuringRun.mockResolvedValue(mock<IExecutionResponse>());
 					// @ts-expect-error Private method
@@ -215,7 +206,7 @@ describe('ExecutionService', () => {
 					/**
 					 * Act
 					 */
-					await executionService.stop(req.params.id, [execution.id]);
+					await executionService.stop(execution.id);
 
 					/**
 					 * Assert
@@ -237,18 +228,16 @@ describe('ExecutionService', () => {
 					 */
 					config.set('executions.mode', 'queue');
 					const execution = mock<IExecutionResponse>({ id: '123', status: 'running' });
-					executionRepository.findWithUnflattenedData.mockResolvedValue(execution);
+					executionRepository.findSingleExecution.mockResolvedValue(execution);
 					waitTracker.has.mockReturnValue(false);
-
-					const req = mock<ExecutionRequest.Stop>({ params: { id: execution.id } });
-					const job = mock<Job>({ data: { executionId: execution.id } });
+					const job = mock<Job>({ data: { executionId: '123' } });
 					scalingService.findJobsByStatus.mockResolvedValue([job]);
 					executionRepository.stopDuringRun.mockResolvedValue(mock<IExecutionResponse>());
 
 					/**
 					 * Act
 					 */
-					await executionService.stop(req.params.id, [execution.id]);
+					await executionService.stop(execution.id);
 
 					/**
 					 * Assert
@@ -266,18 +255,16 @@ describe('ExecutionService', () => {
 					 */
 					config.set('executions.mode', 'queue');
 					const execution = mock<IExecutionResponse>({ id: '123', status: 'waiting' });
-					executionRepository.findWithUnflattenedData.mockResolvedValue(execution);
+					executionRepository.findSingleExecution.mockResolvedValue(execution);
 					waitTracker.has.mockReturnValue(true);
-
-					const req = mock<ExecutionRequest.Stop>({ params: { id: execution.id } });
-					const job = mock<Job>({ data: { executionId: execution.id } });
+					const job = mock<Job>({ data: { executionId: '123' } });
 					scalingService.findJobsByStatus.mockResolvedValue([job]);
 					executionRepository.stopDuringRun.mockResolvedValue(mock<IExecutionResponse>());
 
 					/**
 					 * Act
 					 */
-					await executionService.stop(req.params.id, [execution.id]);
+					await executionService.stop(execution.id);
 
 					/**
 					 * Assert

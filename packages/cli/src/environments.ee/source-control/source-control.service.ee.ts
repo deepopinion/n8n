@@ -3,23 +3,16 @@ import type {
 	PushWorkFolderRequestDto,
 	SourceControlledFile,
 } from '@n8n/api-types';
-import { Logger } from '@n8n/backend-common';
-import {
-	type Variables,
-	type TagEntity,
-	FolderRepository,
-	TagRepository,
-	type User,
-} from '@n8n/db';
+import type { Variables, TagEntity, User } from '@n8n/db';
+import { FolderRepository, TagRepository } from '@n8n/db';
 import { Service } from '@n8n/di';
-import { hasGlobalScope } from '@n8n/permissions';
 import { writeFileSync } from 'fs';
+import { Logger } from 'n8n-core';
 import { UnexpectedError, UserError } from 'n8n-workflow';
 import path from 'path';
 import type { PushResult } from 'simple-git';
 
 import { BadRequestError } from '@/errors/response-errors/bad-request.error';
-import { ForbiddenError } from '@/errors/response-errors/forbidden.error';
 import { EventService } from '@/events/event.service';
 
 import {
@@ -42,10 +35,9 @@ import {
 } from './source-control-helper.ee';
 import { SourceControlImportService } from './source-control-import.service.ee';
 import { SourceControlPreferencesService } from './source-control-preferences.service.ee';
-import type { StatusExportableCredential } from './types/exportable-credential';
+import type { ExportableCredential } from './types/exportable-credential';
 import type { ExportableFolder } from './types/exportable-folders';
 import type { ImportResult } from './types/import-result';
-import { SourceControlContext } from './types/source-control-context';
 import type { SourceControlGetStatus } from './types/source-control-get-status';
 import type { SourceControlPreferences } from './types/source-control-preferences';
 import type { SourceControlWorkflowVersionId } from './types/source-control-workflow-version-id';
@@ -233,9 +225,7 @@ export class SourceControlService {
 			throw new BadRequestError('Cannot push onto read-only branch.');
 		}
 
-		const context = new SourceControlContext(user);
-
-		let filesToPush = options.fileNames.map((file) => {
+		const filesToPush = options.fileNames.map((file) => {
 			const normalizedPath = normalizeAndValidateSourceControlledFilePath(
 				this.gitFolder,
 				file.file,
@@ -247,39 +237,23 @@ export class SourceControlService {
 			};
 		});
 
-		const allowedResources = (await this.getStatus(user, {
-			direction: 'push',
-			verbose: false,
-			preferLocalVersion: true,
-		})) as SourceControlledFile[];
-
-		// Fallback to all allowed resources if no fileNames are provided
-		if (!filesToPush.length) {
-			filesToPush = allowedResources;
-		}
-
-		// If fileNames are provided, we need to check if they are allowed
-		if (
-			filesToPush !== allowedResources &&
-			filesToPush.some(
-				(file) =>
-					!allowedResources.some((allowed) => {
-						return allowed.id === file.id && allowed.type === file.type;
-					}),
-			)
-		) {
-			throw new ForbiddenError('You are not allowed to push these changes');
-		}
-
+		// only determine file status if not provided by the frontend
 		let statusResult: SourceControlledFile[] = filesToPush;
+		if (statusResult.length === 0) {
+			statusResult = (await this.getStatus(user, {
+				direction: 'push',
+				verbose: false,
+				preferLocalVersion: true,
+			})) as SourceControlledFile[];
+		}
 
 		if (!options.force) {
-			const possibleConflicts = filesToPush?.filter((file) => file.conflict);
+			const possibleConflicts = statusResult?.filter((file) => file.conflict);
 			if (possibleConflicts?.length > 0) {
 				return {
 					statusCode: 409,
 					pushResult: undefined,
-					statusResult: filesToPush,
+					statusResult,
 				};
 			}
 		}
@@ -325,13 +299,13 @@ export class SourceControlService {
 		const tagChanges = filesToPush.find((e) => e.type === 'tags');
 		if (tagChanges) {
 			filesToBePushed.add(tagChanges.file);
-			await this.sourceControlExportService.exportTagsToWorkFolder(context);
+			await this.sourceControlExportService.exportTagsToWorkFolder();
 		}
 
 		const folderChanges = filesToPush.find((e) => e.type === 'folders');
 		if (folderChanges) {
 			filesToBePushed.add(folderChanges.file);
-			await this.sourceControlExportService.exportFoldersToWorkFolder(context);
+			await this.sourceControlExportService.exportFoldersToWorkFolder();
 		}
 
 		const variablesChanges = filesToPush.find((e) => e.type === 'variables');
@@ -342,8 +316,12 @@ export class SourceControlService {
 
 		await this.gitService.stage(filesToBePushed, filesToBeDeleted);
 
-		// Set all results as pushed
-		statusResult.forEach((result) => (result.pushed = true));
+		for (let i = 0; i < statusResult.length; i++) {
+			// eslint-disable-next-line @typescript-eslint/no-loop-func
+			if (filesToPush.find((file) => file.file === statusResult[i].file)) {
+				statusResult[i].pushed = true;
+			}
+		}
 
 		await this.gitService.commit(options.commitMessage ?? 'Updated Workfolder');
 
@@ -503,13 +481,6 @@ export class SourceControlService {
 	async getStatus(user: User, options: SourceControlGetStatus) {
 		await this.sanityCheck();
 
-		const context = new SourceControlContext(user);
-
-		if (options.direction === 'pull' && !hasGlobalScope(user, 'sourceControl:pull')) {
-			// A pull is only allowed by global admins or owners
-			throw new ForbiddenError('You do not have permission to pull from source control');
-		}
-
 		const sourceControlledFiles: SourceControlledFile[] = [];
 
 		// fetch and reset hard first
@@ -521,10 +492,10 @@ export class SourceControlService {
 			wfMissingInLocal,
 			wfMissingInRemote,
 			wfModifiedInEither,
-		} = await this.getStatusWorkflows(options, context, sourceControlledFiles);
+		} = await this.getStatusWorkflows(options, sourceControlledFiles);
 
 		const { credMissingInLocal, credMissingInRemote, credModifiedInEither } =
-			await this.getStatusCredentials(options, context, sourceControlledFiles);
+			await this.getStatusCredentials(options, sourceControlledFiles);
 
 		const { varMissingInLocal, varMissingInRemote, varModifiedInEither } =
 			await this.getStatusVariables(options, sourceControlledFiles);
@@ -535,10 +506,10 @@ export class SourceControlService {
 			tagsModifiedInEither,
 			mappingsMissingInLocal,
 			mappingsMissingInRemote,
-		} = await this.getStatusTagsMappings(options, context, sourceControlledFiles);
+		} = await this.getStatusTagsMappings(options, sourceControlledFiles);
 
 		const { foldersMissingInLocal, foldersMissingInRemote, foldersModifiedInEither } =
-			await this.getStatusFoldersMapping(options, context, sourceControlledFiles);
+			await this.getStatusFoldersMapping(options, sourceControlledFiles);
 
 		// #region Tracking Information
 		if (options.direction === 'push') {
@@ -584,34 +555,14 @@ export class SourceControlService {
 
 	private async getStatusWorkflows(
 		options: SourceControlGetStatus,
-		context: SourceControlContext,
 		sourceControlledFiles: SourceControlledFile[],
 	) {
-		// TODO: We need to check the case where it exists in the DB (out of scope) but is in GIT
-		const wfRemoteVersionIds =
-			await this.sourceControlImportService.getRemoteVersionIdsFromFiles(context);
-		const wfLocalVersionIds =
-			await this.sourceControlImportService.getLocalVersionIdsFromDb(context);
+		const wfRemoteVersionIds = await this.sourceControlImportService.getRemoteVersionIdsFromFiles();
+		const wfLocalVersionIds = await this.sourceControlImportService.getLocalVersionIdsFromDb();
 
-		let outOfScopeWF: SourceControlWorkflowVersionId[] = [];
-
-		if (!context.hasAccessToAllProjects()) {
-			// we need to query for all wf in the DB to hide possible deletions,
-			// when a wf went out of scope locally
-			outOfScopeWF = await this.sourceControlImportService.getAllLocalVersionIdsFromDb();
-			outOfScopeWF = outOfScopeWF.filter(
-				(wf) => !wfLocalVersionIds.some((local) => local.id === wf.id),
-			);
-		}
-
-		const wfMissingInLocal = wfRemoteVersionIds
-			.filter((remote) => wfLocalVersionIds.findIndex((local) => local.id === remote.id) === -1)
-			.filter(
-				// If we have out of scope workflows, these are workflows, that are not
-				// visible locally, but exists locally but are available in remote
-				// we skip them and hide them from deletion from the user.
-				(remote) => !outOfScopeWF.some((outOfScope) => outOfScope.id === remote.id),
-			);
+		const wfMissingInLocal = wfRemoteVersionIds.filter(
+			(remote) => wfLocalVersionIds.findIndex((local) => local.id === remote.id) === -1,
+		);
 
 		const wfMissingInRemote = wfLocalVersionIds.filter(
 			(local) => wfRemoteVersionIds.findIndex((remote) => remote.id === local.id) === -1,
@@ -663,7 +614,6 @@ export class SourceControlService {
 				conflict: false,
 				file: item.filename,
 				updatedAt: item.updatedAt ?? new Date().toISOString(),
-				owner: item.owner,
 			});
 		});
 
@@ -677,7 +627,6 @@ export class SourceControlService {
 				conflict: options.direction === 'push' ? false : true,
 				file: item.filename,
 				updatedAt: item.updatedAt ?? new Date().toISOString(),
-				owner: item.owner,
 			});
 		});
 
@@ -691,7 +640,6 @@ export class SourceControlService {
 				conflict: true,
 				file: item.filename,
 				updatedAt: item.updatedAt ?? new Date().toISOString(),
-				owner: item.owner,
 			});
 		});
 
@@ -706,12 +654,10 @@ export class SourceControlService {
 
 	private async getStatusCredentials(
 		options: SourceControlGetStatus,
-		context: SourceControlContext,
 		sourceControlledFiles: SourceControlledFile[],
 	) {
-		const credRemoteIds =
-			await this.sourceControlImportService.getRemoteCredentialsFromFiles(context);
-		const credLocalIds = await this.sourceControlImportService.getLocalCredentialsFromDb(context);
+		const credRemoteIds = await this.sourceControlImportService.getRemoteCredentialsFromFiles();
+		const credLocalIds = await this.sourceControlImportService.getLocalCredentialsFromDb();
 
 		const credMissingInLocal = credRemoteIds.filter(
 			(remote) => credLocalIds.findIndex((local) => local.id === remote.id) === -1,
@@ -722,7 +668,11 @@ export class SourceControlService {
 		);
 
 		// only compares the name, since that is the only change synced for credentials
-		const credModifiedInEither: StatusExportableCredential[] = [];
+		const credModifiedInEither: Array<
+			ExportableCredential & {
+				filename: string;
+			}
+		> = [];
 		credLocalIds.forEach((local) => {
 			const mismatchingCreds = credRemoteIds.find((remote) => {
 				return remote.id === local.id && (remote.name !== local.name || remote.type !== local.type);
@@ -745,7 +695,6 @@ export class SourceControlService {
 				conflict: false,
 				file: item.filename,
 				updatedAt: new Date().toISOString(),
-				owner: item.ownedBy,
 			});
 		});
 
@@ -759,7 +708,6 @@ export class SourceControlService {
 				conflict: options.direction === 'push' ? false : true,
 				file: item.filename,
 				updatedAt: new Date().toISOString(),
-				owner: item.ownedBy,
 			});
 		});
 
@@ -773,7 +721,6 @@ export class SourceControlService {
 				conflict: true,
 				file: item.filename,
 				updatedAt: new Date().toISOString(),
-				owner: item.ownedBy,
 			});
 		});
 		return {
@@ -860,7 +807,6 @@ export class SourceControlService {
 
 	private async getStatusTagsMappings(
 		options: SourceControlGetStatus,
-		context: SourceControlContext,
 		sourceControlledFiles: SourceControlledFile[],
 	) {
 		const lastUpdatedTag = await this.tagRepository.find({
@@ -869,12 +815,9 @@ export class SourceControlService {
 			select: ['updatedAt'],
 		});
 
-		const lastUpdatedDate = lastUpdatedTag[0]?.updatedAt ?? new Date();
-
 		const tagMappingsRemote =
-			await this.sourceControlImportService.getRemoteTagsAndMappingsFromFile(context);
-		const tagMappingsLocal =
-			await this.sourceControlImportService.getLocalTagsAndMappingsFromDb(context);
+			await this.sourceControlImportService.getRemoteTagsAndMappingsFromFile();
+		const tagMappingsLocal = await this.sourceControlImportService.getLocalTagsAndMappingsFromDb();
 
 		const tagsMissingInLocal = tagMappingsRemote.tags.filter(
 			(remote) => tagMappingsLocal.tags.findIndex((local) => local.id === remote.id) === -1,
@@ -918,7 +861,7 @@ export class SourceControlService {
 				location: options.direction === 'push' ? 'local' : 'remote',
 				conflict: false,
 				file: getTagsPath(this.gitFolder),
-				updatedAt: lastUpdatedDate.toISOString(),
+				updatedAt: lastUpdatedTag[0]?.updatedAt.toISOString(),
 			});
 		});
 		tagsMissingInRemote.forEach((item) => {
@@ -930,7 +873,7 @@ export class SourceControlService {
 				location: options.direction === 'push' ? 'local' : 'remote',
 				conflict: options.direction === 'push' ? false : true,
 				file: getTagsPath(this.gitFolder),
-				updatedAt: lastUpdatedDate.toISOString(),
+				updatedAt: lastUpdatedTag[0]?.updatedAt.toISOString(),
 			});
 		});
 
@@ -943,7 +886,7 @@ export class SourceControlService {
 				location: options.direction === 'push' ? 'local' : 'remote',
 				conflict: true,
 				file: getTagsPath(this.gitFolder),
-				updatedAt: lastUpdatedDate.toISOString(),
+				updatedAt: lastUpdatedTag[0]?.updatedAt.toISOString(),
 			});
 		});
 
@@ -958,7 +901,6 @@ export class SourceControlService {
 
 	private async getStatusFoldersMapping(
 		options: SourceControlGetStatus,
-		context: SourceControlContext,
 		sourceControlledFiles: SourceControlledFile[],
 	) {
 		const lastUpdatedFolder = await this.folderRepository.find({
@@ -967,12 +909,10 @@ export class SourceControlService {
 			select: ['updatedAt'],
 		});
 
-		const lastUpdatedDate = lastUpdatedFolder[0]?.updatedAt ?? new Date();
-
 		const foldersMappingsRemote =
-			await this.sourceControlImportService.getRemoteFoldersAndMappingsFromFile(context);
+			await this.sourceControlImportService.getRemoteFoldersAndMappingsFromFile();
 		const foldersMappingsLocal =
-			await this.sourceControlImportService.getLocalFoldersAndMappingsFromDb(context);
+			await this.sourceControlImportService.getLocalFoldersAndMappingsFromDb();
 
 		const foldersMissingInLocal = foldersMappingsRemote.folders.filter(
 			(remote) => foldersMappingsLocal.folders.findIndex((local) => local.id === remote.id) === -1,
@@ -1005,7 +945,7 @@ export class SourceControlService {
 				location: options.direction === 'push' ? 'local' : 'remote',
 				conflict: false,
 				file: getFoldersPath(this.gitFolder),
-				updatedAt: lastUpdatedDate.toISOString(),
+				updatedAt: lastUpdatedFolder[0]?.updatedAt.toISOString(),
 			});
 		});
 		foldersMissingInRemote.forEach((item) => {
@@ -1017,7 +957,7 @@ export class SourceControlService {
 				location: options.direction === 'push' ? 'local' : 'remote',
 				conflict: options.direction === 'push' ? false : true,
 				file: getFoldersPath(this.gitFolder),
-				updatedAt: lastUpdatedDate.toISOString(),
+				updatedAt: lastUpdatedFolder[0]?.updatedAt.toISOString(),
 			});
 		});
 
@@ -1030,7 +970,7 @@ export class SourceControlService {
 				location: options.direction === 'push' ? 'local' : 'remote',
 				conflict: true,
 				file: getFoldersPath(this.gitFolder),
-				updatedAt: lastUpdatedDate.toISOString(),
+				updatedAt: lastUpdatedFolder[0]?.updatedAt.toISOString(),
 			});
 		});
 

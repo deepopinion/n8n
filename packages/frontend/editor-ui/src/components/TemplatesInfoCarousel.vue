@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onBeforeMount, onMounted, ref, watch } from 'vue';
-import type { ITemplatesCollection } from '@n8n/rest-api-client/api/templates';
+import type { ITemplatesCollection } from '@/Interface';
 import Card from '@/components/CollectionWorkflowCard.vue';
 import TemplatesInfoCard from '@/components/TemplatesInfoCard.vue';
 import { VueAgile } from 'vue-agile';
@@ -125,14 +125,14 @@ onBeforeMount(() => {
 			:class="{ [$style.leftButton]: true }"
 			@click="scrollLeft"
 		>
-			<n8n-icon icon="chevron-left" />
+			<font-awesome-icon icon="chevron-left" />
 		</button>
 		<button
 			v-show="showNavigation && !scrollEnd"
 			:class="{ [$style.rightButton]: true }"
 			@click="scrollRight"
 		>
-			<n8n-icon icon="chevron-right" />
+			<font-awesome-icon icon="chevron-right" />
 		</button>
 	</div>
 </template>

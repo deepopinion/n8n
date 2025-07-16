@@ -1,7 +1,9 @@
-import { LicenseState, Logger } from '@n8n/backend-common';
-import { Time } from '@n8n/constants';
+import { LicenseState } from '@n8n/backend-common';
 import { Service } from '@n8n/di';
 import { strict } from 'assert';
+import { Logger } from 'n8n-core';
+
+import { Time } from '@/constants';
 
 import { InsightsByPeriodRepository } from './database/repositories/insights-by-period.repository';
 import { InsightsConfig } from './insights.config';
@@ -41,7 +43,7 @@ export class InsightsPruningService {
 		this.clearPruningTimer();
 		this.isStopped = false;
 		this.scheduleNextPrune();
-		this.logger.debug('Started pruning timer');
+		this.logger.debug(`Insights pruning every ${this.config.pruneCheckIntervalHours} hours`);
 	}
 
 	private clearPruningTimer() {
@@ -54,7 +56,7 @@ export class InsightsPruningService {
 	stopPruningTimer() {
 		this.isStopped = true;
 		this.clearPruningTimer();
-		this.logger.debug('Stopped pruning timer');
+		this.logger.debug('Stopped Insights pruning');
 	}
 
 	private scheduleNextPrune(

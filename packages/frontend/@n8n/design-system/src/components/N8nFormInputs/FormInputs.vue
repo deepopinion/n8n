@@ -1,22 +1,24 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 
-import type { FormFieldValue, IFormInput, FormFieldValueUpdate, FormValues } from '../../types';
+import type { IFormInput } from '../../types';
 import type { FormEventBus } from '../../utils';
 import { createFormEventBus } from '../../utils';
 import N8nFormInput from '../N8nFormInput';
-import N8nText from '../N8nText';
 import ResizeObserver from '../ResizeObserver';
 
-export interface FormInputsProps {
-	inputs: IFormInput[];
+export type FormInputsProps = {
+	inputs?: IFormInput[];
 	eventBus?: FormEventBus;
 	columnView?: boolean;
 	verticalSpacing?: '' | 'xs' | 's' | 'm' | 'l' | 'xl';
 	teleported?: boolean;
-}
+};
+
+type Value = string | number | boolean | null | undefined;
 
 const props = withDefaults(defineProps<FormInputsProps>(), {
+	inputs: () => [],
 	eventBus: createFormEventBus,
 	columnView: false,
 	verticalSpacing: '',
@@ -24,14 +26,14 @@ const props = withDefaults(defineProps<FormInputsProps>(), {
 });
 
 const emit = defineEmits<{
-	update: [value: FormFieldValueUpdate];
-	'update:modelValue': [value: FormValues];
-	submit: [value: FormValues];
+	update: [value: { name: string; value: Value }];
+	'update:modelValue': [value: Record<string, Value>];
+	submit: [value: Record<string, Value>];
 	ready: [value: boolean];
 }>();
 
 const showValidationWarnings = ref(false);
-const values = reactive<FormValues>({});
+const values = reactive<Record<string, Value>>({});
 const validity = ref<Record<string, boolean>>({});
 
 const filteredInputs = computed(() => {
@@ -48,7 +50,7 @@ watch(isReadyToSubmit, (ready) => {
 	emit('ready', ready);
 });
 
-function onUpdateModelValue(name: string, value: FormFieldValue) {
+function onUpdateModelValue(name: string, value: Value) {
 	values[name] = value;
 	emit('update', { name, value });
 	emit('update:modelValue', values);
@@ -74,15 +76,12 @@ function onSubmit() {
 		return;
 	}
 
-	const toSubmit = filteredInputs.value.reduce<Record<string, FormFieldValue>>(
-		(valuesToSubmit, input) => {
-			if (values[input.name]) {
-				valuesToSubmit[input.name] = values[input.name];
-			}
-			return valuesToSubmit;
-		},
-		{},
-	);
+	const toSubmit = filteredInputs.value.reduce<Record<string, Value>>((valuesToSubmit, input) => {
+		if (values[input.name]) {
+			valuesToSubmit[input.name] = values[input.name];
+		}
+		return valuesToSubmit;
+	}, {});
 
 	emit('submit', toSubmit);
 }
@@ -109,7 +108,7 @@ onMounted(() => {
 					:key="input.name"
 					:class="{ [`mt-${verticalSpacing}`]: verticalSpacing && index > 0 }"
 				>
-					<N8nText
+					<n8n-text
 						v-if="input.properties.type === 'info'"
 						color="text-base"
 						tag="div"
@@ -118,7 +117,7 @@ onMounted(() => {
 						class="form-text"
 					>
 						{{ input.properties.label }}
-					</N8nText>
+					</n8n-text>
 					<N8nFormInput
 						v-else
 						v-bind="input.properties"
@@ -128,7 +127,7 @@ onMounted(() => {
 						:data-test-id="input.name"
 						:show-validation-warnings="showValidationWarnings"
 						:teleported="teleported"
-						@update:model-value="(value: FormFieldValue) => onUpdateModelValue(input.name, value)"
+						@update:model-value="(value: Value) => onUpdateModelValue(input.name, value)"
 						@validate="(value: boolean) => onValidate(input.name, value)"
 						@enter="onSubmit"
 					/>

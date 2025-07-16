@@ -12,7 +12,7 @@ import {
 	type SchemaNode,
 } from '@/composables/useDataSchema';
 import { useExternalHooks } from '@/composables/useExternalHooks';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useNodeHelpers } from '@/composables/useNodeHelpers';
 import { useTelemetry } from '@/composables/useTelemetry';
 import { useNDVStore } from '@/stores/ndv.store';
@@ -42,7 +42,7 @@ import { useSettingsStore } from '@/stores/settings.store';
 import { isEmpty } from '@/utils/typesUtils';
 import { asyncComputed } from '@vueuse/core';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
-import pick from 'lodash/pick';
+import { pick } from 'lodash-es';
 import { DateTime } from 'luxon';
 import NodeExecuteButton from './NodeExecuteButton.vue';
 
@@ -55,7 +55,6 @@ type Props = {
 	connectionType?: NodeConnectionType;
 	search?: string;
 	compact?: boolean;
-	outputIndex?: number;
 };
 
 const props = withDefaults(defineProps<Props>(), {
@@ -67,7 +66,6 @@ const props = withDefaults(defineProps<Props>(), {
 	search: '',
 	mappingEnabled: false,
 	compact: false,
-	outputIndex: undefined,
 });
 
 const telemetry = useTelemetry();
@@ -115,14 +113,7 @@ const getNodeSchema = async (fullNode: INodeUi, connectedNode: IConnectedNode) =
 			runIndex: getLastRunIndexWithData(fullNode.name, outputIndex, props.connectionType),
 		}))
 		.filter(({ runIndex }) => runIndex !== -1);
-
-	// If outputIndex is specified, only use data from that specific output branch
-	const filteredOutputsWithData =
-		props.outputIndex !== undefined
-			? connectedOutputsWithData.filter(({ outputIndex }) => outputIndex === props.outputIndex)
-			: connectedOutputsWithData;
-
-	const nodeData = filteredOutputsWithData
+	const nodeData = connectedOutputsWithData
 		.map(({ outputIndex, runIndex }) =>
 			getNodeInputData(fullNode, runIndex, outputIndex, props.paneType, props.connectionType),
 		)
@@ -193,8 +184,7 @@ const contextItems = computed(() => {
 		return [];
 	}
 
-	const flatSchema = flattenSchema({ schema, depth: 1, isDataEmpty: false });
-	const fields: Renders[] = flatSchema.flatMap((renderItem) => {
+	const fields: Renders[] = flattenSchema({ schema, depth: 1 }).flatMap((renderItem) => {
 		const isVars =
 			renderItem.type === 'item' && renderItem.depth === 1 && renderItem.title === '$vars';
 
@@ -321,14 +311,7 @@ const flattenedNodes = computed(() =>
 );
 
 const flattenNodeSchema = computed(() =>
-	nodeSchema.value
-		? flattenSchema({
-				schema: nodeSchema.value,
-				depth: 0,
-				level: -1,
-				isDataEmpty: props.data.length === 0,
-			})
-		: [],
+	nodeSchema.value ? flattenSchema({ schema: nodeSchema.value, depth: 0, level: -1 }) : [],
 );
 
 /**
@@ -345,7 +328,7 @@ const items = computed(() => {
 });
 
 const noSearchResults = computed(() => {
-	return Boolean(props.search.trim()) && !items.value.length;
+	return Boolean(props.search.trim()) && !Boolean(items.value.length);
 });
 
 watch(
@@ -407,7 +390,7 @@ const onDragEnd = (el: HTMLElement) => {
 
 		void useExternalHooks().run('runDataJson.onDragEnd', telemetryPayload);
 
-		telemetry.track('User dragged data for mapping', telemetryPayload);
+		telemetry.track('User dragged data for mapping', telemetryPayload, { withPostHog: true });
 	}, 250); // ensure dest data gets set if drop
 };
 </script>
@@ -473,7 +456,7 @@ const onDragEnd = (el: HTMLElement) => {
 						</VirtualSchemaItem>
 
 						<N8nTooltip v-else-if="item.type === 'icon'" :content="item.tooltip" placement="top">
-							<N8nIcon size="small" :icon="item.icon" class="icon" />
+							<N8nIcon :size="14" :icon="item.icon" class="icon" />
 						</N8nTooltip>
 
 						<div
@@ -532,7 +515,7 @@ const onDragEnd = (el: HTMLElement) => {
 }
 
 .scroller {
-	padding: 0 var(--ndv-spacing);
+	padding: 0 var(--spacing-s);
 	padding-bottom: var(--spacing-2xl);
 
 	.compact & {
@@ -548,14 +531,14 @@ const onDragEnd = (el: HTMLElement) => {
 	text-align: center;
 	height: 100%;
 	gap: var(--spacing-2xs);
-	padding: var(--ndv-spacing) var(--ndv-spacing) var(--spacing-xl) var(--ndv-spacing);
+	padding: var(--spacing-s) var(--spacing-s) var(--spacing-xl) var(--spacing-s);
 }
 
 .icon {
 	display: inline-flex;
 	margin-left: var(--spacing-xl);
 	color: var(--color-text-light);
-	margin-bottom: var(--ndv-spacing);
+	margin-bottom: var(--spacing-s);
 }
 
 .notice {

@@ -11,7 +11,7 @@ import { codeNodeEditorEventBus } from '@/event-bus';
 import { useRootStore } from '@n8n/stores/useRootStore';
 
 import { useCodeEditor } from '@/composables/useCodeEditor';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useMessage } from '@/composables/useMessage';
 import { useTelemetry } from '@/composables/useTelemetry';
 import AskAI from './AskAI/AskAI.vue';
@@ -19,7 +19,6 @@ import { CODE_PLACEHOLDERS } from './constants';
 import { useLinter } from './linter';
 import { useSettingsStore } from '@/stores/settings.store';
 import { dropInCodeEditor } from '@/plugins/codemirror/dragAndDrop';
-import type { TargetNodeParameterContext } from '@/Interface';
 
 type Props = {
 	mode: CodeExecutionMode;
@@ -30,8 +29,6 @@ type Props = {
 	isReadOnly?: boolean;
 	rows?: number;
 	id?: string;
-	targetNodeParameterContext?: TargetNodeParameterContext;
-	disableAskAi?: boolean;
 };
 
 const props = withDefaults(defineProps<Props>(), {
@@ -41,8 +38,6 @@ const props = withDefaults(defineProps<Props>(), {
 	isReadOnly: false,
 	rows: 4,
 	id: () => crypto.randomUUID(),
-	targetNodeParameterContext: undefined,
-	disableAskAi: false,
 });
 const emit = defineEmits<{
 	'update:modelValue': [value: string];
@@ -71,7 +66,7 @@ const dragAndDropEnabled = computed(() => {
 	return !props.isReadOnly;
 });
 
-const { highlightLine, readEditorValue, editor, focus } = useCodeEditor({
+const { highlightLine, readEditorValue, editor } = useCodeEditor({
 	id: props.id,
 	editorRef: codeNodeEditorRef,
 	language: () => props.language,
@@ -86,7 +81,6 @@ const { highlightLine, readEditorValue, editor, focus } = useCodeEditor({
 		rows: props.rows,
 	},
 	onChange: onEditorUpdate,
-	targetNodeParameterContext: () => props.targetNodeParameterContext,
 });
 
 onMounted(() => {
@@ -104,9 +98,7 @@ onBeforeUnmount(() => {
 });
 
 const askAiEnabled = computed(() => {
-	return (
-		props.disableAskAi !== true && settingsStore.isAskAiEnabled && props.language === 'javaScript'
-	);
+	return settingsStore.isAskAiEnabled && props.language === 'javaScript';
 });
 
 watch([() => props.language, () => props.mode], (_, [prevLanguage, prevMode]) => {
@@ -208,10 +200,6 @@ async function onDrop(value: string, event: MouseEvent) {
 
 	await dropInCodeEditor(toRaw(editor.value), event, valueToInsert);
 }
-
-defineExpose({
-	focus,
-});
 </script>
 
 <template>

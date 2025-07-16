@@ -1,7 +1,6 @@
-import { Logger } from '@n8n/backend-common';
 import { ExecutionRepository } from '@n8n/db';
 import { Container } from '@n8n/di';
-import { ErrorReporter } from 'n8n-core';
+import { ErrorReporter, Logger } from 'n8n-core';
 import type { IRunExecutionData, ITaskData } from 'n8n-workflow';
 
 export async function saveExecutionProgress(
@@ -61,11 +60,7 @@ export async function saveExecutionProgress(
 		// Set last executed node so that it may resume on failure
 		fullExecutionData.data.resultData.lastNodeExecuted = nodeName;
 
-		// If the execution was canceled, we do not change the status
-		// to running, because it is already canceled.
-		if (fullExecutionData.status !== 'canceled') {
-			fullExecutionData.status = 'running';
-		}
+		fullExecutionData.status = 'running';
 
 		await executionRepository.updateExistingExecution(executionId, fullExecutionData);
 	} catch (e) {

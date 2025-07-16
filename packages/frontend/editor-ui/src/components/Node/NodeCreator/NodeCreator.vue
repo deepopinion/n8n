@@ -15,11 +15,10 @@ import { DRAG_EVENT_DATA_KEY } from '@/constants';
 import { useAssistantStore } from '@/stores/assistant.store';
 import N8nIconButton from '@n8n/design-system/components/N8nIconButton/IconButton.vue';
 import { useBuilderStore } from '@/stores/builder.store';
-import type { NodeTypeSelectedPayload } from '@/Interface';
 
 export interface Props {
 	active?: boolean;
-	onNodeTypeSelected?: (value: NodeTypeSelectedPayload[]) => void;
+	onNodeTypeSelected?: (nodeType: string[]) => void;
 }
 
 const props = defineProps<Props>();
@@ -27,7 +26,7 @@ const { resetViewStacks } = useViewStacks();
 const { registerKeyHook } = useKeyboardNavigation();
 const emit = defineEmits<{
 	closeNodeCreator: [];
-	nodeTypeSelected: [value: NodeTypeSelectedPayload[]];
+	nodeTypeSelected: [value: string[]];
 }>();
 const uiStore = useUIStore();
 const assistantStore = useAssistantStore();
@@ -165,7 +164,7 @@ onBeforeUnmount(() => {
 			v-if="active"
 			:class="$style.close"
 			type="secondary"
-			icon="x"
+			icon="times"
 			aria-label="Close Node Creator"
 			@click="emit('closeNodeCreator')"
 		/>

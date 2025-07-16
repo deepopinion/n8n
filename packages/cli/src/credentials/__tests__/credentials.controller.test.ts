@@ -1,8 +1,9 @@
-import type { AuthenticatedRequest, SharedCredentialsRepository } from '@n8n/db';
+import type { SharedCredentialsRepository } from '@n8n/db';
 import { mock } from 'jest-mock-extended';
 
 import { createRawProjectData } from '@/__tests__/project.test-data';
 import type { EventService } from '@/events/event.service';
+import type { AuthenticatedRequest } from '@/requests';
 
 import { createdCredentialsWithScopes, createNewCredentialsPayload } from './credentials.test-data';
 import { CredentialsController } from '../credentials.controller';
@@ -28,7 +29,7 @@ describe('CredentialsController', () => {
 	);
 
 	let req: AuthenticatedRequest;
-	const res = mock<Response>();
+	let res = mock<Response>();
 	beforeAll(() => {
 		req = { user: { id: '123' } } as AuthenticatedRequest;
 	});

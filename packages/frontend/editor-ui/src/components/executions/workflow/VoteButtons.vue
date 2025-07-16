@@ -17,18 +17,18 @@ const onVoteClick = (vote: AnnotationVote) => {
 <template>
 	<div :class="$style.ratingIcon">
 		<n8n-icon-button
-			:class="[$style.icon, vote === 'up' && $style.up]"
+			:class="{ [$style.up]: vote === 'up' }"
 			type="tertiary"
 			text
-			size="small"
+			size="medium"
 			icon="thumbs-up"
 			@click="onVoteClick('up')"
 		/>
 		<n8n-icon-button
-			:class="[$style.icon, vote === 'down' && $style.down]"
+			:class="{ [$style.down]: vote === 'down' }"
 			type="tertiary"
 			text
-			size="small"
+			size="medium"
 			icon="thumbs-down"
 			@click="onVoteClick('down')"
 		/>
@@ -39,14 +39,6 @@ const onVoteClick = (vote: AnnotationVote) => {
 .ratingIcon {
 	display: flex;
 	flex-direction: row;
-
-	.icon {
-		color: var(--color-text-light);
-
-		&:not(.up):not(.down):hover {
-			color: var(--color-primary);
-		}
-	}
 
 	.up {
 		color: var(--color-success);

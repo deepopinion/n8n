@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useDebounce } from '@/composables/useDebounce';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useNDVStore } from '@/stores/ndv.store';
 import type {
 	AssignmentCollectionValue,
@@ -244,11 +244,7 @@ function optionSelected(action: string) {
 	min-height: 24px;
 
 	> span {
-		word-wrap: break-word;
-		overflow-wrap: break-word;
-		word-break: break-word;
-		white-space: normal;
-		max-width: 100%;
+		white-space: nowrap;
 	}
 }
 

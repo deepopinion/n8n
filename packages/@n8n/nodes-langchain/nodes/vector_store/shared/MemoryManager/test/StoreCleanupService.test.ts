@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/dot-notation */
 import { mock } from 'jest-mock-extended';
 import type { MemoryVectorStore } from 'langchain/vectorstores/memory';
 

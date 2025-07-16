@@ -9,7 +9,7 @@ import {
 } from '@/constants';
 import { useMessage } from '@/composables/useMessage';
 import { useToast } from '@/composables/useToast';
-import { getResourcePermissions } from '@n8n/permissions';
+import { getResourcePermissions } from '@/permissions';
 import dateformat from 'dateformat';
 import WorkflowActivator from '@/components/WorkflowActivator.vue';
 import { useUIStore } from '@/stores/ui.store';
@@ -19,14 +19,14 @@ import { useWorkflowsStore } from '@/stores/workflows.store';
 import TimeAgo from '@/components/TimeAgo.vue';
 import { useProjectsStore } from '@/stores/projects.store';
 import ProjectCardBadge from '@/components/Projects/ProjectCardBadge.vue';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useTelemetry } from '@/composables/useTelemetry';
 import { ResourceType } from '@/utils/projects.utils';
 import type { EventBus } from '@n8n/utils/event-bus';
-import type { WorkflowResource } from '@/Interface';
+import type { WorkflowResource } from './layouts/ResourcesListLayout.vue';
 import type { IUser } from 'n8n-workflow';
-import { type ProjectSharingData, ProjectTypes } from '@/types/projects.types';
+import { ProjectTypes } from '@/types/projects.types';
 import type { PathItem } from '@n8n/design-system/components/N8nBreadcrumbs/Breadcrumbs.vue';
 import { useFoldersStore } from '@/stores/folders.store';
 
@@ -62,14 +62,7 @@ const emit = defineEmits<{
 	'workflow:archived': [];
 	'workflow:unarchived': [];
 	'workflow:active-toggle': [value: { id: string; active: boolean }];
-	'action:move-to-folder': [
-		value: {
-			id: string;
-			name: string;
-			parentFolderId?: string;
-			sharedWithProjects?: ProjectSharingData[];
-		},
-	];
+	'action:move-to-folder': [value: { id: string; name: string; parentFolderId?: string }];
 }>();
 
 const toast = useToast();
@@ -147,15 +140,17 @@ const actions = computed(() => {
 		});
 	}
 
-	if (
-		((workflowPermissions.value.update && !props.readOnly) ||
-			(workflowPermissions.value.move && projectsStore.isTeamProjectFeatureEnabled)) &&
-		showFolders.value &&
-		route.name !== VIEWS.SHARED_WORKFLOWS
-	) {
+	if (workflowPermissions.value.update && showFolders.value && !props.readOnly) {
 		items.push({
 			label: locale.baseText('folders.actions.moveToFolder'),
 			value: WORKFLOW_LIST_ITEM_ACTIONS.MOVE_TO_FOLDER,
+		});
+	}
+
+	if (workflowPermissions.value.move && projectsStore.isTeamProjectFeatureEnabled) {
+		items.push({
+			label: locale.baseText('workflows.item.changeOwner'),
+			value: WORKFLOW_LIST_ITEM_ACTIONS.MOVE,
 		});
 	}
 
@@ -268,7 +263,6 @@ async function onAction(action: string) {
 				id: props.data.id,
 				name: props.data.name,
 				parentFolderId: props.data.parentFolder?.id,
-				sharedWithProjects: props.data.sharedWithProjects,
 			});
 			break;
 	}
@@ -406,11 +400,6 @@ const onBreadcrumbItemClick = async (item: PathItem) => {
 		await router.push(item.href);
 	}
 };
-
-const tags = computed(
-	() =>
-		props.data.tags?.map((tag) => (typeof tag === 'string' ? { id: tag, name: tag } : tag)) ?? [],
-);
 </script>
 
 <template>
@@ -450,10 +439,9 @@ const tags = computed(
 				<span
 					v-if="settingsStore.areTagsEnabled && data.tags && data.tags.length > 0"
 					v-show="data"
-					:class="$style.cardTags"
 				>
 					<n8n-tags
-						:tags="tags"
+						:tags="data.tags"
 						:truncate-at="3"
 						truncate
 						data-test-id="workflow-card-tags"
@@ -558,11 +546,6 @@ const tags = computed(
 	padding: 0 0 var(--spacing-s) var(--spacing-s);
 }
 
-.cardTags {
-	display: inline-block;
-	margin-top: var(--spacing-4xs);
-}
-
 .cardActions {
 	display: flex;
 	flex-direction: row;
@@ -603,7 +586,6 @@ const tags = computed(
 	.cardActions {
 		width: 100%;
 		padding: 0 var(--spacing-s) var(--spacing-s);
-		justify-content: end;
 	}
 
 	.cardBadge,

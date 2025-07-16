@@ -1,10 +1,4 @@
-import {
-	RoleChangeRequestDto,
-	SettingsUpdateRequestDto,
-	UsersListFilterDto,
-	usersListSchema,
-} from '@n8n/api-types';
-import { Logger } from '@n8n/backend-common';
+import { RoleChangeRequestDto, SettingsUpdateRequestDto } from '@n8n/api-types';
 import type { PublicUser } from '@n8n/db';
 import {
 	Project,
@@ -14,7 +8,6 @@ import {
 	SharedCredentialsRepository,
 	SharedWorkflowRepository,
 	UserRepository,
-	AuthenticatedRequest,
 } from '@n8n/db';
 import {
 	GlobalScope,
@@ -25,9 +18,9 @@ import {
 	Licensed,
 	Body,
 	Param,
-	Query,
 } from '@n8n/decorators';
 import { Response } from 'express';
+import { Logger } from 'n8n-core';
 
 import { AuthService } from '@/auth/auth.service';
 import { CredentialsService } from '@/credentials/credentials.service';
@@ -36,12 +29,12 @@ import { ForbiddenError } from '@/errors/response-errors/forbidden.error';
 import { NotFoundError } from '@/errors/response-errors/not-found.error';
 import { EventService } from '@/events/event.service';
 import { ExternalHooks } from '@/external-hooks';
-import { UserRequest } from '@/requests';
+import { listQueryMiddleware } from '@/middlewares';
+import { ListQuery, AuthenticatedRequest, UserRequest } from '@/requests';
 import { FolderService } from '@/services/folder.service';
 import { ProjectService } from '@/services/project.service.ee';
 import { UserService } from '@/services/user.service';
 import { WorkflowService } from '@/workflows/workflow.service';
-import { hasGlobalScope } from '@n8n/permissions';
 
 @RestController('/users')
 export class UsersController {
@@ -71,14 +64,18 @@ export class UsersController {
 
 	private removeSupplementaryFields(
 		publicUsers: Array<Partial<PublicUser>>,
-		listQueryOptions: UsersListFilterDto,
+		listQueryOptions: ListQuery.Options,
 	) {
-		const { select } = listQueryOptions;
+		const { take, select, filter } = listQueryOptions;
 
 		// remove fields added to satisfy query
 
-		if (select !== undefined && !select.includes('id')) {
+		if (take && select && !select?.id) {
 			for (const user of publicUsers) delete user.id;
+		}
+
+		if (filter?.isOwner) {
+			for (const user of publicUsers) delete user.role;
 		}
 
 		// remove computed fields (unselectable)
@@ -94,42 +91,25 @@ export class UsersController {
 		return publicUsers;
 	}
 
-	@Get('/')
+	@Get('/', { middlewares: listQueryMiddleware })
 	@GlobalScope('user:list')
-	async listUsers(
-		req: AuthenticatedRequest,
-		_res: Response,
-		@Query listQueryOptions: UsersListFilterDto,
-	) {
-		const userQuery = this.userRepository.buildUserQuery(listQueryOptions);
+	async listUsers(req: ListQuery.Request) {
+		const { listQueryOptions } = req;
 
-		const response = await userQuery.getManyAndCount();
+		const findManyOptions = await this.userRepository.toFindManyOptions(listQueryOptions);
 
-		const [users, count] = response;
+		const users = await this.userRepository.find(findManyOptions);
 
-		const withInviteUrl = hasGlobalScope(req.user, 'user:create');
-
-		const publicUsers = await Promise.all(
-			users.map(async (u) => {
-				const user = await this.userService.toPublic(u, {
-					withInviteUrl,
-					inviterId: req.user.id,
-				});
-				return {
-					...user,
-					projectRelations: u.projectRelations?.map((pr) => ({
-						id: pr.projectId,
-						role: pr.role, // normalize role for frontend
-						name: pr.project.name,
-					})),
-				};
-			}),
+		const publicUsers: Array<Partial<PublicUser>> = await Promise.all(
+			users.map(
+				async (u) =>
+					await this.userService.toPublic(u, { withInviteUrl: true, inviterId: req.user.id }),
+			),
 		);
 
-		return usersListSchema.parse({
-			count,
-			items: this.removeSupplementaryFields(publicUsers, listQueryOptions),
-		});
+		return listQueryOptions
+			? this.removeSupplementaryFields(publicUsers, listQueryOptions)
+			: publicUsers;
 	}
 
 	@Get('/:id/password-reset-link')

@@ -1,3 +1,4 @@
+/* eslint-disable n8n-nodes-base/node-dirname-against-convention */
 import { ChatBedrockConverse } from '@langchain/aws';
 import {
 	NodeConnectionTypes,
@@ -7,7 +8,7 @@ import {
 	type SupplyData,
 } from 'n8n-workflow';
 
-import { getProxyAgent } from '@utils/httpProxyAgent';
+import { getHttpProxyAgent } from '@utils/httpProxyAgent';
 import { getConnectionHintNoticeField } from '@utils/sharedFields';
 
 import { makeN8nLlmFailedAttemptHandler } from '../n8nLlmFailedAttemptHandler';
@@ -16,7 +17,7 @@ import { N8nLlmTracing } from '../N8nLlmTracing';
 export class LmChatAwsBedrock implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'AWS Bedrock Chat Model',
-
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-name-miscased
 		name: 'lmChatAwsBedrock',
 		icon: 'file:bedrock.svg',
 		group: ['transform'],
@@ -39,13 +40,14 @@ export class LmChatAwsBedrock implements INodeType {
 				],
 			},
 		},
-
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
 		inputs: [],
-
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
 		outputs: [NodeConnectionTypes.AiLanguageModel],
 		outputNames: ['Model'],
 		credentials: [
 			{
+				// eslint-disable-next-line n8n-nodes-base/node-class-description-credentials-name-unsuffixed
 				name: 'aws',
 				required: true,
 			},
@@ -60,7 +62,6 @@ export class LmChatAwsBedrock implements INodeType {
 				displayName: 'Model',
 				name: 'model',
 				type: 'options',
-				allowArbitraryValues: true, // Hide issues when model name is specified in the expression and does not match any of the options
 				description:
 					'The model which will generate the completion. <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/foundation-models.html">Learn more</a>.',
 				typeOptions: {
@@ -148,7 +149,7 @@ export class LmChatAwsBedrock implements INodeType {
 			temperature: options.temperature,
 			maxTokens: options.maxTokensToSample,
 			clientConfig: {
-				httpAgent: getProxyAgent(),
+				httpAgent: getHttpProxyAgent(),
 			},
 			credentials: {
 				secretAccessKey: credentials.secretAccessKey as string,

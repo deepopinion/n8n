@@ -1,9 +1,8 @@
 import { NodeConnectionTypes } from 'n8n-workflow';
-import type { INodeUi } from './Interface';
-import type { WorkflowDataCreate } from '@n8n/rest-api-client/api/workflows';
+import type { INodeUi, IWorkflowDataCreate } from './Interface';
 
 export const SAMPLE_SUBWORKFLOW_TRIGGER_ID = 'c055762a-8fe7-4141-a639-df2372f30060';
-export const SAMPLE_SUBWORKFLOW_WORKFLOW: WorkflowDataCreate = {
+export const SAMPLE_SUBWORKFLOW_WORKFLOW: IWorkflowDataCreate = {
 	name: 'My Sub-Workflow',
 	nodes: [
 		{
@@ -41,7 +40,7 @@ export const SAMPLE_SUBWORKFLOW_WORKFLOW: WorkflowDataCreate = {
 	pinData: {},
 };
 
-export const SAMPLE_EVALUATION_WORKFLOW: WorkflowDataCreate = {
+export const SAMPLE_EVALUATION_WORKFLOW: IWorkflowDataCreate = {
 	name: 'My Evaluation Sub-Workflow',
 	nodes: [
 		{

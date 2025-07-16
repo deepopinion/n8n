@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 
 const emit = defineEmits<{
 	'update:modelValue': [feedback: 'positive' | 'negative'];
@@ -21,7 +21,10 @@ function onFeedback(feedback: 'positive' | 'negative') {
 			{{ i18n.baseText('feedback.title') }}
 		</N8nText>
 		<N8nText v-else :color="modelValue === 'positive' ? 'success' : 'danger'">
-			<N8nIcon :icon="modelValue === 'positive' ? 'thumbs-up' : 'thumbs-down'" class="mr-2xs" />
+			<FontAwesomeIcon
+				:icon="modelValue === 'positive' ? 'thumbs-up' : 'thumbs-down'"
+				class="mr-2xs"
+			/>
 			{{ i18n.baseText(`feedback.${modelValue}`) }}
 		</N8nText>
 		<N8nTooltip v-if="!modelValue" :content="i18n.baseText('feedback.positive')">
@@ -30,7 +33,7 @@ function onFeedback(feedback: 'positive' | 'negative') {
 				data-test-id="feedback-button-positive"
 				@click="onFeedback('positive')"
 			>
-				<N8nIcon icon="thumbs-up" />
+				<FontAwesomeIcon icon="thumbs-up" />
 			</span>
 		</N8nTooltip>
 		<N8nTooltip v-if="!modelValue" :content="i18n.baseText('feedback.negative')">
@@ -39,7 +42,7 @@ function onFeedback(feedback: 'positive' | 'negative') {
 				data-test-id="feedback-button-negative"
 				@click="onFeedback('negative')"
 			>
-				<N8nIcon icon="thumbs-down" />
+				<FontAwesomeIcon icon="thumbs-down" />
 			</span>
 		</N8nTooltip>
 	</div>

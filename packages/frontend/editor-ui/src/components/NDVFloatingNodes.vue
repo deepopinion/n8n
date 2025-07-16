@@ -5,8 +5,6 @@ import { useWorkflowsStore } from '@/stores/workflows.store';
 import { computed, onMounted, onBeforeUnmount } from 'vue';
 import NodeIcon from '@/components/NodeIcon.vue';
 import { NodeConnectionTypes, type INodeTypeDescription } from 'n8n-workflow';
-import { NDV_UI_OVERHAUL_EXPERIMENT } from '@/constants';
-import { usePostHog } from '@/stores/posthog.store';
 
 interface Props {
 	rootNode: INodeUi;
@@ -19,7 +17,7 @@ const enum FloatingNodePosition {
 const props = defineProps<Props>();
 const workflowsStore = useWorkflowsStore();
 const nodeTypesStore = useNodeTypesStore();
-const posthogStore = usePostHog();
+const workflow = workflowsStore.getCurrentWorkflow();
 const emit = defineEmits<{
 	switchSelectedNode: [nodeName: string];
 }>();
@@ -28,14 +26,6 @@ interface NodeConfig {
 	node: INodeUi;
 	nodeType: INodeTypeDescription;
 }
-
-const isNDVV2 = computed(() =>
-	posthogStore.isVariantEnabled(
-		NDV_UI_OVERHAUL_EXPERIMENT.name,
-		NDV_UI_OVERHAUL_EXPERIMENT.variant,
-	),
-);
-
 function moveNodeDirection(direction: FloatingNodePosition) {
 	const matchedDirectionNode = connectedNodes.value[direction][0];
 	if (matchedDirectionNode) {
@@ -76,9 +66,7 @@ function getINodesFromNames(names: string[]): NodeConfig[] {
 const connectedNodes = computed<
 	Record<FloatingNodePosition, Array<{ node: INodeUi; nodeType: INodeTypeDescription }>>
 >(() => {
-	const workflow = workflowsStore.getCurrentWorkflow();
 	const rootName = props.rootNode.name;
-
 	return {
 		[FloatingNodePosition.top]: getINodesFromNames(
 			workflow.getChildNodes(rootName, 'ALL_NON_MAIN'),
@@ -116,7 +104,7 @@ defineExpose({
 </script>
 
 <template>
-	<aside :class="[$style.floatingNodes, { [$style.v2]: isNDVV2 }]" data-test-id="floating-nodes">
+	<aside :class="$style.floatingNodes">
 		<ul
 			v-for="connectionGroup in connectionGroups"
 			:key="connectionGroup"
@@ -128,7 +116,7 @@ defineExpose({
 					:key="node.name"
 					:placement="tooltipPositionMapper[connectionGroup]"
 					:teleported="false"
-					:offset="isNDVV2 ? 16 : 60"
+					:offset="60"
 				>
 					<template #content>{{ node.name }}</template>
 
@@ -143,7 +131,7 @@ defineExpose({
 							:node-type="nodeType"
 							:node-name="node.name"
 							:tooltip-position="tooltipPositionMapper[connectionGroup]"
-							:size="isNDVV2 ? 24 : 35"
+							:size="35"
 							circle
 						/>
 					</li>
@@ -266,33 +254,6 @@ defineExpose({
 	.inputSub & {
 		&:hover {
 			transform: scale(1.2) translateY(-50%);
-		}
-	}
-}
-
-.connectedNode {
-	&::after {
-		display: none;
-	}
-	padding: var(--spacing-xs);
-	.v2 .outputMain & {
-		&:hover {
-			transform: scale(1.1);
-		}
-	}
-	.v2 .outputSub & {
-		&:hover {
-			transform: scale(1.1);
-		}
-	}
-	.v2 .inputMain & {
-		&:hover {
-			transform: scale(1.1);
-		}
-	}
-	.v2 .inputSub & {
-		&:hover {
-			transform: scale(1.1);
 		}
 	}
 }

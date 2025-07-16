@@ -6,7 +6,3 @@ export type ExportableFolder = {
 	createdAt: string;
 	updatedAt: string;
 };
-
-export type ExportedFolders = {
-	folders: ExportableFolder[];
-};

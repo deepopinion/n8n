@@ -1,19 +1,26 @@
 <script lang="ts" setup generic="Value extends string | number">
 import { onMounted, onUnmounted, ref } from 'vue';
-import { RouterLink } from 'vue-router';
+import type { RouteLocationRaw } from 'vue-router';
 
-import type { TabOptions } from '../../types';
 import N8nIcon from '../N8nIcon';
-import N8nTooltip from '../N8nTooltip';
+
+interface TabOptions {
+	value: Value;
+	label?: string;
+	icon?: string;
+	href?: string;
+	tooltip?: string;
+	align?: 'left' | 'right';
+	to?: RouteLocationRaw;
+}
 
 interface TabsProps {
 	modelValue?: Value;
-	options?: Array<TabOptions<Value>>;
+	options?: TabOptions[];
 	size?: 'small' | 'medium';
 }
 
 withDefaults(defineProps<TabsProps>(), {
-	modelValue: undefined,
 	options: () => [],
 	size: 'medium',
 });
@@ -97,18 +104,18 @@ const scrollRight = () => scroll(50);
 						<div>
 							{{ option.label }}
 							<span :class="$style.external">
-								<N8nIcon icon="external-link" size="small" />
+								<N8nIcon icon="external-link-alt" size="xsmall" />
 							</span>
 						</div>
 					</a>
-					<RouterLink
+					<router-link
 						v-else-if="option.to"
 						:to="option.to"
 						:class="[$style.tab, { [$style.activeTab]: modelValue === option.value }]"
 					>
 						<N8nIcon v-if="option.icon" :icon="option.icon" size="medium" />
 						<span v-if="option.label">{{ option.label }}</span>
-					</RouterLink>
+					</router-link>
 					<div
 						v-else
 						:class="{ [$style.tab]: true, [$style.activeTab]: modelValue === option.value }"
@@ -155,11 +162,8 @@ const scrollRight = () => scroll(50);
 	--active-tab-border-width: 2px;
 	display: block;
 	padding: 0 var(--spacing-s);
-	padding-bottom: calc(
-		var(--spacing-bottom-tab, var(--spacing-2xs)) + var(--active-tab-border-width)
-	);
-	font-size: var(--font-size-tab, var(--font-size-s));
-	font-weight: var(--font-weight-tab, var(--font-weight-regular));
+	padding-bottom: calc(var(--spacing-2xs) + var(--active-tab-border-width));
+	font-size: var(--font-size-s);
 	cursor: pointer;
 	white-space: nowrap;
 	color: var(--color-text-base);
@@ -178,7 +182,7 @@ const scrollRight = () => scroll(50);
 
 .activeTab {
 	color: var(--color-primary);
-	padding-bottom: var(--spacing-bottom-tab, var(--spacing-2xs));
+	padding-bottom: var(--spacing-2xs);
 	border-bottom: var(--color-primary) var(--active-tab-border-width) solid;
 }
 

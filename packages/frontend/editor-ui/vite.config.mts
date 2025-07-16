@@ -28,24 +28,12 @@ const alias = [
 		replacement: resolve(packagesDir, 'frontend', '@n8n', 'chat', 'src$1'),
 	},
 	{
-		find: /^@n8n\/api-requests(.+)$/,
-		replacement: resolve(packagesDir, 'frontend', '@n8n', 'api-requests', 'src$1'),
-	},
-	{
 		find: /^@n8n\/composables(.+)$/,
 		replacement: resolve(packagesDir, 'frontend', '@n8n', 'composables', 'src$1'),
 	},
 	{
-		find: /^@n8n\/constants(.+)$/,
-		replacement: resolve(packagesDir, '@n8n', 'constants', 'src$1'),
-	},
-	{
 		find: /^@n8n\/design-system(.+)$/,
 		replacement: resolve(packagesDir, 'frontend', '@n8n', 'design-system', 'src$1'),
-	},
-	{
-		find: /^@n8n\/i18n(.+)$/,
-		replacement: resolve(packagesDir, 'frontend', '@n8n', 'i18n', 'src$1'),
 	},
 	{
 		find: /^@n8n\/stores(.+)$/,
@@ -57,11 +45,11 @@ const alias = [
 	},
 	...['orderBy', 'camelCase', 'cloneDeep', 'startCase'].map((name) => ({
 		find: new RegExp(`^lodash.${name}$`, 'i'),
-		replacement: `lodash/${name}`,
+		replacement: `lodash-es/${name}`,
 	})),
 	{
 		find: /^lodash\.(.+)$/,
-		replacement: 'lodash/$1',
+		replacement: 'lodash-es/$1',
 	},
 ];
 
@@ -73,12 +61,8 @@ const plugins = [
 	components({
 		dts: './src/components.d.ts',
 		resolvers: [
-			(componentName) => {
-				if (componentName.startsWith('N8n'))
-					return { name: componentName, from: '@n8n/design-system' };
-			},
 			iconsResolver({
-				prefix: 'Icon',
+				prefix: 'icon',
 			}),
 		],
 	}),
@@ -131,7 +115,7 @@ export default mergeConfig(
 		plugins,
 		resolve: { alias },
 		base: publicPath,
-		envPrefix: 'VUE',
+		envPrefix: 'VUE_APP',
 		css: {
 			preprocessorOptions: {
 				scss: {

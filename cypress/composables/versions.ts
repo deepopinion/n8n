@@ -1,13 +1,9 @@
-import { MainSidebar } from '../pages/sidebar/main-sidebar';
-
-const mainSidebar = new MainSidebar();
-
 /**
  * Getters
  */
 
 export function getVersionUpdatesPanelOpenButton() {
-	return cy.getByTestId('version-update-next-versions-link');
+	return cy.getByTestId('version-updates-panel-button');
 }
 
 export function getVersionUpdatesPanel() {
@@ -26,13 +22,9 @@ export function getVersionCard() {
  * Actions
  */
 
-export function openWhatsNewMenu() {
-	mainSidebar.getters.whatsNew().should('be.visible');
-	mainSidebar.getters.whatsNew().click();
-}
-
 export function openVersionUpdatesPanel() {
-	getVersionUpdatesPanelOpenButton().should('be.visible').click();
+	getVersionUpdatesPanelOpenButton().click();
+	getVersionUpdatesPanel().should('be.visible');
 }
 
 export function closeVersionUpdatesPanel() {

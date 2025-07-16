@@ -4,7 +4,6 @@ import type {
 	ResourceMapperFieldsRequestDto,
 	ActionResultRequestDto,
 } from '@n8n/api-types';
-import type { AuthenticatedRequest } from '@n8n/db';
 import { mock } from 'jest-mock-extended';
 import type {
 	ILoadOptions,
@@ -14,6 +13,7 @@ import type {
 } from 'n8n-workflow';
 
 import { DynamicNodeParametersController } from '@/controllers/dynamic-node-parameters.controller';
+import type { AuthenticatedRequest } from '@/requests';
 import type { DynamicNodeParametersService } from '@/services/dynamic-node-parameters.service';
 import * as AdditionalData from '@/workflow-execute-additional-data';
 

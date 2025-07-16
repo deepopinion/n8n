@@ -15,7 +15,7 @@ export async function gotifyApiRequest(
 
 	body: any = {},
 	qs: IDataObject = {},
-	uri?: string,
+	uri?: string | undefined,
 	_option = {},
 ): Promise<any> {
 	const credentials = await this.getCredentials('gotifyApi');
@@ -30,7 +30,7 @@ export async function gotifyApiRequest(
 		qs,
 		uri: uri || `${credentials.url}${path}`,
 		json: true,
-		rejectUnauthorized: !credentials.ignoreSSLIssues,
+		rejectUnauthorized: !credentials.ignoreSSLIssues as boolean,
 	};
 	try {
 		if (Object.keys(body as IDataObject).length === 0) {

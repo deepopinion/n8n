@@ -48,20 +48,46 @@ describe('Canvas Node Manipulation and Navigation', () => {
 
 		NDVDialog.actions.close();
 		for (let i = 0; i < desiredOutputs; i++) {
-			getOutputPlusHandle(SWITCH_NODE_NAME).eq(0).click();
+			cy.ifCanvasVersion(
+				() => {
+					WorkflowPage.getters
+						.canvasNodePlusEndpointByName(SWITCH_NODE_NAME, i)
+						.click({ force: true });
+				},
+				() => {
+					getOutputPlusHandle(SWITCH_NODE_NAME).eq(0).click();
+				},
+			);
 			WorkflowPage.getters.nodeCreatorSearchBar().should('be.visible');
 			WorkflowPage.actions.addNodeToCanvas(EDIT_FIELDS_SET_NODE_NAME, false);
 			WorkflowPage.actions.zoomToFit();
 		}
 		WorkflowPage.getters.nodeViewBackground().click({ force: true });
-		getOutputPlusHandle(`${EDIT_FIELDS_SET_NODE_NAME}3`).click();
+		cy.ifCanvasVersion(
+			() => {
+				WorkflowPage.getters.canvasNodePlusEndpointByName(`${EDIT_FIELDS_SET_NODE_NAME}3`).click();
+			},
+			() => {
+				getOutputPlusHandle(`${EDIT_FIELDS_SET_NODE_NAME}3`).click();
+			},
+		);
 		WorkflowPage.actions.addNodeToCanvas(SWITCH_NODE_NAME, false);
 		WorkflowPage.actions.saveWorkflowOnButtonClick();
 		cy.reload();
 		cy.waitForLoad();
-		// Make sure output-less switch was connected correctly
-		getConnectionBySourceAndTarget(`${EDIT_FIELDS_SET_NODE_NAME}3`, `${SWITCH_NODE_NAME}1`).should(
-			'exist',
+		// Make sure outputless switch was connected correctly
+		cy.ifCanvasVersion(
+			() => {
+				WorkflowPage.getters
+					.getConnectionBetweenNodes(`${EDIT_FIELDS_SET_NODE_NAME}3`, `${SWITCH_NODE_NAME}1`)
+					.should('exist');
+			},
+			() => {
+				getConnectionBySourceAndTarget(
+					`${EDIT_FIELDS_SET_NODE_NAME}3`,
+					`${SWITCH_NODE_NAME}1`,
+				).should('exist');
+			},
 		);
 		// Make sure all connections are there after reload
 		for (let i = 0; i < desiredOutputs; i++) {
@@ -90,13 +116,27 @@ describe('Canvas Node Manipulation and Navigation', () => {
 		);
 
 		// Connect Set1 and Set2 to merge
-		cy.draganddrop(
-			WorkflowPage.getters.getEndpointSelector('output', EDIT_FIELDS_SET_NODE_NAME),
-			WorkflowPage.getters.getEndpointSelector('input', MERGE_NODE_NAME, 0),
-		);
-		cy.draganddrop(
-			WorkflowPage.getters.getEndpointSelector('output', `${EDIT_FIELDS_SET_NODE_NAME}1`),
-			WorkflowPage.getters.getEndpointSelector('input', MERGE_NODE_NAME, 1),
+		cy.ifCanvasVersion(
+			() => {
+				cy.draganddrop(
+					WorkflowPage.getters.getEndpointSelector('plus', EDIT_FIELDS_SET_NODE_NAME),
+					WorkflowPage.getters.getEndpointSelector('input', MERGE_NODE_NAME, 0),
+				);
+				cy.draganddrop(
+					WorkflowPage.getters.getEndpointSelector('plus', `${EDIT_FIELDS_SET_NODE_NAME}1`),
+					WorkflowPage.getters.getEndpointSelector('input', MERGE_NODE_NAME, 1),
+				);
+			},
+			() => {
+				cy.draganddrop(
+					WorkflowPage.getters.getEndpointSelector('output', EDIT_FIELDS_SET_NODE_NAME),
+					WorkflowPage.getters.getEndpointSelector('input', MERGE_NODE_NAME, 0),
+				);
+				cy.draganddrop(
+					WorkflowPage.getters.getEndpointSelector('output', `${EDIT_FIELDS_SET_NODE_NAME}1`),
+					WorkflowPage.getters.getEndpointSelector('input', MERGE_NODE_NAME, 1),
+				);
+			},
 		);
 
 		const checkConnections = () => {
@@ -134,9 +174,13 @@ describe('Canvas Node Manipulation and Navigation', () => {
 		WorkflowPage.getters.stopExecutionButton().should('not.exist');
 
 		// If the merged set nodes are connected and executed correctly, there should be 2 items in the output of merge node
-		getConnectionLabelBySourceAndTarget(`${EDIT_FIELDS_SET_NODE_NAME}1`, MERGE_NODE_NAME)
-			.contains('2 items')
-			.should('be.visible');
+		cy.ifCanvasVersion(
+			() => cy.get('[data-label="2 items"]').should('be.visible'),
+			() =>
+				getConnectionLabelBySourceAndTarget(`${EDIT_FIELDS_SET_NODE_NAME}1`, MERGE_NODE_NAME)
+					.contains('2 items')
+					.should('be.visible'),
+		);
 	});
 
 	it('should add nodes and check execution success', () => {
@@ -148,17 +192,45 @@ describe('Canvas Node Manipulation and Navigation', () => {
 		WorkflowPage.actions.zoomToFit();
 		WorkflowPage.actions.executeWorkflow();
 
-		cy.get('[data-edge-status=success]').should('have.length', 3);
-		cy.getByTestId('canvas-node-status-success').should('have.length', 4);
-		cy.getByTestId('canvas-handle-plus-wrapper').should('have.attr', 'data-plus-type', 'success');
+		cy.ifCanvasVersion(
+			() => cy.get('.jtk-connector.success').should('have.length', 3),
+			() => cy.get('[data-edge-status=success]').should('have.length', 3),
+		);
+		cy.ifCanvasVersion(
+			() => cy.get('.data-count').should('have.length', 4),
+			() => cy.getByTestId('canvas-node-status-success').should('have.length', 4),
+		);
+
+		cy.ifCanvasVersion(
+			() => cy.get('.plus-draggable-endpoint').should('have.class', 'ep-success'),
+			() =>
+				cy
+					.getByTestId('canvas-handle-plus-wrapper')
+					.should('have.attr', 'data-plus-type', 'success'),
+		);
 
 		WorkflowPage.actions.addNodeToCanvas(CODE_NODE_NAME);
 		WorkflowPage.actions.zoomToFit();
 
-		cy.getByTestId('canvas-handle-plus').should('not.have.attr', 'data-plus-type', 'success');
+		cy.ifCanvasVersion(
+			() =>
+				cy
+					.get('.plus-draggable-endpoint')
+					.filter(':visible')
+					.should('not.have.class', 'ep-success'),
+			() =>
+				cy.getByTestId('canvas-handle-plus').should('not.have.attr', 'data-plus-type', 'success'),
+		);
 
-		cy.get('[data-edge-status=success]').should('have.length', 4);
-		cy.getByTestId('canvas-node-status-success').should('have.length', 4);
+		cy.ifCanvasVersion(
+			() => cy.get('.jtk-connector.success').should('have.length', 3),
+			// The new version of the canvas correctly shows executed data being passed to the input of the next node
+			() => cy.get('[data-edge-status=success]').should('have.length', 4),
+		);
+		cy.ifCanvasVersion(
+			() => cy.get('.data-count').should('have.length', 4),
+			() => cy.getByTestId('canvas-node-status-success').should('have.length', 4),
+		);
 	});
 
 	it('should delete node using context menu', () => {
@@ -239,10 +311,19 @@ describe('Canvas Node Manipulation and Navigation', () => {
 			.then(($node) => {
 				const { x: x1, y: y1 } = $node[0].getBoundingClientRect();
 
-				cy.drag(getCanvasNodes().last(), [50, 150], {
-					realMouse: true,
-					abs: true,
-				});
+				cy.ifCanvasVersion(
+					() => {
+						cy.drag('[data-test-id="canvas-node"].jtk-drag-selected', [50, 150], {
+							clickToFinish: true,
+						});
+					},
+					() => {
+						cy.drag(getCanvasNodes().last(), [50, 150], {
+							realMouse: true,
+							abs: true,
+						});
+					},
+				);
 
 				getCanvasNodes()
 					.last()
@@ -255,7 +336,11 @@ describe('Canvas Node Manipulation and Navigation', () => {
 	});
 
 	describe('Canvas Zoom Functionality', () => {
-		const getContainer = () => WorkflowPage.getters.canvasViewport();
+		const getContainer = () =>
+			cy.ifCanvasVersion(
+				() => WorkflowPage.getters.nodeView(),
+				() => WorkflowPage.getters.canvasViewport(),
+			);
 		const checkZoomLevel = (expectedFactor: number) => {
 			return getContainer().should(($nodeView) => {
 				const newTransform = $nodeView.css('transform');

@@ -7,7 +7,6 @@ import type {
 	globalRoleSchema,
 	projectRoleSchema,
 	roleNamespaceSchema,
-	teamRoleSchema,
 	workflowSharingRoleSchema,
 } from './schemas.ee';
 
@@ -50,7 +49,6 @@ export type GlobalRole = z.infer<typeof globalRoleSchema>;
 export type AssignableGlobalRole = z.infer<typeof assignableGlobalRoleSchema>;
 export type CredentialSharingRole = z.infer<typeof credentialSharingRoleSchema>;
 export type WorkflowSharingRole = z.infer<typeof workflowSharingRoleSchema>;
-export type TeamProjectRole = z.infer<typeof teamRoleSchema>;
 export type ProjectRole = z.infer<typeof projectRoleSchema>;
 
 /** Union of all possible role types in the system */

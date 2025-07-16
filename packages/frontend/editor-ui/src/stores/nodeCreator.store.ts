@@ -94,12 +94,10 @@ export const useNodeCreatorStore = defineStore(STORES.NODE_CREATOR, () => {
 		connectionType,
 		node,
 		creatorView,
-		connectionIndex = 0,
 	}: {
 		connectionType: NodeConnectionType;
 		node: string;
 		creatorView?: NodeFilterType;
-		connectionIndex?: number;
 	}) {
 		const nodeName = node ?? ndvStore.activeNodeName;
 		const nodeData = nodeName ? workflowsStore.getNodeByName(nodeName) : null;
@@ -120,7 +118,7 @@ export const useNodeCreatorStore = defineStore(STORES.NODE_CREATOR, () => {
 						sourceHandle: createCanvasConnectionHandleString({
 							mode: 'inputs',
 							type: connectionType,
-							index: connectionIndex,
+							index: 0,
 						}),
 					},
 					eventSource: NODE_CREATOR_OPEN_SOURCES.NOTICE_ERROR_MESSAGE,
@@ -183,9 +181,11 @@ export const useNodeCreatorStore = defineStore(STORES.NODE_CREATOR, () => {
 			return;
 		}
 
-		const { type, mode } = parseCanvasConnectionHandleString(connection.sourceHandle);
+		const { type, index, mode } = parseCanvasConnectionHandleString(connection.sourceHandle);
 
 		uiStore.lastSelectedNode = sourceNode.name;
+		uiStore.lastSelectedNodeEndpointUuid = connection.sourceHandle ?? null;
+		uiStore.lastSelectedNodeOutputIndex = index;
 
 		if (isVueFlowConnection(connection)) {
 			uiStore.lastInteractedWithNodeConnection = connection;
@@ -222,45 +222,6 @@ export const useNodeCreatorStore = defineStore(STORES.NODE_CREATOR, () => {
 		});
 	}
 
-	function openNodeCreatorForActions(node: string, eventSource?: NodeCreatorOpenSource) {
-		const actionNode = allNodeCreatorNodes.value.find((i) => i.key === node);
-
-		if (!actionNode) {
-			return;
-		}
-
-		const nodeActions = actions.value[actionNode.key];
-
-		const transformedActions = nodeActions?.map((a) =>
-			transformNodeType(a, actionNode.properties.displayName, 'action'),
-		);
-
-		ndvStore.activeNodeName = null;
-		setSelectedView(REGULAR_NODE_CREATOR_VIEW);
-		setNodeCreatorState({
-			source: eventSource,
-			createNodeActive: true,
-			nodeCreatorView: REGULAR_NODE_CREATOR_VIEW,
-		});
-
-		setTimeout(() => {
-			useViewStacks().pushViewStack(
-				{
-					subcategory: '*',
-					title: actionNode.properties.displayName,
-					nodeIcon: {
-						type: 'icon',
-						name: 'check-check',
-					},
-					rootView: 'Regular',
-					mode: 'actions',
-					items: transformedActions,
-				},
-				{ resetStacks: true },
-			);
-		});
-	}
-
 	function getNodeCreatorFilter(nodeName: string, outputType?: NodeConnectionType) {
 		let filter;
 		const workflow = workflowsStore.getCurrentWorkflow();
@@ -292,11 +253,17 @@ export const useNodeCreatorStore = defineStore(STORES.NODE_CREATOR, () => {
 		nodePanelSessionId.value = `nodes_panel_session_${new Date().valueOf()}`;
 	}
 
-	function trackNodeCreatorEvent(event: string, properties: IDataObject = {}) {
-		telemetry.track(event, {
-			...properties,
-			nodes_panel_session_id: nodePanelSessionId.value,
-		});
+	function trackNodeCreatorEvent(event: string, properties: IDataObject = {}, withPostHog = false) {
+		telemetry.track(
+			event,
+			{
+				...properties,
+				nodes_panel_session_id: nodePanelSessionId.value,
+			},
+			{
+				withPostHog,
+			},
+		);
 	}
 
 	function onCreatorOpened({
@@ -413,7 +380,7 @@ export const useNodeCreatorStore = defineStore(STORES.NODE_CREATOR, () => {
 		drag_and_drop?: boolean;
 		input_node_type?: string;
 	}) {
-		trackNodeCreatorEvent('User added node to workflow canvas', properties);
+		trackNodeCreatorEvent('User added node to workflow canvas', properties, true);
 	}
 
 	function getMode(mode: NodeFilterType): string {
@@ -446,7 +413,6 @@ export const useNodeCreatorStore = defineStore(STORES.NODE_CREATOR, () => {
 		openSelectiveNodeCreator,
 		openNodeCreatorForConnectingNode,
 		openNodeCreatorForTriggerNodes,
-		openNodeCreatorForActions,
 		onCreatorOpened,
 		onNodeFilterChanged,
 		onCategoryExpanded,

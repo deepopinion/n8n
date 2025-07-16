@@ -49,7 +49,7 @@ export class Sort implements INodeType {
 					},
 				],
 				default: 'simple',
-				description: 'The type of sorting to perform',
+				description: 'The fields of the input items to compare to see if they are the same',
 			},
 			{
 				displayName: 'Fields To Sort By',
@@ -97,7 +97,7 @@ export class Sort implements INodeType {
 					},
 				],
 				default: {},
-				description: 'The fields of the input items to sort by',
+				description: 'The fields of the input items to compare to see if they are the same',
 				displayOptions: {
 					show: {
 						type: ['simple'],

@@ -135,7 +135,7 @@ export const isIpWhitelisted = (
 	}
 
 	for (const address of whitelist) {
-		if (ip?.includes(address)) {
+		if (ip && ip.includes(address)) {
 			return true;
 		}
 
@@ -166,7 +166,7 @@ export const checkResponseModeConfiguration = (context: IWebhookFunctions) => {
 		);
 	}
 
-	if (isRespondToWebhookConnected && !['responseNode', 'streaming'].includes(responseMode)) {
+	if (isRespondToWebhookConnected && responseMode !== 'responseNode') {
 		throw new NodeOperationError(
 			context.getNode(),
 			new Error('Webhook node not correctly configured'),

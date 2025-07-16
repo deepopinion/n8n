@@ -395,6 +395,7 @@ export const extractParametersFromText = (
 	const parameters = extractPlaceholders(text);
 
 	if (parameters.length) {
+		// eslint-disable-next-line @typescript-eslint/no-use-before-define
 		const inputParameters = prepareParameters(
 			parameters.map((name) => ({
 				name,

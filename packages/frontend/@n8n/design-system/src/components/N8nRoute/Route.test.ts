@@ -8,9 +8,6 @@ describe('N8nRoute', () => {
 			props: {
 				to: '/test',
 			},
-			global: {
-				stubs: ['RouterLink'],
-			},
 		});
 		expect(wrapper.html()).toMatchSnapshot();
 	});
@@ -21,9 +18,6 @@ describe('N8nRoute', () => {
 				to: '/test',
 				newWindow: true,
 			},
-			global: {
-				stubs: ['RouterLink'],
-			},
 		});
 		expect(wrapper.html()).toMatchSnapshot();
 	});
@@ -32,9 +26,6 @@ describe('N8nRoute', () => {
 		const wrapper = render(N8nRoute, {
 			props: {
 				to: 'https://example.com/',
-			},
-			global: {
-				stubs: ['RouterLink'],
 			},
 		});
 		expect(wrapper.html()).toMatchSnapshot();

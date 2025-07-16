@@ -498,7 +498,7 @@ export class Aws implements ICredentialType {
 			path,
 			body: bodyContent,
 			region,
-		} as unknown as Request;
+		} as Request;
 
 		const securityHeaders = {
 			accessKeyId: `${credentials.accessKeyId}`.trim(),

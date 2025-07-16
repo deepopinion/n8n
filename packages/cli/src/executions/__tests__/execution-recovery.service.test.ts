@@ -1,4 +1,3 @@
-import { createWorkflow, testDb, mockInstance } from '@n8n/backend-test-utils';
 import { ExecutionRepository } from '@n8n/db';
 import { Container } from '@n8n/di';
 import { stringify } from 'flatted';
@@ -14,7 +13,10 @@ import type { EventMessageTypes as EventMessage } from '@/eventbus/event-message
 import { EventMessageNode } from '@/eventbus/event-message-classes/event-message-node';
 import { ExecutionRecoveryService } from '@/executions/execution-recovery.service';
 import { Push } from '@/push';
+import { mockInstance } from '@test/mocking';
 import { createExecution } from '@test-integration/db/executions';
+import { createWorkflow } from '@test-integration/db/workflows';
+import * as testDb from '@test-integration/test-db';
 
 import { IN_PROGRESS_EXECUTION_DATA, OOM_WORKFLOW } from './constants';
 import { setupMessages } from './utils';
@@ -132,31 +134,6 @@ describe('ExecutionRecoveryService', () => {
 				const workflow = await createWorkflow();
 				const execution = await createExecution(
 					{ status: 'success', data: stringify({ runData: { foo: 'bar' } }) },
-					workflow,
-				);
-				const messages = setupMessages(execution.id, 'Some workflow');
-
-				/**
-				 * Act
-				 */
-				const amendedExecution = await executionRecoveryService.recoverFromLogs(
-					execution.id,
-					messages,
-				);
-
-				/**
-				 * Assert
-				 */
-				expect(amendedExecution).toBeNull();
-			});
-
-			test('for errored dataful execution, should return `null`', async () => {
-				/**
-				 * Arrange
-				 */
-				const workflow = await createWorkflow();
-				const execution = await createExecution(
-					{ status: 'error', data: stringify({ runData: { foo: 'bar' } }) },
 					workflow,
 				);
 				const messages = setupMessages(execution.id, 'Some workflow');
@@ -321,7 +298,6 @@ describe('ExecutionRecoveryService', () => {
 							workflowName: workflow.name,
 							nodeName: 'DebugHelper',
 							nodeType: 'n8n-nodes-base.debugHelper',
-							nodeId: '123',
 						},
 					}),
 				);

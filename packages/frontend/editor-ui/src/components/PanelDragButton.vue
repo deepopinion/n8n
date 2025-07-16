@@ -40,13 +40,13 @@ const onDragStart = () => {
 					v-if="canMoveLeft"
 					:class="{ [$style.leftArrow]: true, [$style.visible]: isDragging }"
 				>
-					<n8n-icon icon="arrow-left" />
+					<font-awesome-icon icon="arrow-left" />
 				</span>
 				<span
 					v-if="canMoveRight"
 					:class="{ [$style.rightArrow]: true, [$style.visible]: isDragging }"
 				>
-					<n8n-icon icon="arrow-right" />
+					<font-awesome-icon icon="arrow-right" />
 				</span>
 				<div :class="$style.grid">
 					<div>

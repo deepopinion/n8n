@@ -5,16 +5,14 @@ import { onMounted, ref } from 'vue';
 import type { IconColor } from '@n8n/design-system/types/icon';
 
 import N8nIcon from '../N8nIcon';
-import { type IconName } from '../N8nIcon/icons';
 import N8nText from '../N8nText';
-import N8nTooltip from '../N8nTooltip';
 
-export interface IAccordionItem {
+interface IAccordionItem {
 	id: string;
 	label: string;
-	icon: IconName;
+	icon: string;
 	iconColor?: IconColor;
-	tooltip?: string | null;
+	tooltip?: string;
 }
 
 interface InfoAccordionProps {
@@ -22,7 +20,7 @@ interface InfoAccordionProps {
 	description?: string;
 	items?: IAccordionItem[];
 	initiallyExpanded?: boolean;
-	headerIcon?: { icon: IconName; color: IconColor };
+	headerIcon?: { icon: string; color: IconColor };
 	eventBus?: EventBus;
 }
 
@@ -71,12 +69,12 @@ const onTooltipClick = (item: string, event: MouseEvent) => emit('tooltipClick',
 			<!-- Info accordion can display list of items with icons or just a HTML description -->
 			<div v-if="items.length > 0" :class="$style.accordionItems">
 				<div v-for="item in items" :key="item.id" :class="$style.accordionItem">
-					<N8nTooltip :disabled="!item.tooltip">
+					<n8n-tooltip :disabled="!item.tooltip">
 						<template #content>
 							<div v-n8n-html="item.tooltip" @click="onTooltipClick(item.id, $event)"></div>
 						</template>
 						<N8nIcon :icon="item.icon" :color="item.iconColor" size="small" class="mr-2xs" />
-					</N8nTooltip>
+					</n8n-tooltip>
 					<N8nText size="small" color="text-base">{{ item.label }}</N8nText>
 				</div>
 			</div>

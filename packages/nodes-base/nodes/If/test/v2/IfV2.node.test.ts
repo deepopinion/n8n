@@ -1,6 +1,6 @@
 import { NodeTestHarness } from '@nodes-testing/node-test-harness';
 import { mock } from 'jest-mock-extended';
-import get from 'lodash/get';
+import { get } from 'lodash';
 import {
 	NodeOperationError,
 	type IExecuteFunctions,
@@ -33,8 +33,8 @@ describe('Test IF v2 Node Tests', () => {
 				getNodeParameter(
 					parameterName: string,
 					itemIndex: number,
-					fallbackValue?: IDataObject,
-					options?: IGetNodeParameterOptions,
+					fallbackValue?: IDataObject | undefined,
+					options?: IGetNodeParameterOptions | undefined,
 				) {
 					const parameter = options?.extractValue ? `${parameterName}.value` : parameterName;
 

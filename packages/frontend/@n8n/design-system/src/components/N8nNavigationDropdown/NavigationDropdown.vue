@@ -5,13 +5,12 @@ import type { RouteLocationRaw } from 'vue-router';
 
 import ConditionalRouterLink from '../ConditionalRouterLink';
 import N8nIcon from '../N8nIcon';
-import { type IconName } from '../N8nIcon/icons';
 
 type BaseItem = {
 	id: string;
 	title: string;
 	disabled?: boolean;
-	icon?: IconName;
+	icon?: string;
 	route?: RouteLocationRaw;
 };
 

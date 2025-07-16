@@ -23,7 +23,7 @@ function buildSecretsValueProxy(value: IDataObject): unknown {
 }
 
 export function getSecretsProxy(additionalData: IWorkflowExecuteAdditionalData): IDataObject {
-	const { externalSecretsProxy } = additionalData;
+	const secretsHelpers = additionalData.secretsHelpers;
 	return new Proxy(
 		{},
 		{
@@ -31,7 +31,7 @@ export function getSecretsProxy(additionalData: IWorkflowExecuteAdditionalData):
 				if (typeof providerName !== 'string') {
 					return {};
 				}
-				if (externalSecretsProxy.hasProvider(providerName)) {
+				if (secretsHelpers.hasProvider(providerName)) {
 					return new Proxy(
 						{},
 						{
@@ -39,13 +39,13 @@ export function getSecretsProxy(additionalData: IWorkflowExecuteAdditionalData):
 								if (typeof secretName !== 'string') {
 									return;
 								}
-								if (!externalSecretsProxy.hasSecret(providerName, secretName)) {
+								if (!secretsHelpers.hasSecret(providerName, secretName)) {
 									throw new ExpressionError('Could not load secrets', {
 										description:
 											'The credential in use tries to use secret from an external store that could not be found',
 									});
 								}
-								const retValue = externalSecretsProxy.getSecret(providerName, secretName);
+								const retValue = secretsHelpers.getSecret(providerName, secretName);
 								if (typeof retValue === 'object' && retValue !== null) {
 									return buildSecretsValueProxy(retValue as IDataObject);
 								}
@@ -55,7 +55,7 @@ export function getSecretsProxy(additionalData: IWorkflowExecuteAdditionalData):
 								return false;
 							},
 							ownKeys() {
-								return externalSecretsProxy.listSecrets(providerName);
+								return secretsHelpers.listSecrets(providerName);
 							},
 						},
 					);
@@ -69,7 +69,7 @@ export function getSecretsProxy(additionalData: IWorkflowExecuteAdditionalData):
 				return false;
 			},
 			ownKeys() {
-				return externalSecretsProxy.listProviders();
+				return secretsHelpers.listProviders();
 			},
 		},
 	);

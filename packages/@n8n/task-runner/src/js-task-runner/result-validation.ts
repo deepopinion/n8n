@@ -1,7 +1,6 @@
 import { normalizeItems } from 'n8n-core';
 import type { INodeExecutionData } from 'n8n-workflow';
 
-import { ReservedKeyFoundError } from './errors/reserved-key-not-found.error';
 import { ValidationError } from './errors/validation-error';
 import { isObject } from './obj-utils';
 
@@ -20,27 +19,16 @@ export const REQUIRED_N8N_ITEM_KEYS = new Set([
 ]);
 
 function validateTopLevelKeys(item: INodeExecutionData, itemIndex: number) {
-	let foundReservedKey: string | null = null;
-	const unknownKeys: string[] = [];
-
 	for (const key in item) {
-		if (!Object.prototype.hasOwnProperty.call(item, key)) continue;
+		if (Object.prototype.hasOwnProperty.call(item, key)) {
+			if (REQUIRED_N8N_ITEM_KEYS.has(key)) continue;
 
-		if (REQUIRED_N8N_ITEM_KEYS.has(key)) {
-			foundReservedKey ??= key;
-		} else {
-			unknownKeys.push(key);
+			throw new ValidationError({
+				message: `Unknown top-level item key: ${key}`,
+				description: 'Access the properties of an item under `.json`, e.g. `item.json`',
+				itemIndex,
+			});
 		}
-	}
-
-	if (unknownKeys.length > 0) {
-		if (foundReservedKey) throw new ReservedKeyFoundError(foundReservedKey, itemIndex);
-
-		throw new ValidationError({
-			message: `Unknown top-level item key: ${unknownKeys[0]}`,
-			description: 'Access the properties of an item under `.json`, e.g. `item.json`',
-			itemIndex,
-		});
 	}
 }
 

@@ -1,25 +1,32 @@
 import { WorkflowRepository } from '@n8n/db';
-import { Command } from '@n8n/decorators';
 import { Container } from '@n8n/di';
-import { z } from 'zod';
+import { Flags } from '@oclif/core';
 
 import { BaseCommand } from '../base-command';
 
-const flagsSchema = z.object({
-	active: z.string().describe('Active state the workflow/s should be set to').optional(),
-	all: z.boolean().describe('Operate on all workflows').optional(),
-	id: z.string().describe('The ID of the workflow to operate on').optional(),
-});
+export class UpdateWorkflowCommand extends BaseCommand {
+	static description = 'Update workflows';
 
-@Command({
-	name: 'update:workflow',
-	description: 'Update workflows',
-	examples: ['--all --active=false', '--id=5 --active=true'],
-	flagsSchema,
-})
-export class UpdateWorkflowCommand extends BaseCommand<z.infer<typeof flagsSchema>> {
+	static examples = [
+		'$ n8n update:workflow --all --active=false',
+		'$ n8n update:workflow --id=5 --active=true',
+	];
+
+	static flags = {
+		help: Flags.help({ char: 'h' }),
+		active: Flags.string({
+			description: 'Active state the workflow/s should be set to',
+		}),
+		all: Flags.boolean({
+			description: 'Operate on all workflows',
+		}),
+		id: Flags.string({
+			description: 'The ID of the workflow to operate on',
+		}),
+	};
+
 	async run() {
-		const { flags } = this;
+		const { flags } = await this.parse(UpdateWorkflowCommand);
 
 		if (!flags.all && !flags.id) {
 			this.logger.error('Either option "--all" or "--id" have to be set!');

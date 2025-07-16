@@ -1,4 +1,4 @@
-import { i18n } from '@n8n/i18n';
+import { i18n } from '@/plugins/i18n';
 import {
 	autocompletableNodeNames,
 	receivesNoBinaryData,
@@ -18,7 +18,6 @@ import {
 	PREVIOUS_NODES_SECTION,
 	RECOMMENDED_SECTION,
 	ROOT_DOLLAR_COMPLETIONS,
-	TARGET_NODE_PARAMETER_FACET,
 } from './constants';
 import { createInfoBoxRenderer } from './infoBoxRenderer';
 
@@ -32,7 +31,7 @@ export function dollarCompletions(context: CompletionContext): CompletionResult 
 
 	if (word.from === word.to && !context.explicit) return null;
 
-	let options = dollarOptions(context).map(stripExcessParens(context));
+	let options = dollarOptions().map(stripExcessParens(context));
 
 	const userInput = word.text;
 
@@ -54,7 +53,7 @@ export function dollarCompletions(context: CompletionContext): CompletionResult 
 	};
 }
 
-export function dollarOptions(context: CompletionContext): Completion[] {
+export function dollarOptions(): Completion[] {
 	const SKIP = new Set();
 	let recommendedCompletions: Completion[] = [];
 
@@ -118,28 +117,24 @@ export function dollarOptions(context: CompletionContext): Completion[] {
 			: [];
 	}
 
-	const targetNodeParameterContext = context.state.facet(TARGET_NODE_PARAMETER_FACET);
-
-	if (!hasActiveNode(targetNodeParameterContext)) {
+	if (!hasActiveNode()) {
 		return [];
 	}
 
-	if (receivesNoBinaryData(targetNodeParameterContext?.nodeName)) SKIP.add('$binary');
+	if (receivesNoBinaryData()) SKIP.add('$binary');
 
-	const previousNodesCompletions = autocompletableNodeNames(targetNodeParameterContext).map(
-		(nodeName) => {
-			const label = `$('${escapeMappingString(nodeName)}')`;
-			return {
-				label,
-				info: createInfoBoxRenderer({
-					name: label,
-					returnType: 'Object',
-					description: i18n.baseText('codeNodeEditor.completer.$()', { interpolate: { nodeName } }),
-				}),
-				section: PREVIOUS_NODES_SECTION,
-			};
-		},
-	);
+	const previousNodesCompletions = autocompletableNodeNames().map((nodeName) => {
+		const label = `$('${escapeMappingString(nodeName)}')`;
+		return {
+			label,
+			info: createInfoBoxRenderer({
+				name: label,
+				returnType: 'Object',
+				description: i18n.baseText('codeNodeEditor.completer.$()', { interpolate: { nodeName } }),
+			}),
+			section: PREVIOUS_NODES_SECTION,
+		};
+	});
 
 	return recommendedCompletions
 		.concat(ROOT_DOLLAR_COMPLETIONS)

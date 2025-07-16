@@ -1,9 +1,9 @@
 import { WorkflowOperationError } from './workflow-operation.error';
 
 export class SubworkflowOperationError extends WorkflowOperationError {
-	override description = '';
+	description = '';
 
-	override cause: Error;
+	cause: Error;
 
 	constructor(message: string, description: string) {
 		super(message);

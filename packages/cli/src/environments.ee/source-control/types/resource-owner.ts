@@ -1,9 +1,7 @@
-export type RemoteResourceOwner =
+export type ResourceOwner =
 	| string
 	| {
 			type: 'personal';
-			projectId?: string; // Optional for retrocompatibility
-			projectName?: string; // Optional for retrocompatibility
 			personalEmail: string;
 	  }
 	| {
@@ -11,9 +9,3 @@ export type RemoteResourceOwner =
 			teamId: string;
 			teamName: string;
 	  };
-
-export type StatusResourceOwner = {
-	type: 'personal' | 'team';
-	projectId: string;
-	projectName: string;
-};

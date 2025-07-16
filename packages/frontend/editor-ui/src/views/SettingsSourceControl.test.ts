@@ -174,7 +174,6 @@ describe('SettingsSourceControl', () => {
 			['root@192.168.1.1/repo.git', true],
 			['http://github.com/user/repository', false],
 			['https://github.com/user/repository', false],
-			['git@gitlab.com:something.net/n8n.git', true],
 		])('%s', async (url: string, isValid: boolean) => {
 			await nextTick();
 			const { container, queryByText } = renderComponent({

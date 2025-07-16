@@ -80,7 +80,7 @@ export async function s3ApiRequest(
 		qs: query,
 		uri: endpoint.toString(),
 		body: signOpts.body,
-		rejectUnauthorized: !credentials.ignoreSSLIssues,
+		rejectUnauthorized: !credentials.ignoreSSLIssues as boolean,
 	};
 
 	if (Object.keys(option).length !== 0) {

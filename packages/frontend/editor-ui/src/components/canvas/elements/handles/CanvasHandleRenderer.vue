@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+/* eslint-disable vue/no-multiple-template-root */
 import { computed, h, provide, toRef, useCssModule } from 'vue';
 import type { CanvasConnectionPort, CanvasElementPortWithRenderData } from '@/types';
 import { CanvasConnectionMode } from '@/types';

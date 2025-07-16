@@ -1,14 +1,9 @@
-import { PiPWindowSymbol } from '@/constants';
-import { useDeviceSupport } from '@n8n/composables/useDeviceSupport';
 import { useActiveElement, useEventListener } from '@vueuse/core';
-import type { MaybeRefOrGetter } from 'vue';
-import { computed, inject, ref, toValue } from 'vue';
+import { useDeviceSupport } from '@n8n/composables/useDeviceSupport';
+import type { MaybeRef, Ref } from 'vue';
+import { computed, unref } from 'vue';
 
-type KeyboardEventHandler =
-	| ((event: KeyboardEvent) => void)
-	| { disabled: () => boolean; run: (event: KeyboardEvent) => void };
-
-export type KeyMap = Partial<Record<string, KeyboardEventHandler>>;
+type KeyMap = Record<string, (event: KeyboardEvent) => void>;
 
 /**
  * Binds a `keydown` event to `document` and calls the approriate
@@ -25,16 +20,15 @@ export type KeyMap = Partial<Record<string, KeyboardEventHandler>>;
  * ```
  */
 export const useKeybindings = (
-	keymap: MaybeRefOrGetter<KeyMap>,
+	keymap: Ref<KeyMap>,
 	options?: {
-		disabled: MaybeRefOrGetter<boolean>;
+		disabled: MaybeRef<boolean>;
 	},
 ) => {
-	const pipWindow = inject(PiPWindowSymbol, ref<Window | undefined>());
-	const activeElement = useActiveElement({ window: pipWindow?.value });
+	const activeElement = useActiveElement();
 	const { isCtrlKeyPressed } = useDeviceSupport();
 
-	const isDisabled = computed(() => toValue(options?.disabled));
+	const isDisabled = computed(() => unref(options?.disabled));
 
 	const ignoreKeyPresses = computed(() => {
 		if (!activeElement.value) return false;
@@ -49,7 +43,7 @@ export const useKeybindings = (
 
 	const normalizedKeymap = computed(() =>
 		Object.fromEntries(
-			Object.entries(toValue(keymap)).flatMap(([shortcut, handler]) => {
+			Object.entries(keymap.value).flatMap(([shortcut, handler]) => {
 				const shortcuts = shortcut.split('|');
 				return shortcuts.map((s) => [normalizeShortcutString(s), handler]);
 			}),
@@ -140,15 +134,13 @@ export const useKeybindings = (
 		// - Dvorak works correctly
 		// - Non-ansi layouts work correctly
 		const handler = normalizedKeymap.value[byKey] ?? normalizedKeymap.value[byCode];
-		const run =
-			typeof handler === 'function' ? handler : handler?.disabled() ? undefined : handler?.run;
 
-		if (run) {
+		if (handler) {
 			event.preventDefault();
 			event.stopPropagation();
-			run(event);
+			handler(event);
 		}
 	}
 
-	useEventListener(pipWindow?.value?.document ?? document, 'keydown', onKeyDown);
+	useEventListener(document, 'keydown', onKeyDown);
 };

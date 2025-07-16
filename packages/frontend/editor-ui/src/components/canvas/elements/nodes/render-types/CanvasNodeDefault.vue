@@ -1,13 +1,11 @@
 <script lang="ts" setup>
 import { computed, ref, useCssModule, watch } from 'vue';
 import { useNodeConnections } from '@/composables/useNodeConnections';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useCanvasNode } from '@/composables/useCanvasNode';
+import { NODE_INSERT_SPACER_BETWEEN_INPUT_GROUPS } from '@/constants';
 import type { CanvasNodeDefaultRender } from '@/types';
 import { useCanvas } from '@/composables/useCanvas';
-import { calculateNodeSize } from '@/utils/nodeViewUtils';
-import ExperimentalInPlaceNodeSettings from '@/components/canvas/experimental/components/ExperimentalEmbeddedNodeDetails.vue';
-import { useExperimentalNdvStore } from '@/components/canvas/experimental/experimentalNdv.store';
 
 const $style = useCssModule();
 const i18n = useI18n();
@@ -26,27 +24,29 @@ const {
 	outputs,
 	connections,
 	isDisabled,
-	isReadOnly,
 	isSelected,
 	hasPinnedData,
 	executionStatus,
 	executionWaiting,
-	executionWaitingForNext,
 	executionRunning,
 	hasRunData,
 	hasIssues,
 	render,
 } = useCanvasNode();
-const { mainOutputs, mainOutputConnections, mainInputs, mainInputConnections, nonMainInputs } =
-	useNodeConnections({
-		inputs,
-		outputs,
-		connections,
-	});
+const {
+	mainOutputs,
+	mainOutputConnections,
+	mainInputs,
+	mainInputConnections,
+	nonMainInputs,
+	requiredNonMainInputs,
+} = useNodeConnections({
+	inputs,
+	outputs,
+	connections,
+});
 
 const renderOptions = computed(() => render.value.options as CanvasNodeDefaultRender['options']);
-
-const experimentalNdvStore = useExperimentalNdvStore();
 
 const classes = computed(() => {
 	return {
@@ -57,7 +57,7 @@ const classes = computed(() => {
 		[$style.error]: hasIssues.value,
 		[$style.pinned]: hasPinnedData.value,
 		[$style.waiting]: executionWaiting.value ?? executionStatus.value === 'waiting',
-		[$style.running]: executionRunning.value || executionWaitingForNext.value,
+		[$style.running]: executionRunning.value,
 		[$style.configurable]: renderOptions.value.configurable,
 		[$style.configuration]: renderOptions.value.configuration,
 		[$style.trigger]: renderOptions.value.trigger,
@@ -65,23 +65,25 @@ const classes = computed(() => {
 	};
 });
 
-const iconSize = computed(() => (renderOptions.value.configuration ? 30 : 40));
+const styles = computed(() => {
+	const stylesObject: Record<string, string | number> = {};
 
-const nodeSize = computed(() =>
-	calculateNodeSize(
-		renderOptions.value.configuration ?? false,
-		renderOptions.value.configurable ?? false,
-		mainInputs.value.length,
-		mainOutputs.value.length,
-		nonMainInputs.value.length,
-	),
-);
+	if (renderOptions.value.configurable) {
+		let spacerCount = 0;
+		if (NODE_INSERT_SPACER_BETWEEN_INPUT_GROUPS && requiredNonMainInputs.value.length > 0) {
+			const requiredNonMainInputsCount = requiredNonMainInputs.value.length;
+			const optionalNonMainInputsCount = nonMainInputs.value.length - requiredNonMainInputsCount;
+			spacerCount = requiredNonMainInputsCount > 0 && optionalNonMainInputsCount > 0 ? 1 : 0;
+		}
 
-const styles = computed(() => ({
-	'--canvas-node--width': `${nodeSize.value.width}px`,
-	'--canvas-node--height': `${nodeSize.value.height}px`,
-	'--node-icon-size': `${iconSize.value}px`,
-}));
+		stylesObject['--configurable-node--input-count'] = nonMainInputs.value.length + spacerCount;
+	}
+
+	stylesObject['--canvas-node--main-input-count'] = mainInputs.value.length;
+	stylesObject['--canvas-node--main-output-count'] = mainOutputs.value.length;
+
+	return stylesObject;
+});
 
 const dataTestId = computed(() => {
 	let type = 'default';
@@ -104,6 +106,8 @@ const isStrikethroughVisible = computed(() => {
 
 	return isDisabled.value && isSingleMainInputNode && isSingleMainOutputNode;
 });
+
+const iconSize = computed(() => (renderOptions.value.configuration ? 30 : 40));
 
 const iconSource = computed(() => renderOptions.value.icon);
 
@@ -132,16 +136,7 @@ function onActivate(event: MouseEvent) {
 </script>
 
 <template>
-	<ExperimentalInPlaceNodeSettings
-		v-if="experimentalNdvStore.isActive(viewport.zoom)"
-		:node-id="id"
-		:class="classes"
-		:style="styles"
-		:is-read-only="isReadOnly"
-		:is-configurable="renderOptions.configurable ?? false"
-	/>
 	<div
-		v-else
 		:class="classes"
 		:style="styles"
 		:data-test-id="dataTestId"
@@ -149,13 +144,8 @@ function onActivate(event: MouseEvent) {
 		@dblclick.stop="onActivate"
 	>
 		<CanvasNodeTooltip v-if="renderOptions.tooltip" :visible="showTooltip" />
-		<NodeIcon
-			:icon-source="iconSource"
-			:size="iconSize"
-			:shrink="false"
-			:disabled="isDisabled"
-			:class="$style.icon"
-		/>
+		<NodeIcon :icon-source="iconSource" :size="iconSize" :shrink="false" :disabled="isDisabled" />
+		<CanvasNodeStatusIcons v-if="!isDisabled" :class="$style.statusIcons" />
 		<CanvasNodeDisabledStrikeThrough v-if="isStrikethroughVisible" />
 		<div :class="$style.description">
 			<div v-if="label" :class="$style.label">
@@ -166,13 +156,23 @@ function onActivate(event: MouseEvent) {
 			</div>
 			<div v-if="subtitle" :class="$style.subtitle">{{ subtitle }}</div>
 		</div>
-		<CanvasNodeStatusIcons v-if="!isDisabled" :class="$style.statusIcons" />
 	</div>
 </template>
 
 <style lang="scss" module>
 .node {
+	--canvas-node--max-vertical-handles: max(
+		var(--canvas-node--main-input-count),
+		var(--canvas-node--main-output-count),
+		1
+	);
+	--canvas-node--height: calc(100px + max(0, var(--canvas-node--max-vertical-handles) - 3) * 42px);
+	--canvas-node--width: 100px;
 	--canvas-node-border-width: 2px;
+	--configurable-node--min-input-count: 4;
+	--configurable-node--input-width: 64px;
+	--configurable-node--icon-offset: 30px;
+	--configurable-node--icon-size: 30px;
 	--trigger-node--border-radius: 36px;
 	--canvas-node--status-icons-offset: var(--spacing-3xs);
 	--node-icon-color: var(--color-foreground-dark);
@@ -198,10 +198,13 @@ function onActivate(event: MouseEvent) {
 	 */
 
 	&.configuration {
+		--canvas-node--width: 80px;
+		--canvas-node--height: 80px;
+
 		background: var(--canvas-node--background, var(--node-type-supplemental-background));
 		border: var(--canvas-node-border-width) solid
 			var(--canvas-node--border-color, var(--color-foreground-dark));
-		border-radius: calc(var(--canvas-node--height) / 2);
+		border-radius: 50px;
 
 		.statusIcons {
 			right: unset;
@@ -209,8 +212,16 @@ function onActivate(event: MouseEvent) {
 	}
 
 	&.configurable {
-		.icon {
-			margin-left: calc(40px - (var(--node-icon-size)) / 2 - var(--canvas-node-border-width));
+		--canvas-node--height: 100px;
+		--canvas-node--width: calc(
+			max(var(--configurable-node--input-count, 4), var(--configurable-node--min-input-count)) *
+				var(--configurable-node--input-width)
+		);
+
+		justify-content: flex-start;
+
+		:global(.n8n-node-icon) {
+			margin-left: var(--configurable-node--icon-offset);
 		}
 
 		.description {
@@ -221,10 +232,11 @@ function onActivate(event: MouseEvent) {
 			margin-right: var(--spacing-s);
 			width: auto;
 			min-width: unset;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			flex-grow: 1;
-			flex-shrink: 1;
+			max-width: calc(
+				var(--canvas-node--width) - var(--configurable-node--icon-offset) - var(
+						--configurable-node--icon-size
+					) - 2 * var(--spacing-s)
+			);
 		}
 
 		.label {
@@ -236,20 +248,11 @@ function onActivate(event: MouseEvent) {
 		}
 
 		&.configuration {
-			.icon {
-				// 4px represents calc(var(--handle--indicator--width) - configuration node offset) / 2)
-				margin-left: calc((var(--canvas-node--height) - var(--node-icon-size) - 4px) / 2);
-			}
+			--canvas-node--height: 75px;
 
-			&:not(.running) {
-				.statusIcons {
-					position: static;
-					margin-right: var(--spacing-2xs);
-				}
-			}
-
-			.description {
-				margin-right: var(--spacing-xs);
+			.statusIcons {
+				right: calc(-1 * var(--spacing-2xs));
+				bottom: 0;
 			}
 		}
 	}
@@ -264,47 +267,32 @@ function onActivate(event: MouseEvent) {
 	}
 
 	&.success {
-		--canvas-node--border-color: var(
-			--color-canvas-node-success-border-color,
-			var(--color-success)
-		);
+		border-color: var(--color-canvas-node-success-border-color, var(--color-success));
 	}
 
 	&.warning {
-		--canvas-node--border-color: var(--color-warning);
+		border-color: var(--color-warning);
 	}
 
 	&.error {
-		--canvas-node--border-color: var(--color-canvas-node-error-border-color, var(--color-danger));
+		border-color: var(--color-canvas-node-error-border-color, var(--color-danger));
 	}
 
 	&.pinned {
-		--canvas-node--border-color: var(
-			--color-canvas-node-pinned-border-color,
-			var(--color-node-pinned-border)
-		);
+		border-color: var(--color-canvas-node-pinned-border-color, var(--color-node-pinned-border));
 	}
 
 	&.disabled {
-		--canvas-node--border-color: var(
-			--color-canvas-node-disabled-border-color,
-			var(--color-foreground-base)
-		);
+		border-color: var(--color-canvas-node-disabled-border-color, var(--color-foreground-base));
 	}
 
 	&.running {
 		background-color: var(--color-node-executing-background);
-		--canvas-node--border-color: var(
-			--color-canvas-node-running-border-color,
-			var(--color-node-running-border)
-		);
+		border-color: var(--color-canvas-node-running-border-color, var(--color-node-running-border));
 	}
 
 	&.waiting {
-		--canvas-node--border-color: var(
-			--color-canvas-node-waiting-border-color,
-			var(--color-secondary)
-		);
+		border-color: var(--color-canvas-node-waiting-border-color, var(--color-secondary));
 	}
 }
 
@@ -317,7 +305,7 @@ function onActivate(event: MouseEvent) {
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-4xs);
-	pointer-events: none;
+	align-items: center;
 }
 
 .label,
@@ -350,10 +338,5 @@ function onActivate(event: MouseEvent) {
 	position: absolute;
 	bottom: var(--canvas-node--status-icons-offset);
 	right: var(--canvas-node--status-icons-offset);
-}
-
-.icon {
-	flex-grow: 0;
-	flex-shrink: 0;
 }
 </style>

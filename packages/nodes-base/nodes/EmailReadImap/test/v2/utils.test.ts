@@ -1,7 +1,7 @@
 import { type ImapSimple } from '@n8n/imap';
-import { mock, mockDeep } from 'jest-mock-extended';
+import { mock } from 'jest-mock-extended';
 import { returnJsonArray } from 'n8n-core';
-import type { INode, ITriggerFunctions } from 'n8n-workflow';
+import { type IDataObject, type ITriggerFunctions } from 'n8n-workflow';
 
 import { getNewEmails } from '../../v2/utils';
 
@@ -9,7 +9,7 @@ describe('Test IMap V2 utils', () => {
 	afterEach(() => jest.resetAllMocks());
 
 	describe('getNewEmails', () => {
-		const triggerFunctions = mockDeep<ITriggerFunctions>({
+		const triggerFunctions = mock<ITriggerFunctions>({
 			helpers: { returnJsonArray },
 		});
 
@@ -73,27 +73,27 @@ describe('Test IMap V2 utils', () => {
 			];
 
 			expectedResults.forEach(async (expectedResult) => {
-				triggerFunctions.getNode.mockReturnValue(mock<INode>({ typeVersion: 2.1 }));
+				// use new staticData for each iteration
+				const staticData: IDataObject = {};
+
 				triggerFunctions.getNodeParameter
 					.calledWith('format')
 					.mockReturnValue(expectedResult.format);
 				triggerFunctions.getNodeParameter
 					.calledWith('dataPropertyAttachmentsPrefixName')
 					.mockReturnValue('resolved');
-				triggerFunctions.getWorkflowStaticData.mockReturnValue({});
 
-				const onEmailBatch = jest.fn();
-				await getNewEmails.call(triggerFunctions, {
+				const result = getNewEmails.call(
+					triggerFunctions,
 					imapConnection,
-					searchCriteria: [],
-					postProcessAction: '',
+					[],
+					staticData,
+					'',
 					getText,
 					getAttachment,
-					onEmailBatch,
-				});
+				);
 
-				expect(onEmailBatch).toHaveBeenCalledTimes(1);
-				expect(onEmailBatch).toHaveBeenCalledWith([expectedResult.expected]);
+				await expect(result).resolves.toEqual([expectedResult.expected]);
 			});
 		});
 	});

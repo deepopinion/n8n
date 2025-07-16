@@ -1,25 +1,23 @@
-export type IUser = {
+export interface IUser {
 	id: string;
-	firstName?: string | null;
-	lastName?: string | null;
+	firstName?: string;
+	lastName?: string;
 	fullName?: string;
-	role?: string;
-	email?: string | null;
-	signInType?: string;
-	isOwner?: boolean;
-	isPendingUser?: boolean;
+	email?: string;
+	isOwner: boolean;
+	isPendingUser: boolean;
 	inviteAcceptUrl?: string;
-	disabled?: boolean;
-	mfaEnabled?: boolean;
-};
+	disabled: boolean;
+	signInType: string;
+}
 
-export interface UserAction<UserType extends IUser> {
+export interface UserAction {
 	label: string;
 	value: string;
-	disabled?: boolean;
+	disabled: boolean;
 	type?: 'external-link';
 	tooltip?: string;
-	guard?: (user: UserType) => boolean;
+	guard?: (user: IUser) => boolean;
 }
 
 export type UserStackGroups = { [groupName: string]: IUser[] };

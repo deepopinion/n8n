@@ -3,7 +3,6 @@ import { NodeOperationError } from 'n8n-workflow';
 
 import * as database from './database/Database.resource';
 import type { MySqlType } from './node.type';
-import { addExecutionHints } from '../../../../utils/utilities';
 import type { MysqlNodeCredentials, QueryRunner } from '../helpers/interfaces';
 import { configureQueryRunner } from '../helpers/utils';
 import { createPool } from '../transport';
@@ -11,13 +10,11 @@ import { createPool } from '../transport';
 export async function router(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 	let returnData: INodeExecutionData[] = [];
 
-	const items = this.getInputData();
 	const resource = this.getNodeParameter<MySqlType>('resource', 0);
 	const operation = this.getNodeParameter('operation', 0);
 	const nodeOptions = this.getNodeParameter('options', 0);
-	const node = this.getNode();
 
-	nodeOptions.nodeVersion = node.typeVersion;
+	nodeOptions.nodeVersion = this.getNode().typeVersion;
 
 	const credentials = await this.getCredentials<MysqlNodeCredentials>('mySql');
 
@@ -33,6 +30,8 @@ export async function router(this: IExecuteFunctions): Promise<INodeExecutionDat
 	try {
 		switch (mysqlNodeData.resource) {
 			case 'database':
+				const items = this.getInputData();
+
 				returnData = await database[mysqlNodeData.operation].execute.call(
 					this,
 					items,
@@ -49,8 +48,6 @@ export async function router(this: IExecuteFunctions): Promise<INodeExecutionDat
 	} finally {
 		await pool.end();
 	}
-
-	addExecutionHints(this, node, items, operation, node.executeOnce);
 
 	return [returnData];
 }

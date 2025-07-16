@@ -1,3 +1,4 @@
+/* eslint-disable n8n-nodes-base/node-dirname-against-convention */
 import type { BaseChatMemory } from '@langchain/community/memory/chat_memory';
 import type { BaseMessage } from '@langchain/core/messages';
 import {
@@ -58,7 +59,7 @@ export class MemoryChatRetriever implements INodeType {
 				],
 			},
 		},
-
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
 		inputs: [
 			NodeConnectionTypes.Main,
 			{
@@ -68,7 +69,7 @@ export class MemoryChatRetriever implements INodeType {
 				required: true,
 			},
 		],
-
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
 		outputs: [NodeConnectionTypes.Main],
 		properties: [
 			{

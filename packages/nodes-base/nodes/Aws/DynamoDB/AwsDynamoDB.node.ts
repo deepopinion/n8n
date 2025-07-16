@@ -107,7 +107,7 @@ export class AwsDynamoDB implements INodeType {
 							[],
 						) as IAttributeValueUi[];
 						const conditionExpession = this.getNodeParameter(
-							'additionalFields.conditionExpression',
+							'conditionExpression',
 							i,
 							'',
 						) as string;
@@ -130,7 +130,7 @@ export class AwsDynamoDB implements INodeType {
 						const expressionAttributeName = adjustExpressionAttributeName(eanUi);
 
 						if (Object.keys(expressionAttributeName).length) {
-							body.ExpressionAttributeNames = expressionAttributeName;
+							body.expressionAttributeNames = expressionAttributeName;
 						}
 
 						if (conditionExpession) {
@@ -180,7 +180,7 @@ export class AwsDynamoDB implements INodeType {
 						};
 
 						const eavUi = this.getNodeParameter(
-							'additionalFields.expressionAttributeUi.expressionAttributeValues',
+							'additionalFields.eavUi.eavValues',
 							i,
 							[],
 						) as IAttributeValueUi[];
@@ -213,7 +213,7 @@ export class AwsDynamoDB implements INodeType {
 						const expressionAttributeName = adjustExpressionAttributeName(eanUi);
 
 						if (Object.keys(expressionAttributeName).length) {
-							body.ExpressionAttributeNames = expressionAttributeName;
+							body.expressionAttributeNames = expressionAttributeName;
 						}
 
 						const headers = {
@@ -260,7 +260,7 @@ export class AwsDynamoDB implements INodeType {
 						const expressionAttributeName = adjustExpressionAttributeName(eanUi);
 
 						if (Object.keys(expressionAttributeName).length) {
-							body.ExpressionAttributeNames = expressionAttributeName;
+							body.expressionAttributeNames = expressionAttributeName;
 						}
 
 						if (additionalFields.readType) {

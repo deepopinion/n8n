@@ -1,9 +1,12 @@
-import { mockInstance } from '@n8n/backend-test-utils';
 import type { AuthIdentity } from '@n8n/db';
-import { generateNanoId, User, AuthIdentityRepository, UserRepository } from '@n8n/db';
+import { generateNanoId } from '@n8n/db';
+import { User } from '@n8n/db';
+import { AuthIdentityRepository } from '@n8n/db';
+import { UserRepository } from '@n8n/db';
 
 import * as helpers from '@/sso.ee/saml/saml-helpers';
 import type { SamlUserAttributes } from '@/sso.ee/saml/types';
+import { mockInstance } from '@test/mocking';
 
 const userRepository = mockInstance(UserRepository);
 mockInstance(AuthIdentityRepository);
@@ -11,7 +14,7 @@ mockInstance(AuthIdentityRepository);
 describe('sso/saml/samlHelpers', () => {
 	describe('updateUserFromSamlAttributes', () => {
 		// We need to use `save` so that that the subscriber in
-		// packages/@n8n/db/src/entities/Project.ts receives the full user.
+		// packages/cli/src/databases/entities/Project.ts receives the full user.
 		// With `update` it would only receive the updated fields, e.g. the `id`
 		// would be missing.
 		test('does not user `Repository.update`, but `Repository.save` instead', async () => {

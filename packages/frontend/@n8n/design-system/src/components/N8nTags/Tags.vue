@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<TagsProp>(), {
 
 const emit = defineEmits<{
 	expand: [value: boolean];
-	'click:tag': [tagId: string, e: PointerEvent];
+	'click:tag': [tagId: string, e: MouseEvent];
 }>();
 
 const { t } = useI18n();

@@ -1,4 +1,3 @@
-import { GlobalConfig } from '@n8n/config';
 import type { LdapConfig, ConnectionSecurity } from '@n8n/constants';
 import type { AuthProviderSyncHistory } from '@n8n/db';
 import {
@@ -14,9 +13,15 @@ import type { Entry as LdapUser } from 'ldapts';
 import { Filter } from 'ldapts/filters/Filter';
 import { randomString } from 'n8n-workflow';
 
+import config from '@/config';
 import { License } from '@/license';
 
-import { BINARY_AD_ATTRIBUTES, LDAP_CONFIG_SCHEMA } from './constants';
+import {
+	BINARY_AD_ATTRIBUTES,
+	LDAP_CONFIG_SCHEMA,
+	LDAP_LOGIN_ENABLED,
+	LDAP_LOGIN_LABEL,
+} from './constants';
 
 /**
  *  Check whether the LDAP feature is disabled in the instance
@@ -28,12 +33,12 @@ export const isLdapEnabled = () => {
 /**
  * Retrieve the LDAP login label from the configuration object
  */
-export const getLdapLoginLabel = (): string => Container.get(GlobalConfig).sso.ldap.loginLabel;
+export const getLdapLoginLabel = (): string => config.getEnv(LDAP_LOGIN_LABEL);
 
 /**
  * Retrieve the LDAP login enabled from the configuration object
  */
-export const isLdapLoginEnabled = (): boolean => Container.get(GlobalConfig).sso.ldap.loginEnabled;
+export const isLdapLoginEnabled = (): boolean => config.getEnv(LDAP_LOGIN_ENABLED);
 
 /**
  * Validate the structure of the LDAP configuration schema

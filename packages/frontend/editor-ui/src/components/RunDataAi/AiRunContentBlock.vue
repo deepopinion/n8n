@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import type { IAiDataContent } from '@/Interface';
-import capitalize from 'lodash/capitalize';
+import { capitalize } from 'lodash-es';
 import { computed, ref } from 'vue';
 import { NodeConnectionTypes } from 'n8n-workflow';
 import type { NodeConnectionType, NodeError } from 'n8n-workflow';
 import RunDataAi from '@/components/RunDataParsedAiContent.vue';
 import { parseAiContent } from '@/utils/aiUtils';
 import { N8nRadioButtons } from '@n8n/design-system';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
 const props = defineProps<{
 	runData: IAiDataContent;
@@ -51,7 +52,7 @@ function onRenderTypeChange(value: 'rendered' | 'json') {
 	<div :class="$style.block">
 		<header :class="$style.blockHeader" @click="onBlockHeaderClick">
 			<button :class="$style.blockToggle">
-				<N8nIcon :icon="isExpanded ? 'chevron-down' : 'chevron-right'" size="large" />
+				<FontAwesomeIcon :icon="isExpanded ? 'angle-down' : 'angle-right'" size="lg" />
 			</button>
 			<p :class="$style.blockTitle">{{ capitalize(runData.inOut) }}</p>
 			<N8nRadioButtons

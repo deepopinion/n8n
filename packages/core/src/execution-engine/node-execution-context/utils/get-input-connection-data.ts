@@ -15,21 +15,17 @@ import type {
 	ISupplyDataFunctions,
 	INodeType,
 	INode,
-	INodeInputConfiguration,
-	NodeConnectionType,
 } from 'n8n-workflow';
 import {
 	NodeConnectionTypes,
 	NodeOperationError,
 	ExecutionBaseError,
 	ApplicationError,
-	UserError,
-	sleepWithAbort,
 } from 'n8n-workflow';
 
 import { createNodeAsTool } from './create-node-as-tool';
 import type { ExecuteContext, WebhookContext } from '../../node-execution-context';
-// eslint-disable-next-line import-x/no-cycle
+// eslint-disable-next-line import/no-cycle
 import { SupplyDataContext } from '../../node-execution-context/supply-data-context';
 
 function getNextRunIndex(runExecutionData: IRunExecutionData, nodeName: string) {
@@ -51,128 +47,42 @@ export function makeHandleToolInvocation(
 	let runIndex = getNextRunIndex(runExecutionData, node.name);
 
 	return async (toolArgs: IDataObject) => {
-		let maxTries = 1;
-		if (node.retryOnFail === true) {
-			maxTries = Math.min(5, Math.max(2, node.maxTries ?? 3));
-		}
+		// Increment the runIndex for the next invocation
+		const localRunIndex = runIndex++;
+		const context = contextFactory(localRunIndex);
+		context.addInputData(NodeConnectionTypes.AiTool, [[{ json: toolArgs }]]);
 
-		let waitBetweenTries = 0;
-		if (node.retryOnFail === true) {
-			waitBetweenTries = Math.min(5000, Math.max(0, node.waitBetweenTries ?? 1000));
-		}
+		try {
+			// Execute the sub-node with the proxied context
+			const result = await nodeType.execute?.call(context as unknown as IExecuteFunctions);
 
-		let lastError: NodeOperationError | undefined;
+			// Process and map the results
+			const mappedResults = result?.[0]?.flatMap((item) => item.json);
+			let response: string | typeof mappedResults = mappedResults;
 
-		for (let tryIndex = 0; tryIndex < maxTries; tryIndex++) {
-			// Increment the runIndex for the next invocation
-			const localRunIndex = runIndex++;
-			const context = contextFactory(localRunIndex);
-
-			// Get abort signal from context for cancellation support
-			const abortSignal = context.getExecutionCancelSignal?.();
-
-			// Check if execution was cancelled before retry
-			if (abortSignal?.aborted) {
-				return 'Error during node execution: Execution was cancelled';
-			}
-
-			if (tryIndex !== 0) {
-				// Reset error from previous attempt
-				lastError = undefined;
-				if (waitBetweenTries !== 0) {
-					try {
-						await sleepWithAbort(waitBetweenTries, abortSignal);
-					} catch (abortError) {
-						return 'Error during node execution: Execution was cancelled';
-					}
+			// Warn if any (unusable) binary data was returned
+			if (result?.some((x) => x.some((y) => y.binary))) {
+				if (!mappedResults || mappedResults.flatMap((x) => Object.keys(x ?? {})).length === 0) {
+					response =
+						'Error: The Tool attempted to return binary data, which is not supported in Agents';
+				} else {
+					context.logger.warn(
+						`Response from Tool '${node.name}' included binary data, which is not supported in Agents. The binary data was omitted from the response.`,
+					);
 				}
 			}
 
-			context.addInputData(NodeConnectionTypes.AiTool, [[{ json: toolArgs }]]);
+			// Add output data to the context
+			context.addOutputData(NodeConnectionTypes.AiTool, localRunIndex, [[{ json: { response } }]]);
 
-			try {
-				// Execute the sub-node with the proxied context
-				const result = await nodeType.execute?.call(context as unknown as IExecuteFunctions);
-
-				// Process and map the results
-				const mappedResults = result?.[0]?.flatMap((item) => item.json);
-				let response: string | typeof mappedResults = mappedResults;
-
-				// Warn if any (unusable) binary data was returned
-				if (result?.some((x) => x.some((y) => y.binary))) {
-					if (!mappedResults || mappedResults.flatMap((x) => Object.keys(x ?? {})).length === 0) {
-						response =
-							'Error: The Tool attempted to return binary data, which is not supported in Agents';
-					} else {
-						context.logger.warn(
-							`Response from Tool '${node.name}' included binary data, which is not supported in Agents. The binary data was omitted from the response.`,
-						);
-					}
-				}
-
-				// Add output data to the context
-				context.addOutputData(NodeConnectionTypes.AiTool, localRunIndex, [
-					[{ json: { response } }],
-				]);
-
-				// Return the stringified results
-				return JSON.stringify(response);
-			} catch (error) {
-				// Check if error is due to cancellation
-				if (abortSignal?.aborted) {
-					return 'Error during node execution: Execution was cancelled';
-				}
-
-				const nodeError = new NodeOperationError(node, error as Error);
-				context.addOutputData(NodeConnectionTypes.AiTool, localRunIndex, nodeError);
-
-				lastError = nodeError;
-
-				// If this is the last attempt, throw the error
-				if (tryIndex === maxTries - 1) {
-					return 'Error during node execution: ' + (nodeError.description ?? nodeError.message);
-				}
-			}
+			// Return the stringified results
+			return JSON.stringify(response);
+		} catch (error) {
+			const nodeError = new NodeOperationError(node, error as Error);
+			context.addOutputData(NodeConnectionTypes.AiTool, localRunIndex, nodeError);
+			return 'Error during node execution: ' + (nodeError.description ?? nodeError.message);
 		}
-
-		return 'Error during node execution : ' + (lastError?.description ?? lastError?.message);
 	};
-}
-
-function validateInputConfiguration(
-	context: ExecuteContext | WebhookContext | SupplyDataContext,
-	connectionType: NodeConnectionType,
-	nodeInputs: INodeInputConfiguration[],
-	connectedNodes: INode[],
-) {
-	const parentNode = context.getNode();
-
-	const connections = context.getConnections(parentNode, connectionType);
-
-	// Validate missing required connections
-	for (let index = 0; index < nodeInputs.length; index++) {
-		const inputConfiguration = nodeInputs[index];
-
-		if (inputConfiguration.required) {
-			// For required inputs, we need at least one enabled connected node
-			if (
-				connections.length === 0 ||
-				connections.length <= index ||
-				connections.at(index)?.length === 0 ||
-				!connectedNodes.find((node) =>
-					connections
-						.at(index)
-						?.map((value) => value.node)
-						.includes(node.name),
-				)
-			) {
-				throw new NodeOperationError(
-					parentNode,
-					`A ${inputConfiguration?.displayName ?? connectionType} sub-node must be connected and enabled`,
-				);
-			}
-		}
-	}
 }
 
 export async function getInputConnectionData(
@@ -191,37 +101,32 @@ export async function getInputConnectionData(
 	abortSignal?: AbortSignal,
 ): Promise<unknown> {
 	const parentNode = this.getNode();
-	const inputConfigurations = this.nodeInputs.filter((input) => input.type === connectionType);
 
-	if (inputConfigurations === undefined || inputConfigurations.length === 0) {
-		throw new UserError('Node does not have input of type', {
+	const inputConfiguration = this.nodeInputs.find((input) => input.type === connectionType);
+	if (inputConfiguration === undefined) {
+		throw new ApplicationError('Node does not have input of type', {
 			extra: { nodeName: parentNode.name, connectionType },
 		});
 	}
 
-	const maxConnections = inputConfigurations.reduce(
-		(acc, currentItem) =>
-			currentItem.maxConnections !== undefined ? acc + currentItem.maxConnections : acc,
-		0,
-	);
-
 	const connectedNodes = this.getConnectedNodes(connectionType);
-	validateInputConfiguration(this, connectionType, inputConfigurations, connectedNodes);
-
-	// Nothing is connected or required
 	if (connectedNodes.length === 0) {
-		return maxConnections === 1 ? undefined : [];
+		if (inputConfiguration.required) {
+			throw new NodeOperationError(
+				parentNode,
+				`A ${inputConfiguration?.displayName ?? connectionType} sub-node must be connected and enabled`,
+			);
+		}
+		return inputConfiguration.maxConnections === 1 ? undefined : [];
 	}
 
-	// Too many connections
 	if (
-		maxConnections !== undefined &&
-		maxConnections !== 0 &&
-		connectedNodes.length > maxConnections
+		inputConfiguration.maxConnections !== undefined &&
+		connectedNodes.length > inputConfiguration.maxConnections
 	) {
 		throw new NodeOperationError(
 			parentNode,
-			`Only ${maxConnections} ${connectionType} sub-nodes are/is allowed to be connected`,
+			`Only ${inputConfiguration.maxConnections} ${connectionType} sub-nodes are/is allowed to be connected`,
 		);
 	}
 
@@ -309,5 +214,7 @@ export async function getInputConnectionData(
 		}
 	}
 
-	return maxConnections === 1 ? (nodes || [])[0]?.response : nodes.map((node) => node.response);
+	return inputConfiguration.maxConnections === 1
+		? (nodes || [])[0]?.response
+		: nodes.map((node) => node.response);
 }

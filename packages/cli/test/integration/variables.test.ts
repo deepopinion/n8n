@@ -1,4 +1,3 @@
-import { testDb } from '@n8n/backend-test-utils';
 import type { Variables } from '@n8n/db';
 import { Container } from '@n8n/di';
 
@@ -6,6 +5,7 @@ import { CacheService } from '@/services/cache/cache.service';
 import { createVariable, getVariableById, getVariableByKey } from '@test-integration/db/variables';
 
 import { createOwner, createUser } from './shared/db/users';
+import * as testDb from './shared/test-db';
 import type { SuperAgentTest } from './shared/types';
 import * as utils from './shared/utils/';
 

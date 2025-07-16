@@ -1,11 +1,9 @@
-import { testDb } from '@n8n/backend-test-utils';
-import type { Project, User } from '@n8n/db';
-import {
-	CredentialsRepository,
-	ProjectRepository,
-	SharedCredentialsRepository,
-	UserRepository,
-} from '@n8n/db';
+import type { Project } from '@n8n/db';
+import type { User } from '@n8n/db';
+import { CredentialsRepository } from '@n8n/db';
+import { ProjectRepository } from '@n8n/db';
+import { SharedCredentialsRepository } from '@n8n/db';
+import { UserRepository } from '@n8n/db';
 import { Container } from '@n8n/di';
 import { randomUUID } from 'crypto';
 import { mock } from 'jest-mock-extended';
@@ -15,6 +13,7 @@ import { FREE_AI_CREDITS_CREDENTIAL_NAME } from '@/constants';
 import { AiService } from '@/services/ai.service';
 
 import { createOwner } from '../shared/db/users';
+import * as testDb from '../shared/test-db';
 import type { SuperAgentTest } from '../shared/types';
 import { setupTestServer } from '../shared/utils';
 

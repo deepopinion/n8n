@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import type { N8nPromptResponse } from '@n8n/rest-api-client/api/prompts';
-import type { ModalKey } from '@/Interface';
+import type { IN8nPromptResponse, ModalKey } from '@/Interface';
 import { VALID_EMAIL_REGEX } from '@/constants';
 import Modal from '@/components/Modal.vue';
+import { useSettingsStore } from '@/stores/settings.store';
 import { useRootStore } from '@n8n/stores/useRootStore';
-import { useUsersStore } from '@/stores/users.store';
 import { createEventBus } from '@n8n/utils/event-bus';
 import { useToast } from '@/composables/useToast';
 import { useNpsSurveyStore } from '@/stores/npsSurvey.store';
@@ -20,7 +19,7 @@ const modalBus = createEventBus();
 
 const npsSurveyStore = useNpsSurveyStore();
 const rootStore = useRootStore();
-const usersStore = useUsersStore();
+const settingsStore = useSettingsStore();
 
 const toast = useToast();
 const telemetry = useTelemetry();
@@ -56,7 +55,7 @@ const closeDialog = () => {
 
 const send = async () => {
 	if (isEmailValid.value) {
-		const response = (await usersStore.submitContactInfo(email.value)) as N8nPromptResponse;
+		const response = (await settingsStore.submitContactInfo(email.value)) as IN8nPromptResponse;
 
 		if (response.updated) {
 			telemetry.track('User closed email modal', {

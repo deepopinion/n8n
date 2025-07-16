@@ -48,7 +48,7 @@ export class GoogleSheet {
 	constructor(
 		spreadsheetId: string,
 		executeFunctions: IExecuteFunctions | ILoadOptionsFunctions,
-		options?: ISheetOptions,
+		options?: ISheetOptions | undefined,
 	) {
 		// options = <SheetOptions>options || {};
 		if (!options) {

@@ -11,26 +11,15 @@ export const useCanvasStore = defineStore('canvas', () => {
 	const newNodeInsertPosition = ref<XYPosition | null>(null);
 	const nodes = computed<INodeUi[]>(() => workflowStore.allNodes);
 	const aiNodes = computed<INodeUi[]>(() =>
-		nodes.value.filter(
-			(node) =>
-				node.type.includes('langchain') ||
-				(node.type === 'n8n-nodes-base.evaluation' && node.parameters?.operation === 'setMetrics'),
-		),
+		nodes.value.filter((node) => node.type.includes('langchain')),
 	);
-	const hasRangeSelection = ref(false);
-
-	function setHasRangeSelection(value: boolean) {
-		hasRangeSelection.value = value;
-	}
 
 	return {
 		newNodeInsertPosition,
 		isLoading: loadingService.isLoading,
 		aiNodes,
-		hasRangeSelection: computed(() => hasRangeSelection.value),
 		startLoading: loadingService.startLoading,
 		setLoadingText: loadingService.setLoadingText,
 		stopLoading: loadingService.stopLoading,
-		setHasRangeSelection,
 	};
 });

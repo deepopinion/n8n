@@ -5,7 +5,6 @@ import type {
 	IUpdateInformation,
 	ActionCreateElement,
 	NodeCreateElement,
-	NodeTypeSelectedPayload,
 } from '@/Interface';
 import {
 	HTTP_REQUEST_NODE_TYPE,
@@ -24,9 +23,9 @@ import { useViewStacks } from '../composables/useViewStacks';
 
 import ItemsRenderer from '../Renderers/ItemsRenderer.vue';
 import CategorizedItemsRenderer from '../Renderers/CategorizedItemsRenderer.vue';
-import type { IDataObject } from 'n8n-workflow';
+import { type IDataObject } from 'n8n-workflow';
 import { useTelemetry } from '@/composables/useTelemetry';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useNodeCreatorStore } from '@/stores/nodeCreator.store';
 import OrderSwitcher from './../OrderSwitcher.vue';
 import { isNodePreviewKey } from '../utils';
@@ -35,7 +34,7 @@ import CommunityNodeInfo from '../Panel/CommunityNodeInfo.vue';
 import CommunityNodeFooter from '../Panel/CommunityNodeFooter.vue';
 
 const emit = defineEmits<{
-	nodeTypeSelected: [value: NodeTypeSelectedPayload[]];
+	nodeTypeSelected: [value: [actionKey: string, nodeName: string] | [nodeName: string]];
 }>();
 const telemetry = useTelemetry();
 const i18n = useI18n();
@@ -46,7 +45,6 @@ const { registerKeyHook } = useKeyboardNavigation();
 const {
 	setAddedNodeActionParameters,
 	getActionData,
-	actionDataToNodeTypeSelectedPayload,
 	getPlaceholderTriggerActions,
 	parseCategoryActions,
 	actionsCategoryLocales,
@@ -168,18 +166,17 @@ function onSelected(actionCreateElement: INodeCreateElement) {
 
 	if (isPlaceholderTriggerAction && isTriggerRootView.value) {
 		const actionNode = actions.value[0]?.key;
-		if (actionNode) emit('nodeTypeSelected', [{ type: actionData.key }, { type: actionNode }]);
+		if (actionNode) emit('nodeTypeSelected', [actionData.key as string, actionNode]);
 	} else if (
 		actionData?.key === OPEN_AI_NODE_TYPE &&
 		(actionData?.value as IDataObject)?.resource === 'assistant' &&
 		(actionData?.value as IDataObject)?.operation === 'message'
 	) {
-		emit('nodeTypeSelected', [{ type: OPEN_AI_NODE_MESSAGE_ASSISTANT_TYPE }]);
+		emit('nodeTypeSelected', [OPEN_AI_NODE_MESSAGE_ASSISTANT_TYPE]);
 	} else if (isNodePreviewKey(actionData?.key)) {
 		return;
 	} else {
-		const payload = actionDataToNodeTypeSelectedPayload(actionData);
-		emit('nodeTypeSelected', [payload]);
+		emit('nodeTypeSelected', [actionData.key as string]);
 	}
 
 	if (telemetry) setAddedNodeActionParameters(actionData, telemetry, rootView.value);
@@ -220,7 +217,7 @@ function addHttpNode() {
 		},
 	} as IUpdateInformation;
 
-	emit('nodeTypeSelected', [{ type: HTTP_REQUEST_NODE_TYPE }]);
+	emit('nodeTypeSelected', [HTTP_REQUEST_NODE_TYPE]);
 	if (telemetry) setAddedNodeActionParameters(updateData);
 
 	const app_identifier = actions.value[0]?.key;
@@ -337,8 +334,8 @@ onMounted(() => {
 			/>
 		</div>
 		<CommunityNodeFooter
-			v-if="communityNodeDetails"
 			:class="$style.communityNodeFooter"
+			v-if="communityNodeDetails"
 			:package-name="communityNodeDetails.packageName"
 			:show-manage="communityNodeDetails.installed && isInstanceOwner"
 		/>

@@ -7,12 +7,9 @@ import { useWorkflowsStore } from '@/stores/workflows.store';
 import { PLACEHOLDER_EMPTY_WORKFLOW_ID, WORKFLOW_SETTINGS_MODAL_KEY } from '@/constants';
 import type { IWorkflowSettings } from 'n8n-workflow';
 import { deepCopy } from 'n8n-workflow';
+import { useWorkflowHelpers } from '@/composables/useWorkflowHelpers';
 import { useNpsSurveyStore } from '@/stores/npsSurvey.store';
-import { useI18n } from '@n8n/i18n';
-import { useWorkflowSaving } from '@/composables/useWorkflowSaving';
-import type { IconColor } from '@n8n/design-system';
-import { type IAccordionItem } from '@n8n/design-system/components/N8nInfoAccordion/InfoAccordion.vue';
-import { type IconName } from '@n8n/design-system/components/N8nIcon/icons';
+import { useI18n } from '@/composables/useI18n';
 
 interface IWorkflowSaveSettings {
 	saveFailedExecutions: boolean;
@@ -31,7 +28,7 @@ const props = withDefaults(
 
 const i18n = useI18n();
 const router = useRouter();
-const workflowSaving = useWorkflowSaving({ router });
+const workflowHelpers = useWorkflowHelpers({ router });
 const locale = useI18n();
 
 const settingsStore = useSettingsStore();
@@ -50,7 +47,7 @@ const workflowSaveSettings = ref({
 	saveTestExecutions: false,
 } as IWorkflowSaveSettings);
 
-const accordionItems = computed((): IAccordionItem[] => [
+const accordionItems = computed(() => [
 	{
 		id: 'productionExecutions',
 		label: locale.baseText('executionsLandingPage.emptyState.accordion.productionExecutions'),
@@ -66,7 +63,7 @@ const accordionItems = computed((): IAccordionItem[] => [
 	{
 		id: 'manualExecutions',
 		label: locale.baseText('executionsLandingPage.emptyState.accordion.testExecutions'),
-		icon: workflowSaveSettings.value.saveTestExecutions ? 'check' : 'x',
+		icon: workflowSaveSettings.value.saveTestExecutions ? 'check' : 'times',
 		iconColor: workflowSaveSettings.value.saveTestExecutions ? 'success' : 'danger',
 	},
 ]);
@@ -80,13 +77,13 @@ const shouldExpandAccordion = computed(() => {
 		!workflowSaveSettings.value.saveTestExecutions
 	);
 });
-const productionExecutionsIcon = computed((): { color: IconColor; icon: IconName } => {
+const productionExecutionsIcon = computed(() => {
 	if (productionExecutionsStatus.value === 'saving') {
 		return { icon: 'check', color: 'success' };
 	} else if (productionExecutionsStatus.value === 'not-saving') {
-		return { icon: 'x', color: 'danger' };
+		return { icon: 'times', color: 'danger' };
 	}
-	return { icon: 'triangle-alert', color: 'warning' };
+	return { icon: 'exclamation-triangle', color: 'warning' };
 });
 const productionExecutionsStatus = computed(() => {
 	if (
@@ -102,14 +99,14 @@ const productionExecutionsStatus = computed(() => {
 	}
 });
 const workflowSettings = computed(() => deepCopy(workflowsStore.workflowSettings));
-const accordionIcon = computed((): { color: IconColor; icon: IconName } | undefined => {
+const accordionIcon = computed(() => {
 	if (
 		!workflowSaveSettings.value.saveTestExecutions ||
 		productionExecutionsStatus.value !== 'saving'
 	) {
-		return { icon: 'triangle-alert', color: 'warning' };
+		return { icon: 'exclamation-triangle', color: 'warning' };
 	}
-	return undefined;
+	return null;
 });
 const currentWorkflowId = computed(() => workflowsStore.workflowId);
 const isNewWorkflow = computed(() => {
@@ -180,7 +177,7 @@ async function onSaveWorkflowClick(): Promise<void> {
 	if (!currentId) {
 		return;
 	}
-	const saved = await workflowSaving.saveCurrentWorkflow({
+	const saved = await workflowHelpers.saveCurrentWorkflow({
 		id: currentId,
 		name: workflowName.value,
 		tags: currentWorkflowTagIds.value,

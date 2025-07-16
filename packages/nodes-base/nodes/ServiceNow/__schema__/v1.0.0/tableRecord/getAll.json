@@ -1,6 +1,9 @@
 {
     "type": "object",
     "properties": {
+        "number": {
+            "type": "string"
+        },
         "state": {
             "type": "string"
         },
@@ -26,5 +29,5 @@
             "type": "string"
         }
     },
-    "version": 4
+    "version": 3
 }

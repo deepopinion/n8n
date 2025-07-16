@@ -1,9 +1,7 @@
-import { Logger } from '@n8n/backend-common';
 import { ExecutionRepository } from '@n8n/db';
-import { LifecycleMetadata } from '@n8n/decorators';
-import { Container, Service } from '@n8n/di';
+import { Container } from '@n8n/di';
 import { stringify } from 'flatted';
-import { ErrorReporter, InstanceSettings, ExecutionLifecycleHooks } from 'n8n-core';
+import { ErrorReporter, Logger, InstanceSettings, ExecutionLifecycleHooks } from 'n8n-core';
 import type {
 	IWorkflowBase,
 	WorkflowExecuteMode,
@@ -12,12 +10,12 @@ import type {
 
 import { EventService } from '@/events/event.service';
 import { ExternalHooks } from '@/external-hooks';
+import { ModuleRegistry } from '@/modules/module-registry';
 import { Push } from '@/push';
 import { WorkflowStatisticsService } from '@/services/workflow-statistics.service';
 import { isWorkflowIdValid } from '@/utils';
 import { WorkflowStaticDataService } from '@/workflows/workflow-static-data.service';
 
-// eslint-disable-next-line import-x/no-cycle
 import { executeErrorWorkflow } from './execute-error-workflow';
 import { restoreBinaryDataId } from './restore-binary-data-id';
 import { saveExecutionProgress } from './save-execution-progress';
@@ -27,72 +25,6 @@ import {
 	updateExistingExecution,
 } from './shared/shared-hook-functions';
 import { type ExecutionSaveSettings, toSaveSettings } from './to-save-settings';
-
-@Service()
-class ModulesHooksRegistry {
-	addHooks(hooks: ExecutionLifecycleHooks) {
-		const handlers = Container.get(LifecycleMetadata).getHandlers();
-
-		for (const { handlerClass, methodName, eventName } of handlers) {
-			const instance = Container.get(handlerClass);
-
-			switch (eventName) {
-				case 'workflowExecuteAfter':
-					hooks.addHandler(eventName, async function (runData, newStaticData) {
-						const context = {
-							type: 'workflowExecuteAfter',
-							workflow: this.workflowData,
-							runData,
-							newStaticData,
-						};
-						// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-						return await instance[methodName].call(instance, context);
-					});
-					break;
-
-				case 'nodeExecuteBefore':
-					hooks.addHandler(eventName, async function (nodeName, taskData) {
-						const context = {
-							type: 'nodeExecuteBefore',
-							workflow: this.workflowData,
-							nodeName,
-							taskData,
-						};
-						// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-						return await instance[methodName].call(instance, context);
-					});
-					break;
-
-				case 'nodeExecuteAfter':
-					hooks.addHandler(eventName, async function (nodeName, taskData, executionData) {
-						const context = {
-							type: 'nodeExecuteAfter',
-							workflow: this.workflowData,
-							nodeName,
-							taskData,
-							executionData,
-						};
-						// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-						return await instance[methodName].call(instance, context);
-					});
-					break;
-
-				case 'workflowExecuteBefore':
-					hooks.addHandler(eventName, async function (workflowInstance, executionData) {
-						const context = {
-							type: 'workflowExecuteBefore',
-							workflow: this.workflowData,
-							workflowInstance,
-							executionData,
-						};
-						// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-						return await instance[methodName].call(instance, context);
-					});
-					break;
-			}
-		}
-	}
-}
 
 type HooksSetupParameters = {
 	saveSettings: ExecutionSaveSettings;
@@ -110,15 +42,6 @@ function hookFunctionsWorkflowEvents(hooks: ExecutionLifecycleHooks, userId?: st
 		if (runData.status === 'waiting') return;
 
 		const { executionId, workflowData: workflow } = this;
-
-		if (runData.data.startData) {
-			const originalDestination = runData.data.startData.originalDestinationNode;
-			if (originalDestination) {
-				runData.data.startData.destinationNode = originalDestination;
-				runData.data.startData.originalDestinationNode = undefined;
-			}
-		}
-
 		eventService.emit('workflow-post-execute', { executionId, runData, workflow, userId });
 	});
 }
@@ -127,27 +50,11 @@ function hookFunctionsNodeEvents(hooks: ExecutionLifecycleHooks) {
 	const eventService = Container.get(EventService);
 	hooks.addHandler('nodeExecuteBefore', function (nodeName) {
 		const { executionId, workflowData: workflow } = this;
-		const node = workflow.nodes.find((n) => n.name === nodeName);
-
-		eventService.emit('node-pre-execute', {
-			executionId,
-			workflow,
-			nodeId: node?.id,
-			nodeName,
-			nodeType: node?.type,
-		});
+		eventService.emit('node-pre-execute', { executionId, workflow, nodeName });
 	});
 	hooks.addHandler('nodeExecuteAfter', function (nodeName) {
 		const { executionId, workflowData: workflow } = this;
-		const node = workflow.nodes.find((n) => n.name === nodeName);
-
-		eventService.emit('node-post-execute', {
-			executionId,
-			workflow,
-			nodeId: node?.id,
-			nodeName,
-			nodeType: node?.type,
-		});
+		eventService.emit('node-post-execute', { executionId, workflow, nodeName });
 	});
 }
 
@@ -491,7 +398,7 @@ export function getLifecycleHooksForScalingWorker(
 		hookFunctionsPush(hooks, optionalParameters);
 	}
 
-	Container.get(ModulesHooksRegistry).addHooks(hooks);
+	Container.get(ModuleRegistry).registerLifecycleHooks(hooks);
 
 	return hooks;
 }
@@ -553,7 +460,7 @@ export function getLifecycleHooksForScalingMain(
 	hooks.handlers.nodeExecuteBefore = [];
 	hooks.handlers.nodeExecuteAfter = [];
 
-	Container.get(ModulesHooksRegistry).addHooks(hooks);
+	Container.get(ModuleRegistry).registerLifecycleHooks(hooks);
 
 	return hooks;
 }
@@ -577,6 +484,6 @@ export function getLifecycleHooksForRegularMain(
 	hookFunctionsSaveProgress(hooks, optionalParameters);
 	hookFunctionsStatistics(hooks);
 	hookFunctionsExternalHooks(hooks);
-	Container.get(ModulesHooksRegistry).addHooks(hooks);
+	Container.get(ModuleRegistry).registerLifecycleHooks(hooks);
 	return hooks;
 }

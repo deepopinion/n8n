@@ -1,4 +1,3 @@
-import { mockInstance } from '@n8n/backend-test-utils';
 import { GlobalConfig } from '@n8n/config';
 import { sleep } from 'n8n-workflow';
 
@@ -6,6 +5,7 @@ import config from '@/config';
 import { CacheService } from '@/services/cache/cache.service';
 import { retryUntil } from '@test-integration/retry-until';
 
+import { mockInstance } from '../../../../../test/shared/mocking';
 import { TaskBrokerAuthService } from '../task-broker-auth.service';
 
 describe('TaskBrokerAuthService', () => {

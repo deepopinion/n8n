@@ -3,10 +3,9 @@ import { computed } from 'vue';
 import TitledList from '@/components/TitledList.vue';
 import { useNodeHelpers } from '@/composables/useNodeHelpers';
 import { useCanvasNode } from '@/composables/useCanvasNode';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { CanvasNodeDirtiness, CanvasNodeRenderType } from '@/types';
 import { N8nTooltip } from '@n8n/design-system';
-import { useCanvas } from '@/composables/useCanvas';
 
 const nodeHelpers = useNodeHelpers();
 const i18n = useI18n();
@@ -17,27 +16,17 @@ const {
 	hasIssues,
 	executionStatus,
 	executionWaiting,
-	executionWaitingForNext,
 	executionRunning,
 	hasRunData,
 	runDataIterations,
 	isDisabled,
 	render,
 } = useCanvasNode();
-const { isExecuting } = useCanvas();
 
 const hideNodeIssues = computed(() => false); // @TODO Implement this
 const dirtiness = computed(() =>
 	render.value.type === CanvasNodeRenderType.Default ? render.value.options.dirtiness : undefined,
 );
-
-const isNodeExecuting = computed(() => {
-	if (!isExecuting.value) return false;
-
-	return (
-		executionRunning.value || executionWaitingForNext.value || executionStatus.value === 'running' // eslint-disable-line @typescript-eslint/prefer-nullish-coalescing
-	);
-});
 </script>
 
 <template>
@@ -50,7 +39,7 @@ const isNodeExecuting = computed(() => {
 			<template #content>
 				<TitledList :title="`${i18n.baseText('node.issues')}:`" :items="issues" />
 			</template>
-			<N8nIcon icon="triangle-alert" />
+			<FontAwesomeIcon icon="exclamation-triangle" />
 		</N8nTooltip>
 	</div>
 	<div v-else-if="executionWaiting || executionStatus === 'waiting'">
@@ -59,29 +48,29 @@ const isNodeExecuting = computed(() => {
 				<template #content>
 					<div v-text="executionWaiting"></div>
 				</template>
-				<N8nIcon icon="clock" />
+				<FontAwesomeIcon icon="clock" />
 			</N8nTooltip>
 		</div>
 		<div :class="[$style.status, $style['node-waiting-spinner']]">
-			<N8nIcon icon="refresh-cw" spin />
+			<FontAwesomeIcon icon="sync-alt" spin />
 		</div>
 	</div>
 	<div v-else-if="executionStatus === 'unknown'">
 		<!-- Do nothing, unknown means the node never executed -->
 	</div>
 	<div
-		v-else-if="isNodeExecuting"
+		v-else-if="executionRunning || executionStatus === 'running'"
 		data-test-id="canvas-node-status-running"
 		:class="[$style.status, $style.running]"
 	>
-		<N8nIcon icon="refresh-cw" spin />
+		<FontAwesomeIcon icon="sync-alt" spin />
 	</div>
 	<div
 		v-else-if="hasPinnedData && !nodeHelpers.isProductionExecutionPreview.value && !isDisabled"
 		data-test-id="canvas-node-status-pinned"
 		:class="[$style.status, $style.pinnedData]"
 	>
-		<N8nIcon icon="pin" />
+		<FontAwesomeIcon icon="thumbtack" />
 	</div>
 	<div v-else-if="dirtiness !== undefined">
 		<N8nTooltip :show-after="500" placement="bottom">
@@ -95,7 +84,7 @@ const isNodeExecuting = computed(() => {
 				}}
 			</template>
 			<div data-test-id="canvas-node-status-warning" :class="[$style.status, $style.warning]">
-				<N8nIcon icon="triangle" />
+				<FontAwesomeIcon icon="triangle" />
 				<span v-if="runDataIterations > 1" :class="$style.count"> {{ runDataIterations }}</span>
 			</div>
 		</N8nTooltip>
@@ -105,7 +94,7 @@ const isNodeExecuting = computed(() => {
 		data-test-id="canvas-node-status-success"
 		:class="[$style.status, $style.runData]"
 	>
-		<N8nIcon icon="check" />
+		<FontAwesomeIcon icon="check" />
 		<span v-if="runDataIterations > 1" :class="$style.count"> {{ runDataIterations }}</span>
 	</div>
 </template>

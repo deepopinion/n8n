@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { ElDropdown, ElDropdownItem, ElDropdownMenu } from 'element-plus';
 import { computed } from 'vue';
 
 import type { IUser, UserStackGroups } from '@n8n/design-system/types';
@@ -10,7 +9,7 @@ import N8nUserInfo from '../N8nUserInfo';
 const props = withDefaults(
 	defineProps<{
 		users: UserStackGroups;
-		currentUserEmail?: string | null;
+		currentUserEmail?: string;
 		maxAvatars?: number;
 		dropdownTrigger?: 'hover' | 'click';
 	}>(),
@@ -64,7 +63,7 @@ const menuHeight = computed(() => {
 
 <template>
 	<div class="user-stack" data-test-id="user-stack-container">
-		<ElDropdown
+		<el-dropdown
 			:trigger="$props.dropdownTrigger"
 			:max-height="menuHeight"
 			popper-class="user-stack-popper"
@@ -82,14 +81,14 @@ const menuHeight = computed(() => {
 				<div v-if="hiddenUsersCount > 0" :class="$style.hiddenBadge">+{{ hiddenUsersCount }}</div>
 			</div>
 			<template #dropdown>
-				<ElDropdownMenu class="user-stack-list" data-test-id="user-stack-list">
+				<el-dropdown-menu class="user-stack-list" data-test-id="user-stack-list">
 					<div v-for="(groupUsers, index) in nonEmptyGroups" :key="index">
 						<div :class="$style.groupContainer">
-							<ElDropdownItem>
+							<el-dropdown-item>
 								<header v-if="groupCount > 1" :class="$style.groupName">{{ index }}</header>
-							</ElDropdownItem>
+							</el-dropdown-item>
 							<div :class="$style.groupUsers">
-								<ElDropdownItem
+								<el-dropdown-item
 									v-for="user in groupUsers"
 									:key="user.id"
 									:data-test-id="`user-stack-info-${user.id}`"
@@ -99,13 +98,13 @@ const menuHeight = computed(() => {
 										v-bind="user"
 										:is-current-user="user.email === props.currentUserEmail"
 									/>
-								</ElDropdownItem>
+								</el-dropdown-item>
 							</div>
 						</div>
 					</div>
-				</ElDropdownMenu>
+				</el-dropdown-menu>
 			</template>
-		</ElDropdown>
+		</el-dropdown>
 	</div>
 </template>
 

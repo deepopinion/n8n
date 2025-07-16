@@ -1,9 +1,12 @@
-import { createManyWorkflows, testDb } from '@n8n/backend-test-utils';
-import { StatisticsNames, LicenseMetricsRepository, WorkflowStatisticsRepository } from '@n8n/db';
+import { StatisticsNames } from '@n8n/db';
+import { LicenseMetricsRepository } from '@n8n/db';
+import { WorkflowStatisticsRepository } from '@n8n/db';
 import { Container } from '@n8n/di';
 
 import { createManyCredentials } from './shared/db/credentials';
 import { createAdmin, createMember, createOwner, createUser } from './shared/db/users';
+import { createManyWorkflows } from './shared/db/workflows';
+import * as testDb from './shared/test-db';
 
 describe('LicenseMetricsRepository', () => {
 	let licenseMetricsRepository: LicenseMetricsRepository;
@@ -80,7 +83,6 @@ describe('LicenseMetricsRepository', () => {
 				productionExecutions: 3,
 				productionRootExecutions: 3,
 				manualExecutions: 2,
-				evaluations: 0,
 			});
 		});
 
@@ -98,7 +100,6 @@ describe('LicenseMetricsRepository', () => {
 				productionExecutions: 0, // not NaN
 				productionRootExecutions: 0, // not NaN
 				manualExecutions: 0, // not NaN
-				evaluations: 0,
 			});
 		});
 	});

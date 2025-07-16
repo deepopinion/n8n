@@ -5,12 +5,7 @@ import { Response } from 'express';
 import omit from 'lodash/omit';
 import set from 'lodash/set';
 import split from 'lodash/split';
-import {
-	ensureError,
-	type ICredentialDataDecryptedObject,
-	jsonParse,
-	jsonStringify,
-} from 'n8n-workflow';
+import { type ICredentialDataDecryptedObject, jsonParse, jsonStringify } from 'n8n-workflow';
 import pkceChallenge from 'pkce-challenge';
 import * as qs from 'querystring';
 
@@ -154,11 +149,11 @@ export class OAuth2CredentialController extends AbstractOAuthController {
 			});
 
 			return res.render('oauth-callback');
-		} catch (e) {
-			const error = ensureError(e);
+		} catch (error) {
 			return this.renderCallbackError(
 				res,
-				error.message,
+				(error as Error).message,
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 				'body' in error ? jsonStringify(error.body) : undefined,
 			);
 		}

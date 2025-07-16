@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import type { StoryObj } from '@storybook/vue3';
 import { onMounted } from 'vue';
 
@@ -24,7 +25,7 @@ const meta = {
 	tags: ['autodocs'],
 };
 
-// eslint-disable-next-line import-x/no-default-export
+// eslint-disable-next-line import/no-default-export
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -32,7 +33,6 @@ export const Fullscreen: Story = {
 	args: {
 		webhookUrl,
 		mode: 'fullscreen',
-		enableStreaming: false,
 	} satisfies Partial<ChatOptions>,
 };
 
@@ -40,7 +40,6 @@ export const Windowed: Story = {
 	args: {
 		webhookUrl,
 		mode: 'window',
-		enableStreaming: false,
 	} satisfies Partial<ChatOptions>,
 };
 
@@ -53,6 +52,5 @@ export const WorkflowChat: Story = {
 		allowFileUploads: true,
 		showWelcomeScreen: false,
 		initialMessages: [],
-		enableStreaming: false,
 	} satisfies Partial<ChatOptions>,
 };

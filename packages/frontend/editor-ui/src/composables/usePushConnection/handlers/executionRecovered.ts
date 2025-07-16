@@ -37,9 +37,9 @@ export async function executionRecovered(
 	if (execution.data?.waitTill !== undefined) {
 		handleExecutionFinishedWithWaitTill(options);
 	} else if (execution.status === 'error' || execution.status === 'canceled') {
-		handleExecutionFinishedWithErrorOrCanceled(execution, runExecutionData);
+		handleExecutionFinishedWithErrorOrCanceled(execution, runExecutionData, options);
 	} else {
-		handleExecutionFinishedWithOther(false);
+		handleExecutionFinishedWithOther(false, options);
 	}
 
 	setRunExecutionData(execution, runExecutionData);

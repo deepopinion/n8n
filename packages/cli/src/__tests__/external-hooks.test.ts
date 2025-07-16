@@ -1,13 +1,9 @@
-import type { Logger } from '@n8n/backend-common';
 import type { GlobalConfig } from '@n8n/config';
-import type {
-	WorkflowRepository,
-	CredentialsRepository,
-	SettingsRepository,
-	UserRepository,
-} from '@n8n/db';
+import type { WorkflowRepository } from '@n8n/db';
+import type { CredentialsRepository, SettingsRepository } from '@n8n/db';
+import type { UserRepository } from '@n8n/db';
 import { mock } from 'jest-mock-extended';
-import type { ErrorReporter } from 'n8n-core';
+import type { ErrorReporter, Logger } from 'n8n-core';
 import type { IWorkflowBase } from 'n8n-workflow';
 import { UnexpectedError } from 'n8n-workflow';
 
@@ -75,6 +71,7 @@ describe('ExternalHooks', () => {
 
 			await externalHooks.init();
 
+			// eslint-disable-next-line @typescript-eslint/dot-notation
 			expect(externalHooks['registered']['workflow.create']).toHaveLength(1);
 
 			await externalHooks.run('workflow.create', [workflowData]);
@@ -90,6 +87,7 @@ describe('ExternalHooks', () => {
 		});
 
 		it('should execute registered hooks', async () => {
+			// eslint-disable-next-line @typescript-eslint/dot-notation
 			externalHooks['registered']['workflow.create'] = [hookFn];
 
 			await externalHooks.run('workflow.create', [workflowData]);
@@ -109,7 +107,7 @@ describe('ExternalHooks', () => {
 		it('should report error if hook execution fails', async () => {
 			const error = new Error('Hook failed');
 			hookFn.mockRejectedValueOnce(error);
-
+			// eslint-disable-next-line @typescript-eslint/dot-notation
 			externalHooks['registered']['workflow.create'] = [hookFn];
 
 			await expect(externalHooks.run('workflow.create', [workflowData])).rejects.toThrow(error);

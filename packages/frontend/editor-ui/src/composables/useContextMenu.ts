@@ -8,10 +8,10 @@ import type { INode, INodeTypeDescription } from 'n8n-workflow';
 import { NodeHelpers } from 'n8n-workflow';
 import { computed, ref, watch } from 'vue';
 import { getMousePosition } from '../utils/nodeViewUtils';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from './useI18n';
 import { usePinnedData } from './usePinnedData';
 import { isPresent } from '../utils/typesUtils';
-import { getResourcePermissions } from '@n8n/permissions';
+import { getResourcePermissions } from '@/permissions';
 
 export type ContextMenuTarget =
 	| { source: 'canvas'; nodeIds: string[]; nodeId?: string }
@@ -34,8 +34,7 @@ export type ContextMenuAction =
 	| 'add_sticky'
 	| 'change_color'
 	| 'open_sub_workflow'
-	| 'tidy_up'
-	| 'extract_sub_workflow';
+	| 'tidy_up';
 
 const position = ref<XYPosition>([0, 0]);
 const isOpen = ref(false);
@@ -48,6 +47,7 @@ export const useContextMenu = (onAction: ContextMenuActionCallback = () => {}) =
 	const nodeTypesStore = useNodeTypesStore();
 	const workflowsStore = useWorkflowsStore();
 	const sourceControlStore = useSourceControlStore();
+
 	const i18n = useI18n();
 
 	const workflowPermissions = computed(
@@ -164,16 +164,6 @@ export const useContextMenu = (onAction: ContextMenuActionCallback = () => {}) =
 			},
 		];
 
-		const extractionActions: ActionDropdownItem[] = [
-			{
-				id: 'extract_sub_workflow',
-				divided: true,
-				label: i18n.baseText('contextMenu.extract', { adjustToNumber: nodes.length }),
-				shortcut: { altKey: true, keys: ['X'] },
-				disabled: isReadOnly.value,
-			},
-		];
-
 		const layoutActions: ActionDropdownItem[] = [
 			{
 				id: 'tidy_up',
@@ -232,7 +222,6 @@ export const useContextMenu = (onAction: ContextMenuActionCallback = () => {}) =
 					disabled: isReadOnly.value || !nodes.every(canDuplicateNode),
 				},
 				...layoutActions,
-				...extractionActions,
 				...selectionActions,
 				{
 					id: 'delete',

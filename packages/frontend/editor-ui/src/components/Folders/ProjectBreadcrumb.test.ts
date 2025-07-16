@@ -4,8 +4,7 @@ import ProjectBreadcrumb from './ProjectBreadcrumb.vue';
 import { ProjectTypes } from '@/types/projects.types';
 import type { Project } from '@vue-flow/core';
 
-vi.mock('@n8n/i18n', async (importOriginal) => ({
-	...(await importOriginal()),
+vi.mock('@/composables/useI18n', () => ({
 	useI18n: () => ({
 		baseText: vi.fn((key) => {
 			if (key === 'projects.menu.personal') return 'Personal';

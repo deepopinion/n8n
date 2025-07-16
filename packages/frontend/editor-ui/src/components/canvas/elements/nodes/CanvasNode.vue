@@ -32,10 +32,8 @@ import {
 } from '@/utils/canvasUtils';
 import type { EventBus } from '@n8n/utils/event-bus';
 import { createEventBus } from '@n8n/utils/event-bus';
-import isEqual from 'lodash/isEqual';
+import { isEqual } from 'lodash-es';
 import CanvasNodeTrigger from '@/components/canvas/elements/nodes/render-types/parts/CanvasNodeTrigger.vue';
-import { CONFIGURATION_NODE_OFFSET, GRID_SIZE } from '@/utils/nodeViewUtils';
-import { useExperimentalNdvStore } from '../../experimental/experimentalNdv.store';
 
 type Props = NodeProps<CanvasNodeData> & {
 	readOnly?: boolean;
@@ -73,9 +71,7 @@ const props = defineProps<Props>();
 
 const contextMenu = useContextMenu();
 
-const { connectingHandle, viewport } = useCanvas();
-
-const experimentalNdvStore = useExperimentalNdvStore();
+const { connectingHandle } = useCanvas();
 
 /*
   Toolbar slot classes
@@ -98,10 +94,6 @@ const {
 });
 
 const isDisabled = computed(() => props.data.disabled);
-
-const isExperimentalEmbeddedNdvShown = computed(() =>
-	experimentalNdvStore.isActive(viewport.value.zoom),
-);
 
 const classes = computed(() => ({
 	[style.canvasNode]: true,
@@ -191,12 +183,6 @@ const createEndpointMappingFn =
 			connectingHandle.value?.nodeId === props.id &&
 			connectingHandle.value?.handleType === handleType &&
 			connectingHandle.value?.handleId === handleId;
-		const offsetValue =
-			position === Position.Bottom
-				? `${GRID_SIZE * 2 * (1 + index * 2) + CONFIGURATION_NODE_OFFSET}px`
-				: isExperimentalEmbeddedNdvShown.value && endpoints.length === 1
-					? `${(1 + index) * (GRID_SIZE * 2)}px`
-					: `${(100 / (endpoints.length + 1)) * (index + 1)}%`;
 
 		return {
 			...endpoint,
@@ -205,7 +191,7 @@ const createEndpointMappingFn =
 			isConnecting,
 			position,
 			offset: {
-				[offsetAxis]: offsetValue,
+				[offsetAxis]: `${(100 / (endpoints.length + 1)) * (index + 1)}%`,
 			},
 		};
 	};

@@ -1,20 +1,10 @@
-import type { CredentialPayload } from '@n8n/backend-test-utils';
-import {
-	createTeamProject,
-	getProjectByNameOrFail,
-	createWorkflow,
-	randomName,
-	testDb,
-} from '@n8n/backend-test-utils';
 import type { TagEntity, Variables } from '@n8n/db';
-import {
-	ApiKeyRepository,
-	CredentialsRepository,
-	ProjectRepository,
-	TagRepository,
-	SharedCredentialsRepository,
-	SharedWorkflowRepository,
-} from '@n8n/db';
+import { ApiKeyRepository } from '@n8n/db';
+import { CredentialsRepository } from '@n8n/db';
+import { ProjectRepository } from '@n8n/db';
+import { TagRepository } from '@n8n/db';
+import { SharedCredentialsRepository } from '@n8n/db';
+import { SharedWorkflowRepository } from '@n8n/db';
 import { Container } from '@n8n/di';
 import { getOwnerOnlyApiKeyScopes } from '@n8n/permissions';
 import { randomString } from 'n8n-workflow';
@@ -22,6 +12,7 @@ import validator from 'validator';
 
 import { affixRoleToSaveCredential, createCredentials } from '@test-integration/db/credentials';
 import { createErrorExecution, createSuccessfulExecution } from '@test-integration/db/executions';
+import { createTeamProject, getProjectByNameOrFail } from '@test-integration/db/projects';
 import { createTag } from '@test-integration/db/tags';
 import {
 	createAdminWithApiKey,
@@ -32,9 +23,12 @@ import {
 	getUserById,
 } from '@test-integration/db/users';
 import { createVariable, getVariableByIdOrFail } from '@test-integration/db/variables';
-import type { SaveCredentialFunction } from '@test-integration/types';
+import { createWorkflow } from '@test-integration/db/workflows';
+import { randomName } from '@test-integration/random';
+import type { CredentialPayload, SaveCredentialFunction } from '@test-integration/types';
 import { setupTestServer } from '@test-integration/utils';
 
+import * as testDb from '../shared/test-db';
 import * as utils from '../shared/utils';
 
 let saveCredential: SaveCredentialFunction;
@@ -1069,7 +1063,6 @@ describe('Public API endpoints with feat:apiKeyScopes enabled', () => {
 						name: 'some-project',
 						icon: null,
 						type: 'team',
-						description: null,
 						id: expect.any(String),
 						createdAt: expect.any(String),
 						updatedAt: expect.any(String),

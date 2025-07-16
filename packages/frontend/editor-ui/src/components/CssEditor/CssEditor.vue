@@ -69,11 +69,7 @@ const extensions = computed(() => [
 	mappingDropCursor(),
 ]);
 
-const {
-	editor: editorRef,
-	readEditorValue,
-	focus,
-} = useExpressionEditor({
+const { editor: editorRef, readEditorValue } = useExpressionEditor({
 	editorRef: cssEditor,
 	editorValue,
 	extensions,
@@ -87,10 +83,6 @@ async function onDrop(value: string, event: MouseEvent) {
 
 	await dropInExpressionEditor(toRaw(editorRef.value), event, value);
 }
-
-defineExpose({
-	focus,
-});
 </script>
 
 <template>

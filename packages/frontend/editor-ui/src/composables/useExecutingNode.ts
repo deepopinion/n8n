@@ -14,11 +14,9 @@ import { ref } from 'vue';
  */
 export function useExecutingNode() {
 	const executingNode = ref<string[]>([]);
-	const lastAddedExecutingNode = ref<string | null>(null);
 
 	function addExecutingNode(nodeName: string) {
 		executingNode.value.push(nodeName);
-		lastAddedExecutingNode.value = nodeName;
 	}
 
 	function removeExecutingNode(nodeName: string) {
@@ -32,7 +30,6 @@ export function useExecutingNode() {
 
 	function clearNodeExecutionQueue() {
 		executingNode.value = [];
-		lastAddedExecutingNode.value = null;
 	}
 
 	function isNodeExecuting(nodeName: string): boolean {
@@ -41,7 +38,6 @@ export function useExecutingNode() {
 
 	return {
 		executingNode,
-		lastAddedExecutingNode,
 		addExecutingNode,
 		removeExecutingNode,
 		isNodeExecuting,

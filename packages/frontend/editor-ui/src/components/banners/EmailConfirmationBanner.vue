@@ -1,16 +1,15 @@
 <script lang="ts" setup>
 import BaseBanner from '@/components/banners/BaseBanner.vue';
 import { useToast } from '@/composables/useToast';
-import { i18n as locale } from '@n8n/i18n';
+import { i18n as locale } from '@/plugins/i18n';
 import { useUsersStore } from '@/stores/users.store';
 import { computed } from 'vue';
-import { useCloudPlanStore } from '@/stores/cloudPlan.store';
 
 const toast = useToast();
-const cloudPlanStore = useCloudPlanStore();
 
 const userEmail = computed(() => {
-	return cloudPlanStore.currentUserCloudInfo?.email ?? '';
+	const { currentUserCloudInfo } = useUsersStore();
+	return currentUserCloudInfo?.email ?? '';
 });
 
 async function onConfirmEmailClick() {
@@ -43,7 +42,7 @@ async function onConfirmEmailClick() {
 		<template #trailingContent>
 			<n8n-button
 				type="success"
-				icon="mail"
+				icon="envelope"
 				size="small"
 				data-test-id="confirm-email-button"
 				@click="onConfirmEmailClick"

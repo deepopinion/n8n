@@ -1,10 +1,8 @@
 import { defineStore } from 'pinia';
 import { TEMPLATES_URLS } from '@/constants';
 import { STORES } from '@n8n/stores';
-import type { INodeUi } from '@/Interface';
-import { useSettingsStore } from './settings.store';
-import * as templatesApi from '@n8n/rest-api-client/api/templates';
 import type {
+	INodeUi,
 	ITemplatesCategory,
 	ITemplatesCollection,
 	ITemplatesCollectionFull,
@@ -12,36 +10,14 @@ import type {
 	ITemplatesWorkflow,
 	ITemplatesWorkflowFull,
 	IWorkflowTemplate,
-} from '@n8n/rest-api-client/api/templates';
+} from '@/Interface';
+import { useSettingsStore } from './settings.store';
+import * as templatesApi from '@/api/templates';
 import { getNodesWithNormalizedPosition } from '@/utils/nodeViewUtils';
 import { useRootStore } from '@n8n/stores/useRootStore';
 import { useUsersStore } from './users.store';
 import { useWorkflowsStore } from './workflows.store';
 import { computed, ref } from 'vue';
-import { useCloudPlanStore } from '@/stores/cloudPlan.store';
-import { getTemplatePathByRole } from '@/utils/experiments';
-
-export interface ITemplateState {
-	categories: ITemplatesCategory[];
-	collections: { [id: string]: ITemplatesCollection };
-	workflows: { [id: string]: ITemplatesWorkflow | ITemplatesWorkflowFull };
-	workflowSearches: {
-		[search: string]: {
-			workflowIds: string[];
-			totalWorkflows: number;
-			loadingMore?: boolean;
-			categories?: ITemplatesCategory[];
-		};
-	};
-	collectionSearches: {
-		[search: string]: {
-			collectionIds: string[];
-		};
-	};
-	currentSessionId: string;
-	previousSessionId: string;
-	currentN8nPath: string;
-}
 
 const TEMPLATES_PAGE_SIZE = 20;
 
@@ -83,7 +59,6 @@ export const useTemplatesStore = defineStore(STORES.TEMPLATES, () => {
 	const settingsStore = useSettingsStore();
 	const rootStore = useRootStore();
 	const userStore = useUsersStore();
-	const cloudPlanStore = useCloudPlanStore();
 	const workflowsStore = useWorkflowsStore();
 
 	const allCategories = computed(() => {
@@ -147,7 +122,7 @@ export const useTemplatesStore = defineStore(STORES.TEMPLATES, () => {
 			const searchKey = getSearchKey(query);
 			const search = workflowSearches.value[searchKey];
 
-			return Boolean(search?.loadingMore);
+			return Boolean(search && search.loadingMore);
 		};
 	});
 
@@ -166,15 +141,6 @@ export const useTemplatesStore = defineStore(STORES.TEMPLATES, () => {
 		return settingsStore.templatesHost !== TEMPLATES_URLS.DEFAULT_API_HOST;
 	});
 
-	const userRole = computed(
-		() =>
-			cloudPlanStore.currentUserCloudInfo?.role ??
-			(userStore.currentUser?.personalizationAnswers &&
-			'role' in userStore.currentUser.personalizationAnswers
-				? userStore.currentUser.personalizationAnswers.role
-				: undefined),
-	);
-
 	const websiteTemplateRepositoryParameters = computed(() => {
 		const defaultParameters: Record<string, string> = {
 			...TEMPLATES_URLS.UTM_QUERY,
@@ -182,8 +148,15 @@ export const useTemplatesStore = defineStore(STORES.TEMPLATES, () => {
 			utm_n8n_version: rootStore.versionCli,
 			utm_awc: String(workflowsStore.activeWorkflows.length),
 		};
-		if (userRole.value) {
-			defaultParameters.utm_user_role = userRole.value;
+		const userRole: string | null | undefined =
+			userStore.currentUserCloudInfo?.role ??
+			(userStore.currentUser?.personalizationAnswers &&
+			'role' in userStore.currentUser.personalizationAnswers
+				? userStore.currentUser.personalizationAnswers.role
+				: undefined);
+
+		if (userRole) {
+			defaultParameters.utm_user_role = userRole;
 		}
 		return new URLSearchParams({
 			...defaultParameters,
@@ -192,7 +165,7 @@ export const useTemplatesStore = defineStore(STORES.TEMPLATES, () => {
 
 	const websiteTemplateRepositoryURL = computed(
 		() =>
-			`${TEMPLATES_URLS.BASE_WEBSITE_URL}${getTemplatePathByRole(userRole.value)}?${websiteTemplateRepositoryParameters.value.toString()}`,
+			`${TEMPLATES_URLS.BASE_WEBSITE_URL}?${websiteTemplateRepositoryParameters.value.toString()}`,
 	);
 
 	const constructTemplateRepositoryURL = (params: URLSearchParams): string => {

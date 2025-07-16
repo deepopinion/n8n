@@ -38,7 +38,7 @@ export async function googleApiRequest(
 	qs: IDataObject = {},
 	uri?: string,
 	noCredentials = false,
-	encoding?: null,
+	encoding?: null | undefined,
 ) {
 	const options: IRequestOptions = {
 		headers: {

@@ -1,32 +1,26 @@
 <script setup lang="ts">
 import { useClipboard } from '@/composables/useClipboard';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useToast } from '@/composables/useToast';
 import { type ParsedAiContent } from '@/utils/aiUtils';
 import { N8nIconButton } from '@n8n/design-system';
 import { type IDataObject } from 'n8n-workflow';
 import VueMarkdown from 'vue-markdown-render';
 import hljs from 'highlight.js/lib/core';
-import { computed } from 'vue';
-import { createSearchHighlightPlugin } from '@/components/RunDataAi/utils';
 
 const {
 	content,
 	compact = false,
 	renderType,
-	search,
 } = defineProps<{
 	content: ParsedAiContent;
 	compact?: boolean;
-	search?: string;
 	renderType: 'rendered' | 'json';
 }>();
 
 const i18n = useI18n();
 const clipboard = useClipboard();
 const { showMessage } = useToast();
-
-const vueMarkdownPlugins = computed(() => [createSearchHighlightPlugin(search)]);
 
 function isJsonString(text: string) {
 	try {
@@ -45,7 +39,7 @@ const markdownOptions = {
 			} catch {}
 		}
 
-		return undefined; // use external default escaping
+		return ''; // use external default escaping
 	},
 };
 
@@ -114,20 +108,17 @@ function onCopyToClipboard(object: IDataObject | IDataObject[]) {
 					:source="jsonToMarkdown(parsedContent.data as JsonMarkdown)"
 					:class="$style.markdown"
 					:options="markdownOptions"
-					:plugins="vueMarkdownPlugins"
 				/>
 				<VueMarkdown
 					v-else-if="parsedContent.type === 'markdown'"
 					:source="parsedContent.data"
 					:class="$style.markdown"
 					:options="markdownOptions"
-					:plugins="vueMarkdownPlugins"
 				/>
-				<TextWithHighlights
+				<p
 					v-else-if="parsedContent.type === 'text'"
 					:class="$style.runText"
-					:content="String(parsedContent.data)"
-					:search="search"
+					v-text="parsedContent.data"
 				/>
 			</template>
 			<!-- We weren't able to parse text or raw switch -->
@@ -137,14 +128,10 @@ function onCopyToClipboard(object: IDataObject | IDataObject[]) {
 					:class="$style.copyToClipboard"
 					type="secondary"
 					:title="i18n.baseText('nodeErrorView.copyToClipboard')"
-					icon="files"
+					icon="copy"
 					@click="onCopyToClipboard(raw)"
 				/>
-				<VueMarkdown
-					:source="jsonToMarkdown(raw as JsonMarkdown)"
-					:class="$style.markdown"
-					:plugins="vueMarkdownPlugins"
-				/>
+				<VueMarkdown :source="jsonToMarkdown(raw as JsonMarkdown)" :class="$style.markdown" />
 			</div>
 		</div>
 	</div>
@@ -188,12 +175,6 @@ function onCopyToClipboard(object: IDataObject | IDataObject[]) {
 				font-size: var(--font-size-xs);
 			}
 		}
-
-		p {
-			.compact & {
-				line-height: var(--font-line-height-xloose);
-			}
-		}
 	}
 }
 
@@ -221,7 +202,7 @@ function onCopyToClipboard(object: IDataObject | IDataObject[]) {
 	.compact & {
 		padding-top: 0;
 		padding-inline: var(--spacing-2xs);
-		font-size: var(--font-size-2xs);
+		font-size: var(--font-size-xs);
 	}
 }
 </style>

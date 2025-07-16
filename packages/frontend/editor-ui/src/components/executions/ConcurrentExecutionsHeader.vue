@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
+import { WORKFLOW_EVALUATION_EXPERIMENT } from '@/constants';
+import { usePostHog } from '@/stores/posthog.store';
 
 const props = defineProps<{
 	runningExecutionsCount: number;
@@ -14,6 +16,8 @@ const emit = defineEmits<{
 
 const i18n = useI18n();
 
+const posthogStore = usePostHog();
+
 const tooltipText = computed(() => {
 	let text = i18n.baseText('executionsList.activeExecutions.tooltip', {
 		interpolate: {
@@ -22,7 +26,9 @@ const tooltipText = computed(() => {
 		},
 	});
 
-	text += '\n' + i18n.baseText('executionsList.activeExecutions.evaluationNote');
+	if (posthogStore.isFeatureEnabled(WORKFLOW_EVALUATION_EXPERIMENT)) {
+		text += '\n' + i18n.baseText('executionsList.activeExecutions.evaluationNote');
+	}
 
 	return text;
 });
@@ -65,7 +71,7 @@ const headerText = computed(() => {
 					>
 				</div>
 			</template>
-			<n8n-icon icon="info" class="ml-2xs" />
+			<font-awesome-icon icon="info-circle" class="ml-2xs" />
 		</n8n-tooltip>
 	</div>
 </template>

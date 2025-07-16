@@ -1,22 +1,74 @@
-<script lang="ts" setup generic="ResourceType extends Resource = Resource">
+<script lang="ts" setup>
 import { computed, nextTick, ref, onMounted, watch, onBeforeUnmount } from 'vue';
 
+import { type ProjectSharingData } from '@/types/projects.types';
 import PageViewLayout from '@/components/layouts/PageViewLayout.vue';
 import PageViewLayoutList from '@/components/layouts/PageViewLayoutList.vue';
 import ResourceFiltersDropdown from '@/components/forms/ResourceFiltersDropdown.vue';
 import { useUsersStore } from '@/stores/users.store';
 import type { DatatableColumn } from '@n8n/design-system';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useDebounce } from '@/composables/useDebounce';
 import { useTelemetry } from '@/composables/useTelemetry';
 import { useRoute, useRouter } from 'vue-router';
 
-import type { BaseTextKey } from '@n8n/i18n';
-import type { BaseFilters, Resource, SortingAndPaginationUpdates } from '@/Interface';
+import type { BaseTextKey } from '@/plugins/i18n';
+import type { Scope } from '@n8n/permissions';
+import type { BaseFolderItem, BaseResource, ITag, ResourceParentFolder } from '@/Interface';
 import { isSharedResource, isResourceSortableByDate } from '@/utils/typeGuards';
 import { useN8nLocalStorage } from '@/composables/useN8nLocalStorage';
 
 type ResourceKeyType = 'credentials' | 'workflows' | 'variables' | 'folders';
+
+export type FolderResource = BaseFolderItem & {
+	resourceType: 'folder';
+};
+
+export type WorkflowResource = BaseResource & {
+	resourceType: 'workflow';
+	updatedAt: string;
+	createdAt: string;
+	active: boolean;
+	isArchived: boolean;
+	homeProject?: ProjectSharingData;
+	scopes?: Scope[];
+	tags?: ITag[] | string[];
+	sharedWithProjects?: ProjectSharingData[];
+	readOnly: boolean;
+	parentFolder?: ResourceParentFolder;
+};
+
+export type VariableResource = BaseResource & {
+	resourceType: 'variable';
+	key?: string;
+	value?: string;
+};
+
+export type CredentialsResource = BaseResource & {
+	resourceType: 'credential';
+	updatedAt: string;
+	createdAt: string;
+	type: string;
+	homeProject?: ProjectSharingData;
+	scopes?: Scope[];
+	sharedWithProjects?: ProjectSharingData[];
+	readOnly: boolean;
+	needsSetup: boolean;
+};
+
+export type Resource = WorkflowResource | FolderResource | CredentialsResource | VariableResource;
+
+export type BaseFilters = {
+	search: string;
+	homeProject: string;
+	[key: string]: boolean | string | string[];
+};
+
+export type SortingAndPaginationUpdates = {
+	page?: number;
+	pageSize?: number;
+	sort?: string;
+};
 
 const route = useRoute();
 const router = useRouter();
@@ -29,19 +81,19 @@ const n8nLocalStorage = useN8nLocalStorage();
 const props = withDefaults(
 	defineProps<{
 		resourceKey: ResourceKeyType;
-		displayName?: (resource: ResourceType) => string;
-		resources: ResourceType[];
+		displayName?: (resource: Resource) => string;
+		resources: Resource[];
 		disabled: boolean;
 		initialize?: () => Promise<void>;
 		filters?: BaseFilters;
 		additionalFiltersHandler?: (
-			resource: ResourceType,
+			resource: Resource,
 			filters: BaseFilters,
 			matches: boolean,
 		) => boolean;
 		shareable?: boolean;
 		showFiltersDropdown?: boolean;
-		sortFns?: Record<string, (a: ResourceType, b: ResourceType) => number>;
+		sortFns?: Record<string, (a: Resource, b: Resource) => number>;
 		sortOptions?: string[];
 		type?: 'datatable' | 'list-full' | 'list-paginated';
 		typeProps: { itemSize: number } | { columns: DatatableColumn[] };
@@ -55,7 +107,7 @@ const props = withDefaults(
 		hasEmptyState?: boolean;
 	}>(),
 	{
-		displayName: (resource: ResourceType) => resource.name || '',
+		displayName: (resource: Resource) => resource.name || '',
 		initialize: async () => {},
 		filters: () => ({ search: '', homeProject: '' }),
 		sortFns: () => ({}),
@@ -137,7 +189,7 @@ const filterKeys = computed(() => {
 	return Object.keys(filtersModel.value);
 });
 
-const filteredAndSortedResources = computed((): ResourceType[] => {
+const filteredAndSortedResources = computed(() => {
 	if (props.dontPerformSortingAndFiltering) {
 		return props.resources;
 	}
@@ -147,11 +199,7 @@ const filteredAndSortedResources = computed((): ResourceType[] => {
 		if (filtersModel.value.homeProject && isSharedResource(resource)) {
 			matches =
 				matches &&
-				!!(
-					'homeProject' in resource &&
-					resource.homeProject &&
-					resource.homeProject.id === filtersModel.value.homeProject
-				);
+				!!(resource.homeProject && resource.homeProject.id === filtersModel.value.homeProject);
 		}
 
 		if (filtersModel.value.search) {
@@ -173,27 +221,16 @@ const filteredAndSortedResources = computed((): ResourceType[] => {
 				if (!sortableByDate) {
 					return 0;
 				}
-
-				if ('updatedAt' in a && 'updatedAt' in b) {
-					return props.sortFns.lastUpdated
-						? props.sortFns.lastUpdated(a, b)
-						: new Date(b.updatedAt ?? '').valueOf() - new Date(a.updatedAt ?? '').valueOf();
-				}
-
-				return 0;
-
+				return props.sortFns.lastUpdated
+					? props.sortFns.lastUpdated(a, b)
+					: new Date(b.updatedAt ?? '').valueOf() - new Date(a.updatedAt ?? '').valueOf();
 			case 'lastCreated':
 				if (!sortableByDate) {
 					return 0;
 				}
-
-				if ('createdAt' in a && 'createdAt' in b) {
-					return props.sortFns.lastCreated
-						? props.sortFns.lastCreated(a, b)
-						: new Date(b.createdAt ?? '').valueOf() - new Date(a.createdAt ?? '').valueOf();
-				}
-
-				return 0;
+				return props.sortFns.lastCreated
+					? props.sortFns.lastCreated(a, b)
+					: new Date(b.createdAt ?? '').valueOf() - new Date(a.createdAt ?? '').valueOf();
 			case 'nameAsc':
 				return props.sortFns.nameAsc
 					? props.sortFns.nameAsc(a, b)
@@ -680,7 +717,7 @@ defineExpose({
 						data-test-id="resources-list"
 						:items="filteredAndSortedResources"
 						:item-size="itemSize()"
-						:item-key="'id'"
+						item-key="id"
 					>
 						<template #default="{ item, updateItemSize }">
 							<slot :data="item" :update-item-size="updateItemSize" />

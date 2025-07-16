@@ -15,7 +15,7 @@ import { useUsersStore } from './users.store';
 import { useRoute } from 'vue-router';
 import { useSettingsStore } from './settings.store';
 import { assert } from '@n8n/utils/assert';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 import { useTelemetry } from '@/composables/useTelemetry';
 import { useUIStore } from './ui.store';
 import { usePostHog } from './posthog.store';
@@ -95,10 +95,6 @@ export const useBuilderStore = defineStore(STORES.BUILDER, () => {
 		// Looks smoother if we wait for slide animation to finish before updating the grid width
 		// Has to wait for longer than SlideTransition duration
 		setTimeout(() => {
-			if (!window) {
-				return; // for unit testing
-			}
-
 			uiStore.appGridDimensions = {
 				...uiStore.appGridDimensions,
 				width: window.innerWidth,
@@ -242,10 +238,14 @@ export const useBuilderStore = defineStore(STORES.BUILDER, () => {
 	function onEachStreamingMessage(response: ChatRequest.ResponsePayload, id: string) {
 		if (response.sessionId && !currentSessionId.value) {
 			currentSessionId.value = response.sessionId;
-			telemetry.track('Assistant session started', {
-				chat_session_id: currentSessionId.value,
-				task: 'workflow-generation',
-			});
+			telemetry.track(
+				'Assistant session started',
+				{
+					chat_session_id: currentSessionId.value,
+					task: 'workflow-generation',
+				},
+				{ withPostHog: true },
+			);
 		} else if (currentSessionId.value !== response.sessionId) {
 			// Ignore messages from other sessions
 			return;
@@ -259,10 +259,14 @@ export const useBuilderStore = defineStore(STORES.BUILDER, () => {
 
 	// Core API functions
 	async function initBuilderChat(userMessage: string, source: 'chat' | 'canvas') {
-		telemetry.track('User submitted workflow prompt', {
-			source,
-			prompt: userMessage,
-		});
+		telemetry.track(
+			'User submitted workflow prompt',
+			{
+				source,
+				prompt: userMessage,
+			},
+			{ withPostHog: true },
+		);
 		resetBuilderChat();
 		const id = getRandomId();
 

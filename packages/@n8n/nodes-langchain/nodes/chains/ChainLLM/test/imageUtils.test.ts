@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { HumanMessage } from '@langchain/core/messages';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { ChatOllama } from '@langchain/ollama';
@@ -188,11 +189,7 @@ describe('imageUtils', () => {
 
 		it('should handle image data differently for GoogleGenerativeAI models', async () => {
 			// Mock a Google model - using our mocked class
-			mockContext.getInputConnectionData.mockResolvedValue(
-				new ChatGoogleGenerativeAI({
-					model: 'gemini-2.5-flash',
-				}),
-			);
+			mockContext.getInputConnectionData.mockResolvedValue(new ChatGoogleGenerativeAI());
 
 			const message: MessageTemplate = {
 				type: 'HumanMessagePromptTemplate',

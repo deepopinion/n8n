@@ -8,7 +8,7 @@ import type { IWorkflowShortResponse, ExecutionFilterType } from '@/Interface';
 import { createComponentRenderer } from '@/__tests__/render';
 import * as telemetryModule from '@/composables/useTelemetry';
 import type { Telemetry } from '@/plugins/telemetry';
-import merge from 'lodash/merge';
+import { merge } from 'lodash-es';
 
 const defaultFilterState: ExecutionFilterType = {
 	status: 'all',
@@ -17,7 +17,7 @@ const defaultFilterState: ExecutionFilterType = {
 	annotationTags: [],
 	startDate: '',
 	endDate: '',
-	metadata: [{ key: '', value: '', exactMatch: false }],
+	metadata: [{ key: '', value: '' }],
 	vote: 'all',
 };
 

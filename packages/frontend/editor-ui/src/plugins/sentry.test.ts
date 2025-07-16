@@ -1,7 +1,7 @@
 import type * as Sentry from '@sentry/vue';
 import { beforeSend } from '@/plugins/sentry';
 import { AxiosError } from 'axios';
-import { ResponseError } from '@n8n/rest-api-client';
+import { ResponseError } from '@/utils/apiUtils';
 
 function createErrorEvent(): Sentry.ErrorEvent {
 	return {} as Sentry.ErrorEvent;

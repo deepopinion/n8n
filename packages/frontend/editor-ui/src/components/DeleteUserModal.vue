@@ -7,14 +7,11 @@ import { useUsersStore } from '@/stores/users.store';
 import { useProjectsStore } from '@/stores/projects.store';
 import { createEventBus } from '@n8n/utils/event-bus';
 import type { ProjectSharingData } from '@/types/projects.types';
-import { useI18n } from '@n8n/i18n';
+import { useI18n } from '@/composables/useI18n';
 
 const props = defineProps<{
 	modalName: string;
-	data: {
-		userId: string;
-		afterDelete?: () => Promise<void>;
-	};
+	activeId: string;
 }>();
 
 const modalBus = createEventBus();
@@ -28,18 +25,17 @@ const usersStore = useUsersStore();
 const projectsStore = useProjectsStore();
 
 const userToDelete = computed(() => {
-	if (!props.data?.userId) return null;
+	if (!props.activeId) return null;
 
-	return usersStore.usersList.state.items.find((user) => user.id === props.data.userId);
+	return usersStore.usersById[props.activeId];
 });
 
-const isPending = computed(() => !userToDelete.value?.firstName);
+const isPending = computed(() => {
+	return userToDelete.value ? !userToDelete.value.firstName : false;
+});
 
 const title = computed(() => {
-	const user =
-		userToDelete.value?.firstName && userToDelete.value.lastName
-			? `${userToDelete.value.firstName} ${userToDelete.value.lastName}`
-			: (userToDelete.value?.email ?? '');
+	const user = userToDelete.value?.fullName ?? userToDelete.value?.email ?? '';
 
 	return i18n.baseText('settings.users.deleteUser', { interpolate: { user } });
 });
@@ -56,7 +52,11 @@ const enabled = computed(() => {
 		return true;
 	}
 
-	return !!(operation.value === 'transfer' && selectedProject.value);
+	if (operation.value === 'transfer' && selectedProject.value) {
+		return true;
+	}
+
+	return false;
 });
 
 const projects = computed(() => {
@@ -81,7 +81,7 @@ async function onSubmit() {
 	try {
 		loading.value = true;
 
-		const params = { id: props.data.userId } as { id: string; transferId?: string };
+		const params = { id: props.activeId } as { id: string; transferId?: string };
 		if (operation.value === 'transfer' && selectedProject.value) {
 			params.transferId = selectedProject.value.id;
 		}
@@ -104,7 +104,6 @@ async function onSubmit() {
 			message,
 		});
 
-		await props.data.afterDelete?.();
 		modalBus.emit('close');
 	} catch (error) {
 		showError(error, i18n.baseText('settings.users.userDeletedError'));
