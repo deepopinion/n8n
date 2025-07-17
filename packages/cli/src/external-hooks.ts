@@ -174,7 +174,7 @@ export class ExternalHooks {
 			try {
 				await hookFunction.apply(context, hookParameters);
 			} catch (cause) {
-				this.logger.error(`There was a problem running hook "${hookName}"`);
+				this.logger.log(this.logger.ERROR, `There was a problem running hook "${hookName}"`);
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				const error = new UnexpectedError(`External hook "${hookName}" failed`, { cause });
 				this.errorReporter.error(error, { level: 'fatal' });
