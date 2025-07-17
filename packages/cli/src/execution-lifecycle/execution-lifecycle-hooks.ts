@@ -379,13 +379,13 @@ export function getLifecycleHooksForSubExecutions(
 ): ExecutionLifecycleHooks {
 	const hooks = new ExecutionLifecycleHooks(mode, executionId, workflowData);
 	const saveSettings = toSaveSettings(workflowData.settings);
+	hookFunctionsExternalHooks(hooks);
 	hookFunctionsWorkflowEvents(hooks, userId);
 	hookFunctionsNodeEvents(hooks);
 	hookFunctionsFinalizeExecutionStatus(hooks);
 	hookFunctionsSave(hooks, { saveSettings });
 	hookFunctionsSaveProgress(hooks, { saveSettings });
 	hookFunctionsStatistics(hooks);
-	hookFunctionsExternalHooks(hooks);
 	return hooks;
 }
 
@@ -400,12 +400,12 @@ export function getLifecycleHooksForScalingWorker(
 	const hooks = new ExecutionLifecycleHooks(executionMode, executionId, workflowData);
 	const saveSettings = toSaveSettings(workflowData.settings);
 	const optionalParameters = { pushRef, retryOf: retryOf ?? undefined, saveSettings };
+	hookFunctionsExternalHooks(hooks);
 	hookFunctionsNodeEvents(hooks);
 	hookFunctionsFinalizeExecutionStatus(hooks);
 	hookFunctionsSaveWorker(hooks, optionalParameters);
 	hookFunctionsSaveProgress(hooks, optionalParameters);
 	hookFunctionsStatistics(hooks);
-	hookFunctionsExternalHooks(hooks);
 
 	if (executionMode === 'manual' && Container.get(InstanceSettings).isWorker) {
 		hookFunctionsPush(hooks, optionalParameters);
@@ -429,9 +429,9 @@ export function getLifecycleHooksForScalingMain(
 	const optionalParameters = { pushRef, retryOf: retryOf ?? undefined, saveSettings };
 	const executionRepository = Container.get(ExecutionRepository);
 
+	hookFunctionsExternalHooks(hooks);
 	hookFunctionsWorkflowEvents(hooks, userId);
 	hookFunctionsSaveProgress(hooks, optionalParameters);
-	hookFunctionsExternalHooks(hooks);
 	hookFunctionsFinalizeExecutionStatus(hooks);
 
 	hooks.addHandler('workflowExecuteAfter', async function (fullRunData) {
@@ -489,6 +489,7 @@ export function getLifecycleHooksForRegularMain(
 	const hooks = new ExecutionLifecycleHooks(executionMode, executionId, workflowData);
 	const saveSettings = toSaveSettings(workflowData.settings);
 	const optionalParameters = { pushRef, retryOf: retryOf ?? undefined, saveSettings };
+	hookFunctionsExternalHooks(hooks);
 	hookFunctionsWorkflowEvents(hooks, userId);
 	hookFunctionsNodeEvents(hooks);
 	hookFunctionsFinalizeExecutionStatus(hooks);
@@ -496,7 +497,6 @@ export function getLifecycleHooksForRegularMain(
 	hookFunctionsPush(hooks, optionalParameters);
 	hookFunctionsSaveProgress(hooks, optionalParameters);
 	hookFunctionsStatistics(hooks);
-	hookFunctionsExternalHooks(hooks);
 	Container.get(ModuleRegistry).registerLifecycleHooks(hooks);
 	return hooks;
 }
