@@ -7,20 +7,22 @@ async function createTransaction(body) {
 	const url = `${dataLayerUrl}/transactions`;
 	console.log(`FETCH ${url}\n`, body);
 
-	// await fetch(url, {
-	//     method: 'POST',
-	//     body: JSON.stringify(body)
-	// });
+	await fetch(url, {
+		method: 'POST',
+		headers: {'Content-Type': 'application/json'},
+		body: JSON.stringify(body)
+	});
 }
 
 async function syncOutputToDataLayer(executionId, body) {
 	const url = `${dataLayerUrl}/transactions/executions/${executionId}/workflow-steps`;
 	console.log(`FETCH ${url}\n`, body);
 
-	// await fetch(url, {
-	//     method: 'POST',
-	//     body: JSON.stringify(body)
-	// });
+	await fetch(url, {
+		method: 'POST',
+		headers: {'Content-Type': 'application/json'},
+		body: JSON.stringify(body)
+	});
 
 	return {
 		executionId,
@@ -56,8 +58,10 @@ module.exports = {
 				await createTransaction({
 					businessAppId,
 					executionId,
-					workflowId,
-					nodeInfos
+					workflowConfiguration: {
+						workflowId,
+						nodeInfos
+					}
 				});
 			}
 		],
