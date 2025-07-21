@@ -9,8 +9,16 @@ import {
 	UserRepository,
 } from '@n8n/db';
 import { Service } from '@n8n/di';
-import { ErrorReporter, Logger } from 'n8n-core';
-import type { IRun, IWorkflowBase, Workflow, WorkflowExecuteMode } from 'n8n-workflow';
+import { ErrorReporter } from 'n8n-core';
+import type {
+	IRun,
+	IRunExecutionData,
+	ITaskData,
+	ITaskStartedData,
+	IWorkflowBase,
+	Workflow,
+	WorkflowExecuteMode,
+} from 'n8n-workflow';
 import { UnexpectedError } from 'n8n-workflow';
 import type clientOAuth1 from 'oauth-1.0a';
 
@@ -73,11 +81,17 @@ type ExternalHooksMap = {
 	'workflow.afterArchive': [workflowId: string];
 	'workflow.afterUnarchive': [workflowId: string];
 
-	'workflow.preExecute': [workflow: Workflow, mode: WorkflowExecuteMode];
+	'workflow.preExecute': [workflow: Workflow, mode: WorkflowExecuteMode, executionId: string];
 	'workflow.postExecute': [
 		fullRunData: IRun | undefined,
 		workflowData: IWorkflowBase,
 		executionId: string,
+	];
+	'node.preExecute': [nodeName: string, taskData: ITaskStartedData];
+	'node.postExecute': [
+		nodeName: string,
+		taskData: ITaskData,
+		runData: IRunExecutionData & { executionId: string },
 	];
 };
 type HookNames = keyof ExternalHooksMap;
