@@ -206,6 +206,9 @@ importers:
       '@biomejs/biome':
         specifier: ^1.9.0
         version: 1.9.0
+      '@deepopinion/n8n-data-layer-client':
+        specifier: 1.1.0
+        version: 1.1.0(encoding@0.1.13)
       '@n8n/eslint-config':
         specifier: workspace:*
         version: link:packages/@n8n/eslint-config
@@ -735,7 +738,7 @@ importers:
         version: 4.3.0
       '@getzep/zep-cloud':
         specifier: 1.0.12
-        version: 1.0.12(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)(langchain@0.3.11(7f2a4b9c5436679ca8b0df05212b4905))
+        version: 1.0.12(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)(langchain@0.3.11(b4eb53fe8b825d6e8edd96cc3d942586))
       '@getzep/zep-js':
         specifier: 0.9.0
         version: 0.9.0
@@ -762,7 +765,7 @@ importers:
         version: 0.3.2(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)
       '@langchain/community':
         specifier: 'catalog:'
-        version: 0.3.24(0b620065402de60ffbc4ade3af2d8197)
+        version: 0.3.24(11baf845afebba292b9d40a47856bea9)
       '@langchain/core':
         specifier: 'catalog:'
         version: 0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1))
@@ -867,7 +870,7 @@ importers:
         version: 23.0.1
       langchain:
         specifier: 0.3.11
-        version: 0.3.11(7f2a4b9c5436679ca8b0df05212b4905)
+        version: 0.3.11(b4eb53fe8b825d6e8edd96cc3d942586)
       lodash:
         specifier: 'catalog:'
         version: 4.17.21
@@ -3190,12 +3193,6 @@ packages:
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
-  '@babel/plugin-syntax-jsx@7.18.6':
-    resolution: {integrity: sha512-6mmljtAedFGTWu2p/8WIORGwy+61PLgOMPOdazc7YoJ9ZCWUyFy3A6CpPkRKLKD1ToAesxX8KGEViAiLo9N+7Q==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0-0
-
   '@babel/plugin-syntax-jsx@7.25.9':
     resolution: {integrity: sha512-ld6oezHQMZsZfp6pWtbjaNDF2tiiCYYDqQszHt5VV437lewP9aSi2Of99CK0D0XB21k7FLgnLcmQKyKzynfeAA==}
     engines: {node: '>=6.9.0'}
@@ -3747,6 +3744,9 @@ packages:
     resolution: {integrity: sha512-mepCf/e9+SKYy1d02/UkvSy6+6MoyXhVxP8lLDfA7BPE1X1d4dR0sZznmbM8/XVJ1GPM+Svnx7Xj6ZweByWUkw==}
     engines: {node: '>17.0.0'}
 
+  '@deepopinion/n8n-data-layer-client@1.1.0':
+    resolution: {integrity: sha512-+c7/ucpevHu+9QaCy/cSb+61d3PYpbD1O7EedvMb+P9ci0bzbpDdQCJKWi9SFSu16846Oh08S32I6WI0vqvAZQ==, tarball: https://europe-west1-npm.pkg.dev/deepopinion/npm-private/@deepopinion/n8n-data-layer-client/-/@deepopinion/n8n-data-layer-client-1.1.0.tgz}
+
   '@element-plus/icons-vue@2.3.1':
     resolution: {integrity: sha512-XxVUZv48RZAd87ucGS48jPf6pKu0yV5UCg9f4FFwtrYxXOwWuVJo6wOvSLKEoMQKjv8GsX/mhP6UsC1lRwbUWg==}
     peerDependencies:
@@ -4261,10 +4261,6 @@ packages:
 
   '@jest/schemas@29.4.3':
     resolution: {integrity: sha512-VLYKXQmtmuEz6IxJsrZwzG9NvtkQsWNnWMsKxqWNu3+CnfzJQhp0WDDKWLVV9hLKr0l3SLLFRqcYHjhtyuDVxg==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-
-  '@jest/schemas@29.6.0':
-    resolution: {integrity: sha512-rxLjXyJBTL4LQeJW3aKo0M/+GkCOXsO+8i9Iu7eDb6KwtP65ayoDsitrdPBtujxQ88k4wI2FNYfa6TOGwSn6cQ==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
 
   '@jest/schemas@29.6.3':
@@ -9355,12 +9351,20 @@ packages:
     engines: {node: '>=14'}
     deprecated: The gm module has been sunset. Please migrate to an alternative. https://github.com/aheckmann/gm?tab=readme-ov-file#2025-02-24-this-project-is-not-maintained
 
+  google-artifactregistry-auth@3.3.0:
+    resolution: {integrity: sha512-m/ubCJsWZpOdAAlv7hYqHiZZc6we4z4kjLhEMBMpf392yslJXt1J/Rm1C7VOPQNXeUjx4rHw6znnj50S4O2ePA==}
+    hasBin: true
+
   google-auth-library@8.9.0:
     resolution: {integrity: sha512-f7aQCJODJFmYWN6PeNKzgvy9LI2tYmXnzpNDHEjG5sDNPgGb2FXQyTBnXeSH+PAtpKESFD+LmHw3Ox3mN7e1Fg==}
     engines: {node: '>=12'}
 
   google-auth-library@9.10.0:
     resolution: {integrity: sha512-ol+oSa5NbcGdDqA+gZ3G3mev59OHBZksBTxY/tYwjtcp1H/scAFwJfSQU9/1RALoyZ7FslNbke8j4i3ipwlyuQ==}
+    engines: {node: '>=14'}
+
+  google-auth-library@9.15.1:
+    resolution: {integrity: sha512-Jb6Z0+nvECVz+2lzSMt9u98UsoakXxA2HGHMCxh+so3n90XgYWkq5dur19JAJV7ONiJY22yBTyJB1TSkvPq9Ng==}
     engines: {node: '>=14'}
 
   google-gax@4.3.4:
@@ -13845,8 +13849,8 @@ packages:
   vue-component-type-helpers@2.2.10:
     resolution: {integrity: sha512-iDUO7uQK+Sab2tYuiP9D1oLujCWlhHELHMgV/cB13cuGbG4qwkLHvtfWb6FzvxrIOPDnU0oHsz2MlQjhYDeaHA==}
 
-  vue-component-type-helpers@3.0.1:
-    resolution: {integrity: sha512-j23mCB5iEbGsyIhnVdXdWUOg+UdwmVxpKnYYf2j+4ppCt5VSFXKjwu9YFt0QYxUaf5G99PuHsVfRScjHCRSsGQ==}
+  vue-component-type-helpers@3.0.3:
+    resolution: {integrity: sha512-koiBu7lO8e6w/UlbZAAIW11qcFQocYIl7Nh/SVwGZ804ej5KrncU32bRxi2zfU2Kyf6HWuk1CeeVP2rhIL+vyQ==}
 
   vue-demi@0.14.10:
     resolution: {integrity: sha512-nMZBOwuzabUO0nLgIcc6rycZEebF6eeUfaiQx9+WSk8e29IbLvPU9feI6tqW4kTo3hvoYAJkMh8n8D0fuISphg==}
@@ -15654,11 +15658,6 @@ snapshots:
       '@babel/core': 7.26.10
       '@babel/helper-plugin-utils': 7.26.5
 
-  '@babel/plugin-syntax-jsx@7.18.6(@babel/core@7.26.10)':
-    dependencies:
-      '@babel/core': 7.26.10
-      '@babel/helper-plugin-utils': 7.26.5
-
   '@babel/plugin-syntax-jsx@7.25.9(@babel/core@7.26.10)':
     dependencies:
       '@babel/core': 7.26.10
@@ -16389,6 +16388,13 @@ snapshots:
 
   '@dagrejs/graphlib@2.2.4': {}
 
+  '@deepopinion/n8n-data-layer-client@1.1.0(encoding@0.1.13)':
+    dependencies:
+      google-artifactregistry-auth: 3.3.0(encoding@0.1.13)
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+
   '@element-plus/icons-vue@2.3.1(vue@3.5.13(typescript@5.8.2))':
     dependencies:
       vue: 3.5.13(typescript@5.8.2)
@@ -16541,7 +16547,7 @@ snapshots:
   '@gar/promisify@1.1.3':
     optional: true
 
-  '@getzep/zep-cloud@1.0.12(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)(langchain@0.3.11(7f2a4b9c5436679ca8b0df05212b4905))':
+  '@getzep/zep-cloud@1.0.12(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)(langchain@0.3.11(b4eb53fe8b825d6e8edd96cc3d942586))':
     dependencies:
       form-data: 4.0.0
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -16550,7 +16556,7 @@ snapshots:
       zod: 3.24.1
     optionalDependencies:
       '@langchain/core': 0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1))
-      langchain: 0.3.11(7f2a4b9c5436679ca8b0df05212b4905)
+      langchain: 0.3.11(b4eb53fe8b825d6e8edd96cc3d942586)
     transitivePeerDependencies:
       - encoding
 
@@ -16913,10 +16919,6 @@ snapshots:
     dependencies:
       '@sinclair/typebox': 0.25.21
 
-  '@jest/schemas@29.6.0':
-    dependencies:
-      '@sinclair/typebox': 0.27.8
-
   '@jest/schemas@29.6.3':
     dependencies:
       '@sinclair/typebox': 0.27.8
@@ -16963,7 +16965,7 @@ snapshots:
 
   '@jest/types@29.6.1':
     dependencies:
-      '@jest/schemas': 29.6.0
+      '@jest/schemas': 29.6.3
       '@types/istanbul-lib-coverage': 2.0.4
       '@types/istanbul-reports': 3.0.1
       '@types/node': 18.16.16
@@ -17062,7 +17064,7 @@ snapshots:
       - aws-crt
       - encoding
 
-  '@langchain/community@0.3.24(0b620065402de60ffbc4ade3af2d8197)':
+  '@langchain/community@0.3.24(11baf845afebba292b9d40a47856bea9)':
     dependencies:
       '@browserbasehq/stagehand': 1.9.0(@playwright/test@1.49.1)(deepmerge@4.3.1)(dotenv@16.4.5)(encoding@0.1.13)(openai@4.78.1(encoding@0.1.13)(zod@3.24.1))(zod@3.24.1)
       '@ibm-cloud/watsonx-ai': 1.1.2
@@ -17073,7 +17075,7 @@ snapshots:
       flat: 5.0.2
       ibm-cloud-sdk-core: 5.3.2
       js-yaml: 4.1.0
-      langchain: 0.3.11(7f2a4b9c5436679ca8b0df05212b4905)
+      langchain: 0.3.11(b4eb53fe8b825d6e8edd96cc3d942586)
       langsmith: 0.2.15(openai@4.78.1(encoding@0.1.13)(zod@3.24.1))
       openai: 4.78.1(encoding@0.1.13)(zod@3.24.1)
       uuid: 10.0.0
@@ -17088,7 +17090,7 @@ snapshots:
       '@aws-sdk/credential-provider-node': 3.808.0
       '@azure/storage-blob': 12.26.0
       '@browserbasehq/sdk': 2.0.0(encoding@0.1.13)
-      '@getzep/zep-cloud': 1.0.12(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)(langchain@0.3.11(7f2a4b9c5436679ca8b0df05212b4905))
+      '@getzep/zep-cloud': 1.0.12(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)(langchain@0.3.11(b4eb53fe8b825d6e8edd96cc3d942586))
       '@getzep/zep-js': 0.9.0
       '@google-ai/generativelanguage': 2.6.0(encoding@0.1.13)
       '@google-cloud/storage': 7.12.1(encoding@0.1.13)
@@ -17109,7 +17111,7 @@ snapshots:
       d3-dsv: 2.0.0
       epub2: 3.0.2(ts-toolbelt@9.6.0)
       fast-xml-parser: 5.2.3
-      google-auth-library: 9.10.0(encoding@0.1.13)
+      google-auth-library: 9.15.1(encoding@0.1.13)
       html-to-text: 9.0.5
       ignore: 5.2.4
       ioredis: 5.3.2
@@ -18998,7 +19000,7 @@ snapshots:
       ts-dedent: 2.2.0
       type-fest: 2.19.0
       vue: 3.5.13(typescript@5.8.2)
-      vue-component-type-helpers: 3.0.1
+      vue-component-type-helpers: 3.0.3
 
   '@supabase/auth-js@2.65.0':
     dependencies:
@@ -22991,6 +22993,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  google-artifactregistry-auth@3.3.0(encoding@0.1.13):
+    dependencies:
+      google-auth-library: 9.15.1(encoding@0.1.13)
+      yargs: 17.7.2
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+
   google-auth-library@8.9.0(encoding@0.1.13):
     dependencies:
       arrify: 2.0.1
@@ -23007,6 +23017,18 @@ snapshots:
       - supports-color
 
   google-auth-library@9.10.0(encoding@0.1.13):
+    dependencies:
+      base64-js: 1.5.1
+      ecdsa-sig-formatter: 1.0.11
+      gaxios: 6.6.0(encoding@0.1.13)
+      gcp-metadata: 6.1.0(encoding@0.1.13)
+      gtoken: 7.1.0(encoding@0.1.13)
+      jws: 4.0.0
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+
+  google-auth-library@9.15.1(encoding@0.1.13):
     dependencies:
       base64-js: 1.5.1
       ecdsa-sig-formatter: 1.0.11
@@ -23281,7 +23303,7 @@ snapshots:
       '@types/debug': 4.1.12
       '@types/node': 18.16.16
       '@types/tough-cookie': 4.0.2
-      axios: 1.8.3
+      axios: 1.8.3(debug@4.4.0)
       camelcase: 6.3.0
       debug: 4.4.0(supports-color@8.1.1)
       dotenv: 16.4.5
@@ -23291,7 +23313,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.8.3(debug@4.4.0))
+      retry-axios: 2.6.0(axios@1.8.3)
       tough-cookie: 4.1.3
     transitivePeerDependencies:
       - supports-color
@@ -23959,7 +23981,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.26.10
       '@babel/generator': 7.26.10
-      '@babel/plugin-syntax-jsx': 7.18.6(@babel/core@7.26.10)
+      '@babel/plugin-syntax-jsx': 7.25.9(@babel/core@7.26.10)
       '@babel/plugin-syntax-typescript': 7.20.0(@babel/core@7.26.10)
       '@babel/types': 7.26.10
       '@jest/expect-utils': 29.6.2
@@ -24285,7 +24307,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langchain@0.3.11(7f2a4b9c5436679ca8b0df05212b4905):
+  langchain@0.3.11(b4eb53fe8b825d6e8edd96cc3d942586):
     dependencies:
       '@langchain/core': 0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1))
       '@langchain/openai': 0.3.17(@langchain/core@0.3.30(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)
@@ -26662,7 +26684,7 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
 
-  retry-axios@2.6.0(axios@1.8.3(debug@4.4.0)):
+  retry-axios@2.6.0(axios@1.8.3):
     dependencies:
       axios: 1.8.3
 
@@ -28373,7 +28395,7 @@ snapshots:
 
   vue-component-type-helpers@2.2.10: {}
 
-  vue-component-type-helpers@3.0.1: {}
+  vue-component-type-helpers@3.0.3: {}
 
   vue-demi@0.14.10(vue@3.5.13(typescript@5.8.2)):
     dependencies:
