@@ -42,6 +42,20 @@ async function triggerControlHubRules(transactionId) {
 	await fetch(url, { method: 'POST' });
 }
 
+async function getDataLayerContext(transactionId) {
+	const url = `${dataLayerUrl}/transactions/${transactionId}/rule-execution-context`;
+
+	const res = await fetch(url, {
+		method: 'GET',
+		headers: {'Content-Type': 'application/json'}
+	});
+
+	if (!res.ok) {
+		throw new Error(`Failed to get data layer context: ${res.status} ${res.statusText}`);
+	}
+	return res.json();
+}
+
 function getFlattenedOutput(node) {
 	return 'output' in node.json ? node.json.output : node.json;
 }
@@ -62,6 +76,22 @@ async function getWorkspaceId(businessAppId) {
 		return process.env.OVERRIDE_WORKSPACE_ID;
 	}
 	return 'default-workspace-id'; // Replace with actual logic to get workspace ID
+}
+
+async function overrideOutput(transactionId, itemData) {
+	const { id, context, ruleDecisions, documents } = await getDataLayerContext(transactionId);
+	itemData.forEach(element => {
+		const oldValue = getFlattenedOutput(element);
+		element.json = {
+			output: oldValue,
+			data: {
+				id,
+				context,
+				ruleDecisions,
+				documents
+			}
+		}
+	});
 }
 
 module.exports = {
@@ -114,24 +144,13 @@ module.exports = {
 					throw new Error(`No transaction found for execution ID: ${executionId}`);
 				}
 
-				const dataLayerValue = await syncOutputToDataLayer(transactionId, {
+				await syncOutputToDataLayer(transactionId, {
 					nodeName,
 					output
 				});
 
 				await triggerControlHubRules(transactionId);
-
-				itemData.forEach(element => {
-					const oldValue = getFlattenedOutput(element);
-					element.json = {
-						output: oldValue,
-						data: {
-							...dataLayerValue,
-							nodeName
-						}
-					}
-				});
-
+				await overrideOutput(transactionId, itemData);
 			}
 		],
 	}
