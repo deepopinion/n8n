@@ -24,22 +24,25 @@ async function createTransaction(body) {
 async function syncOutputToDataLayer(transactionId, body) {
 	const url = `${dataLayerUrl}/transactions/${transactionId}/workflow-step`;
 
-	await fetch(url, {
+	const response = await fetch(url, {
 		method: 'POST',
 		headers: {'Content-Type': 'application/json'},
 		body: JSON.stringify(body)
 	});
 
-	return {
-		executionId: transactionId,
-		test: "1234"
-	};
+	if (!response.ok) {
+		throw new Error(`Failed to sync output to data layer: ${response.status} ${response.statusText}`);
+	}
 }
 
 async function triggerControlHubRules(transactionId) {
-	const url = `${controlHubUrl}/transactions/business-rules-execution/all-rules/for-transaction/${transactionId}`;
+	const url = `${controlHubUrl}/business-rules-execution/all-rules/for-transaction/${transactionId}`;
 
-	await fetch(url, { method: 'POST' });
+	const response = await fetch(url, { method: 'POST' });
+
+	if (!response.ok) {
+		throw new Error(`Failed to trigger control hub rules: ${response.status} ${response.statusText}`);
+	}
 }
 
 async function getDataLayerContext(transactionId) {
@@ -103,7 +106,7 @@ module.exports = {
 				const businessAppId = await getBusinessAppId(workflowId);
 				const workspaceId = await getWorkspaceId(businessAppId);
 
-				const nodeInfos = Object.entries(workflow.nodes ?? {}).map(([key, value]) => ({name: key, id: value.id}));
+
 
 				const transaction = await createTransaction({
 					businessAppId,
@@ -112,7 +115,7 @@ module.exports = {
 						executionId,
 						workflowConfiguration: {
 							workflowId,
-							nodeInfos
+							nodeInfos: workflow.nodes
 						}
 					}
 				});
