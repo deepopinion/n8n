@@ -22,7 +22,7 @@ RUN find . -type f -name "*.ts" -o -name "*.vue" -o -name "tsconfig.json" -o -na
 
 # Deploy the `n8n` package into /compiled
 RUN mkdir /compiled
-RUN NODE_ENV=production DOCKER_BUILD=true pnpm --filter=n8n --prod --no-optional --legacy --mount=type=secret,id=npmrc,target=/src/.npmrc  deploy /compiled
+RUN --mount=type=secret,id=npmrc,target=/src/.npmrc NODE_ENV=production DOCKER_BUILD=true pnpm --filter=n8n --prod --no-optional --legacy deploy /compiled
 
 # 2. Start with a new clean image with just the code that is needed to run n8n
 FROM n8nio/base:${NODE_VERSION}
