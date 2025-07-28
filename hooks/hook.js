@@ -103,10 +103,8 @@ module.exports = {
 			async function (workflow, _, executionId) {
 				const workflowId = workflow.id;
 
-				const businessAppId = await getBusinessAppId(workflowId);
+				const businessAppId = await getBusinessAppId.bind(this)(workflowId);
 				const workspaceId = await getWorkspaceId(businessAppId);
-
-
 
 				const transaction = await createTransaction({
 					businessAppId,
