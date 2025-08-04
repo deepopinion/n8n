@@ -1,4 +1,4 @@
-name: 'Private NPM Publish'
+name: 'DO - Private NPM Publish'
 
 # This workflow publishes n8n packages to a private npm registry
 # Make sure to set up the PRIVATE_NPM_TOKEN secret in your repository settings
